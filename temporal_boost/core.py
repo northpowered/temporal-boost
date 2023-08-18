@@ -1,9 +1,13 @@
 # Base imports
 import typer
 import asyncio
+from multiprocessing import Process
 # Local imports
 from .worker import BoostWorker
 from .schemas import ClientConnectorArgs
+
+
+PROHIBITED_WORKER_NAMES: list[str] = ['all']
 
 
 class BoostApp:
@@ -36,6 +40,11 @@ class BoostApp:
         )
 
         self._root_typer.add_typer(self.run_typer, no_args_is_help=True)
+        
+
+        
+
+        self.run_typer.command(name="all")(self.register_all)
 
     def add_worker(
         self,
@@ -44,6 +53,19 @@ class BoostApp:
         workflows: list = [],
         activities: list = [],
     ) -> None:
+
+        # Constraints check:
+        if worker_name in PROHIBITED_WORKER_NAMES:
+            raise RuntimeError(
+                f"{worker_name} name for worker is reserved for temporal-boost"
+            )
+        
+        for registered_worker in self.registered_workers:
+            if worker_name == registered_worker.name:
+                raise RuntimeError(
+                    f"{worker_name} name for worker`s already reserved"
+                )        
+
         worker: BoostWorker = BoostWorker(
             name=worker_name,
             client_connector_args=self.client_connector_args,
@@ -58,3 +80,20 @@ class BoostApp:
 
     def run(self):
         asyncio.run(self._root_typer())
+
+
+    def register_all(self):
+
+        #logger.warning('Use all-in-one mode only in dev mode!')
+        procs: list[Process] = list()
+        # Creating worker
+        for worker in self.registered_workers:
+
+            proc = Process(
+                target=worker.run,
+            )
+            procs.append(proc)
+            proc.start()
+
+        for proc in procs:
+            proc.join()
