@@ -1,6 +1,7 @@
 # Base imports
 import typer
 import asyncio
+import typing
 from multiprocessing import Process
 # Local imports
 from .worker import BoostWorker
@@ -24,6 +25,7 @@ class BoostApp:
         self.enable_otlp: bool = enable_otlp
 
         self.registered_workers: list[BoostWorker] = []
+        self.registered_cron_workers: list[BoostWorker] = []
 
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
             temporal_endpoint=self.temporal_endpoint,
@@ -39,10 +41,12 @@ class BoostApp:
             name="run"
         )
 
-        self._root_typer.add_typer(self.run_typer, no_args_is_help=True)
-        
+        self.cron_typer: typer.Typer = typer.Typer(
+            name="cron"
+        )
 
-        
+        self._root_typer.add_typer(self.run_typer, no_args_is_help=True)
+        self._root_typer.add_typer(self.cron_typer, no_args_is_help=True)
 
         self.run_typer.command(name="all")(self.register_all)
 
@@ -52,6 +56,8 @@ class BoostApp:
         task_queue: str,
         workflows: list = [],
         activities: list = [],
+        cron_schedule: str | None = None,
+        cron_runner: typing.Coroutine | None = None
     ) -> None:
 
         # Constraints check:
@@ -59,12 +65,12 @@ class BoostApp:
             raise RuntimeError(
                 f"{worker_name} name for worker is reserved for temporal-boost"
             )
-        
+
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
                 raise RuntimeError(
                     f"{worker_name} name for worker`s already reserved"
-                )        
+                )
 
         worker: BoostWorker = BoostWorker(
             name=worker_name,
@@ -72,19 +78,26 @@ class BoostApp:
             task_queue=task_queue,
             workflows=workflows,
             activities=activities,
+            cron_schedule=cron_schedule,
+            cron_runner=cron_runner
         )
-
+        # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
+
+        if cron_schedule and cron_runner:
+            # If cron_schedule and cron_runner is not None
+            # register this worker as cron_worker too
+            self.cron_typer.command(name=worker_name)(worker.cron)
+            self.registered_cron_workers.append(worker)
 
         self.registered_workers.append(worker)
 
     def run(self):
         asyncio.run(self._root_typer())
 
-
     def register_all(self):
 
-        #logger.warning('Use all-in-one mode only in dev mode!')
+        # logger.warning('Use all-in-one mode only in dev mode!')
         procs: list[Process] = list()
         # Creating worker
         for worker in self.registered_workers:
