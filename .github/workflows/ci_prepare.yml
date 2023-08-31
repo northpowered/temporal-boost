@@ -25,12 +25,18 @@ jobs:
                 pip install poetry
                 poetry config virtualenvs.create false
                 poetry install --with lint --no-root
-            - name: Lint
+            - name: Lint lib src
               run: |
                 # stop the build if there are Python syntax errors or undefined names
-                flake8 src --show-source --statistics
+                flake8 temporal_boost --show-source --statistics
                 # exit-zero treats all errors as warnings
-                flake8 src --count --exit-zero --statistics
+                flake8 temporal_boost --count --exit-zero --statistics
+            - name: Lint unit tests
+              run: |
+                # stop the build if there are Python syntax errors or undefined names
+                flake8 tests --show-source --statistics
+                # exit-zero treats all errors as warnings
+                flake8 tests --count --exit-zero --statistics
 
     unit-tests:
         runs-on: ubuntu-latest
@@ -50,6 +56,6 @@ jobs:
                 poetry config virtualenvs.create false
                 poetry install --with test --no-root
             - name: Run integration tests
-              run: poetry run pytest src --cov
+              run: poetry run pytest tests --cov
             - name: Upload Codecov
               uses: codecov/codecov-action@v3
