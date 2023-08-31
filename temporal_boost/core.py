@@ -6,6 +6,8 @@ from multiprocessing import Process
 # Local imports
 from .worker import BoostWorker
 from .schemas import ClientConnectorArgs
+from .logger import BoostLogger
+import logging
 
 
 PROHIBITED_WORKER_NAMES: list[str] = ['all']
@@ -18,11 +20,14 @@ class BoostApp:
         temporal_endpoint: str = "localhost:7233",
         temporal_namespace: str = "default",
         enable_otlp: bool = True,
+        logger: logging.Logger = BoostLogger().get_default_logger()
+        
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
         self.temporal_namespace: str = temporal_namespace
         self.enable_otlp: bool = enable_otlp
+        self.logger: logging.Logger = logger
 
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
@@ -91,13 +96,14 @@ class BoostApp:
             self.registered_cron_workers.append(worker)
 
         self.registered_workers.append(worker)
+        self.logger.info(f"reg worker {worker_name}")
 
     def run(self):
         asyncio.run(self._root_typer())
 
     def register_all(self):
 
-        # logger.warning('Use all-in-one mode only in dev mode!')
+        self.logger.warning('Use all-in-one mode only in dev mode!')
         procs: list[Process] = list()
         # Creating worker
         for worker in self.registered_workers:
