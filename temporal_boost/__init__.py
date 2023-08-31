@@ -1,1 +1,1 @@
-from .core import BoostApp
+from .core import BoostApp  # noqa: F401
