@@ -21,7 +21,7 @@ class BoostApp:
         temporal_namespace: str = "default",
         enable_otlp: bool = True,
         logger: logging.Logger = BoostLogger().get_default_logger()
-        
+
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
