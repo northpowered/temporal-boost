@@ -1,5 +1,5 @@
 from temporal_boost import BoostApp
-from temporal_boost.sample_t_objects import (
+from .sample_t_objects import (
     test_boost_activity_1 as t_act_1,
     TestCronWorkflow
 )
@@ -22,3 +22,11 @@ def test_create_cron():
         cron_runner=TestCronWorkflow.run
     )
     assert app.registered_cron_workers[0].name == "test_worker_1"
+
+
+def test_create_prohibited_worker():
+    app = BoostApp()
+    try:
+        app.add_worker("all", "test_queue_1", activities=[t_act_1])
+    except RuntimeError:
+        assert True

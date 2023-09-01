@@ -78,6 +78,7 @@ class BoostApp:
                 )
 
         worker: BoostWorker = BoostWorker(
+            app=self,
             name=worker_name,
             client_connector_args=self.client_connector_args,
             task_queue=task_queue,
@@ -96,14 +97,14 @@ class BoostApp:
             self.registered_cron_workers.append(worker)
 
         self.registered_workers.append(worker)
-        self.logger.info(f"reg worker {worker_name}")
+        self.logger.info(f"Worker {worker_name} was registered in CLI")
 
     def run(self):
         asyncio.run(self._root_typer())
 
     def register_all(self):
 
-        self.logger.warning('Use all-in-one mode only in dev mode!')
+        self.logger.warning('Use all-in-one mode only in development!')
         procs: list[Process] = list()
         # Creating worker
         for worker in self.registered_workers:
