@@ -10,10 +10,15 @@ from temporalio import workflow
 from .schemas import ClientConnectorArgs
 from .connect import create_temporal_client_connector
 
+# Avoid circular import for type hints
+if typing.TYPE_CHECKING:
+    from . import BoostApp
+
 
 class BoostWorker:
     def __init__(
         self,
+        app: "BoostApp",
         name: str,
         client_connector_args: ClientConnectorArgs,
         task_queue: str,
@@ -22,6 +27,8 @@ class BoostWorker:
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None
     ) -> None:
+
+        self.app: "BoostApp" = app
         self.name: str = name
         self.client_connector_args: ClientConnectorArgs = client_connector_args
         self.task_queue: str = task_queue
@@ -68,10 +75,11 @@ class BoostWorker:
             await asyncio.Future()
 
     def run(self):
-        print(f"This is worker {self.name}")  # do not forget to delete!
+        self.app.logger.info(f"Worker {self.name} started on {self.task_queue} queue")
         asyncio.run(self._run_worker())
         return self.name
 
-    def cron(self,):
+    def cron(self):
+        self.app.logger.info(f"Cron worker {self.name} started on {self.task_queue} queue with schedule {self.cron_schedule}")
         asyncio.run(self._run_with_cron())
         return self.name

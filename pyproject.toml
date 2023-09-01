@@ -10,7 +10,6 @@ packages = [{include = "temporal_boost"}]
 python = "^3.10"
 typer = "^0.9.0"
 temporalio = "^1.3.0"
-loguru = "^0.7.0"
 
 
 [tool.poetry.group.test.dependencies]
@@ -29,6 +28,11 @@ temporalio = {version = "^1.3.0", extras = ["opentelemetry"]}
 opentelemetry-exporter-jaeger = "^1.19.0"
 opentelemetry-exporter-otlp = "^1.19.0"
 
+
+
+
+[tool.poetry.group.logging.dependencies]
+loguru = "^0.7.0"
 
 [build-system]
 requires = ["poetry-core"]
