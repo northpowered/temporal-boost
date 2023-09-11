@@ -23,7 +23,7 @@ async def create_temporal_client_connector(
         )
     except RuntimeError:
         app.logger.error(
-            "Cannot coonect with Temporal server",
+            "Cannot connect with Temporal server",
             temporal_endpoint=temporal_endpoint,
             temporal_namespace=temporal_namespace
         )

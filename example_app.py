@@ -1,12 +1,15 @@
+# Import `BoostApp` class
 from temporal_boost import BoostApp
 
 from temporalio import activity
 from temporalio import workflow
 
 
+# Create `BoostApp` object
 app = BoostApp()
 
 
+# Describe your activities/workflows
 @activity.defn(name="test_boost_activity_1")
 async def test_boost_activity_1(foo: str, bar: str) -> str:
     app.logger.info("This is built-in logger")
@@ -26,8 +29,11 @@ class TestCronWorkflow:
         return None
 
 
+# Add async workers to your app
+
 app.add_worker("worker_1", "task_q_1", activities=[test_boost_activity_1])
 app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
+# Example of CRON worker
 app.add_worker(
     "test_cron",
     "task_q_3",
@@ -36,5 +42,5 @@ app.add_worker(
     cron_runner=TestCronWorkflow.run
 )
 
-
+# Run your app and start workers with CLI
 app.run()

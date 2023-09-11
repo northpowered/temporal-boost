@@ -51,7 +51,7 @@ class BoostWorker:
             client=client,
             task_queue=self.task_queue,
             activities=self.activities,
-            workflows=self.workflows
+            workflows=self.workflows,
         )
         await worker.run()
 
@@ -70,7 +70,7 @@ class BoostWorker:
             client=client,
             task_queue=self.task_queue,
             activities=self.activities,
-            workflows=self.workflows
+            workflows=self.workflows,
         ):
             workflow_id: str = str(uuid.uuid4())
             await client.start_workflow(
