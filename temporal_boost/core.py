@@ -78,7 +78,8 @@ class BoostApp:
         workflows: list = [],
         activities: list = [],
         cron_schedule: str | None = None,
-        cron_runner: typing.Coroutine | None = None
+        cron_runner: typing.Coroutine | None = None,
+        metrics_endpoint: str | None = None
     ) -> None:
 
         # Constraints check:
@@ -101,7 +102,8 @@ class BoostApp:
             workflows=workflows,
             activities=activities,
             cron_schedule=cron_schedule,
-            cron_runner=cron_runner
+            cron_runner=cron_runner,
+            metrics_endpoint=metrics_endpoint
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
