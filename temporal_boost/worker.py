@@ -42,7 +42,6 @@ class BoostWorker:
             app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
-            enable_otlp=self.client_connector_args.enable_otlp,
         )
         if not client:
             return
@@ -61,7 +60,6 @@ class BoostWorker:
             app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
-            enable_otlp=self.client_connector_args.enable_otlp,
         )
         if not client:
             return
