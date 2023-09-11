@@ -5,7 +5,8 @@ import typing
 from multiprocessing import Process
 # Local imports
 from .worker import BoostWorker
-from .schemas import ClientConnectorArgs
+from .schemas import ClientConnectorArgs, BoostOTLPConfig
+from .tracing import create_tracer, trace
 from .logger import BoostLogger
 import logging
 
@@ -19,14 +20,14 @@ class BoostApp:
         name: str = "temporal_generic_service",
         temporal_endpoint: str = "localhost:7233",
         temporal_namespace: str = "default",
-        enable_otlp: bool = True,
+        otlp_config: BoostOTLPConfig | None = None,
         logger: logging.Logger = BoostLogger().get_default_logger()
 
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
         self.temporal_namespace: str = temporal_namespace
-        self.enable_otlp: bool = enable_otlp
+        self.otlp_config: BoostOTLPConfig | None = otlp_config
         self.logger: logging.Logger = logger
 
         self.registered_workers: list[BoostWorker] = []
@@ -35,7 +36,7 @@ class BoostApp:
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
             temporal_endpoint=self.temporal_endpoint,
             temporal_namespace=self.temporal_namespace,
-            enable_otlp=self.enable_otlp,
+            otlp_config=self.otlp_config
         )
 
         self._root_typer: typer.Typer = typer.Typer(
@@ -55,6 +56,21 @@ class BoostApp:
 
         self.run_typer.command(name="all")(self.register_all)
 
+        # Creting OTLP tracer for an app
+        self.tracer: trace.Tracer | None = None
+
+        if self.otlp_config:
+            # If `service_name` in OTLPConfig is None,
+            # use app name
+            service_name: str = self.otlp_config.service_name
+            if not service_name:
+                service_name = self.name
+            # Create tracer and add it into the app
+            self.tracer = create_tracer(
+                service_name=service_name,
+                otlp_endpoint=self.otlp_config.otlp_endpoint
+            )
+
     def add_worker(
         self,
         worker_name: str,
@@ -62,7 +78,8 @@ class BoostApp:
         workflows: list = [],
         activities: list = [],
         cron_schedule: str | None = None,
-        cron_runner: typing.Coroutine | None = None
+        cron_runner: typing.Coroutine | None = None,
+        metrics_endpoint: str | None = None
     ) -> None:
 
         # Constraints check:
@@ -85,7 +102,8 @@ class BoostApp:
             workflows=workflows,
             activities=activities,
             cron_schedule=cron_schedule,
-            cron_runner=cron_runner
+            cron_runner=cron_runner,
+            metrics_endpoint=metrics_endpoint
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)

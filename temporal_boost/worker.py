@@ -25,7 +25,8 @@ class BoostWorker:
         activities: list = [],
         workflows: list = [],
         cron_schedule: str | None = None,
-        cron_runner: typing.Coroutine | None = None
+        cron_runner: typing.Coroutine | None = None,
+        metrics_endpoint: str | None = None
     ) -> None:
 
         self.app: "BoostApp" = app
@@ -36,13 +37,14 @@ class BoostWorker:
         self.workflows: list = workflows
         self.cron_schedule: str | None = cron_schedule
         self.cron_runner: workflow.run | None = cron_runner
+        self.metrics_endpoint: str | None = metrics_endpoint
 
     async def _run_worker(self):
         client: Client = await create_temporal_client_connector(
             app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
-            enable_otlp=self.client_connector_args.enable_otlp,
+            metrics_endpoint=self.metrics_endpoint
         )
         if not client:
             return
@@ -61,7 +63,6 @@ class BoostWorker:
             app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
-            enable_otlp=self.client_connector_args.enable_otlp,
         )
         if not client:
             return

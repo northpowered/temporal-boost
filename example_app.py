@@ -31,7 +31,7 @@ class TestCronWorkflow:
 
 # Add async workers to your app
 
-app.add_worker("worker_1", "task_q_1", activities=[test_boost_activity_1])
+app.add_worker("worker_1", "task_q_1", activities=[test_boost_activity_1], metrics_endpoint="0.0.0.0:9000")
 app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 # Example of CRON worker
 app.add_worker(
