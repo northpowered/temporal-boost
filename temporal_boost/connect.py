@@ -5,7 +5,6 @@ from temporalio.client import Client
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig, _default_runtime
 # Local imports
 from .opentelemetry import TracingInterceptor
-from .schemas import BoostOTLPConfig
 
 
 # Avoid circular import for type hints
