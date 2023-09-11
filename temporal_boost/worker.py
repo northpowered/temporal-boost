@@ -39,10 +39,14 @@ class BoostWorker:
 
     async def _run_worker(self):
         client: Client = await create_temporal_client_connector(
+            app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
             enable_otlp=self.client_connector_args.enable_otlp,
         )
+        if not client:
+            return
+
         worker: Worker = Worker(
             client=client,
             task_queue=self.task_queue,
@@ -54,10 +58,13 @@ class BoostWorker:
     async def _run_with_cron(self):
 
         client: Client = await create_temporal_client_connector(
+            app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
             enable_otlp=self.client_connector_args.enable_otlp,
         )
+        if not client:
+            return
 
         async with Worker(
             client=client,
