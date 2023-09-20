@@ -1,12 +1,16 @@
 # Import `BoostApp` class
-from temporal_boost import BoostApp
+from temporal_boost import BoostApp, BoostLoggerConfig
 
 from temporalio import activity
 from temporalio import workflow
 
 
 # Create `BoostApp` object
-app = BoostApp()
+app = BoostApp(
+    logger_config=BoostLoggerConfig(
+        json=False
+    )
+)
 
 
 # Describe your activities/workflows

@@ -7,7 +7,7 @@ from multiprocessing import Process
 from .worker import BoostWorker
 from .schemas import ClientConnectorArgs, BoostOTLPConfig
 from .tracing import create_tracer, trace
-from .logger import BoostLogger
+from .logger import BoostLogger, BoostLoggerConfig
 import logging
 
 
@@ -21,14 +21,25 @@ class BoostApp:
         temporal_endpoint: str = "localhost:7233",
         temporal_namespace: str = "default",
         otlp_config: BoostOTLPConfig | None = None,
-        logger: logging.Logger = BoostLogger().get_default_logger()
+        logger_config: BoostLoggerConfig | None = None,
+        logger: logging.Logger | None = None
 
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
         self.temporal_namespace: str = temporal_namespace
+
         self.otlp_config: BoostOTLPConfig | None = otlp_config
-        self.logger: logging.Logger = logger
+        self.logger_config = logger_config
+
+
+        if self.logger_config is None:
+            self.logger: logging.Logger = BoostLogger().get_default_logger()
+        else:
+            if logger is None:
+                self.logger: logging.Logger = BoostLogger(config=self.logger_config).get_default_logger()
+            else:
+                self.logger: logging.Logger = logger
 
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
