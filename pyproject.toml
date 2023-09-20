@@ -1,10 +1,11 @@
 [tool.poetry]
 name = "temporal-boost"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Small framework for Temporal development"
+authors = ["northpowered <you@example.com>"]
 readme = "README.md"
 packages = [{include = "temporal_boost"}]
+repository = "https://github.com/northpowered/temporal-boost"
 
 [tool.poetry.dependencies]
 python = "^3.10"
