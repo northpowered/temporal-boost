@@ -32,7 +32,11 @@ class BoostApp:
         self.otlp_config: BoostOTLPConfig | None = otlp_config
         self.logger_config = logger_config
 
-
+        # Logger creating logic:
+        # Priority:
+        # 1. Creating logger from default BoostLoggerConfig
+        # 2. Creating logger from BoostLoggerConfig
+        # 2. Using external logger
         if self.logger_config is None:
             self.logger: logging.Logger = BoostLogger().get_default_logger()
         else:
