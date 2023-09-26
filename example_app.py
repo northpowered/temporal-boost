@@ -1,5 +1,5 @@
 # Import `BoostApp` class
-from temporal_boost import BoostApp, BoostLoggerConfig
+from temporal_boost import BoostApp, BoostLoggerConfig, DocServerConfig
 
 from temporalio import activity
 from temporalio import workflow
@@ -9,6 +9,9 @@ from temporalio import workflow
 app = BoostApp(
     logger_config=BoostLoggerConfig(
         json=False
+    ),
+    doc_config=DocServerConfig(
+        modules=["temporal_boost"]
     )
 )
 

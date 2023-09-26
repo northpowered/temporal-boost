@@ -1,0 +1,1 @@
+from .doc import serve_doc_page  # noqa: F401

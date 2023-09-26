@@ -8,10 +8,11 @@ from .worker import BoostWorker
 from .schemas import ClientConnectorArgs, BoostOTLPConfig
 from .tracing import create_tracer, trace
 from .logger import BoostLogger, BoostLoggerConfig
+from .http import DocServerConfig, serve_doc_page
 import logging
 
 
-PROHIBITED_WORKER_NAMES: list[str] = ['all']
+PROHIBITED_WORKER_NAMES: list[str] = ['all', 'doc']
 
 
 class BoostApp:
@@ -22,7 +23,8 @@ class BoostApp:
         temporal_namespace: str = "default",
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
-        logger: logging.Logger | None = None
+        logger: logging.Logger | None = None,
+        doc_config: DocServerConfig | None = None
 
     ) -> None:
         self.name: str = name
@@ -31,6 +33,8 @@ class BoostApp:
 
         self.otlp_config: BoostOTLPConfig | None = otlp_config
         self.logger_config = logger_config
+
+        self.doc_config: DocServerConfig | None = doc_config
 
         # Logger creating logic:
         # Priority:
@@ -85,6 +89,9 @@ class BoostApp:
                 service_name=service_name,
                 otlp_endpoint=self.otlp_config.otlp_endpoint
             )
+
+        if self.doc_config:
+            self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))
 
     def add_worker(
         self,
