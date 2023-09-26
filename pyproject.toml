@@ -10,6 +10,9 @@ repository = "https://github.com/northpowered/temporal-boost"
 [tool.poetry.dependencies]
 python = "^3.10"
 typer = "^0.9.0"
+opentelemetry-exporter-otlp = "^1.20.0"
+loguru = "^0.7.2"
+opentelemetry-sdk = "^1.20.0"
 temporalio = "^1.3.0"
 
 
@@ -24,17 +27,11 @@ black = "^23.7.0"
 flake8 = "^6.1.0"
 
 
-[tool.poetry.group.otel.dependencies]
-temporalio = {version = "^1.3.0", extras = ["opentelemetry"]}
-opentelemetry-exporter-jaeger = "^1.19.0"
-opentelemetry-exporter-otlp = "^1.19.0"
-
-
-
-
 [tool.poetry.group.logging.dependencies]
-loguru = "^0.7.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+
