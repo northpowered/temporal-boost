@@ -34,17 +34,17 @@ async def app(scope, receive, send):
 
 proc = subprocess.Popen(
     [
-    "granian",
-    "--port",
-    "8889",
-    "--interface",
-    "asgi",
-    "--threading-mode",
-    "runtime",
-    "--no-ws",
-    "--loop",
-    "asyncio",
-    "gen_doc:app"
+        "granian",
+        "--port",
+        "8889",
+        "--interface",
+        "asgi",
+        "--threading-mode",
+        "runtime",
+        "--no-ws",
+        "--loop",
+        "asyncio",
+        "gen_doc:app"
     ],
     stdout=subprocess.DEVNULL
 )

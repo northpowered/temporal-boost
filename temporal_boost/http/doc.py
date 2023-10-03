@@ -39,7 +39,6 @@ def serve_doc_page(
             'body': html.encode(),
         })
 
-
     proc = subprocess.Popen(
         [
             "granian",

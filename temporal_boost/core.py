@@ -8,7 +8,8 @@ from .worker import BoostWorker
 from .schemas import ClientConnectorArgs, BoostOTLPConfig
 from .tracing import create_tracer, trace
 from .logger import BoostLogger, BoostLoggerConfig
-from .http import DocServerConfig, serve_doc_page
+from .http import BoostHTTPWorker
+#from .http import DocServerConfig, serve_doc_page
 import logging
 
 
@@ -24,7 +25,7 @@ class BoostApp:
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
-        doc_config: DocServerConfig | None = None
+        #doc_config: DocServerConfig | None = None
 
     ) -> None:
         self.name: str = name
@@ -34,7 +35,7 @@ class BoostApp:
         self.otlp_config: BoostOTLPConfig | None = otlp_config
         self.logger_config = logger_config
 
-        self.doc_config: DocServerConfig | None = doc_config
+        #self.doc_config: DocServerConfig | None = doc_config
 
         # Logger creating logic:
         # Priority:
@@ -51,6 +52,7 @@ class BoostApp:
 
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
+        self.registered_http_workers: list[BoostHTTPWorker] = []
 
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
             temporal_endpoint=self.temporal_endpoint,
@@ -90,8 +92,8 @@ class BoostApp:
                 otlp_endpoint=self.otlp_config.otlp_endpoint
             )
 
-        if self.doc_config:
-            self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))
+        # if self.doc_config:
+        #     self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))
 
     def add_worker(
         self,
@@ -138,6 +140,39 @@ class BoostApp:
 
         self.registered_workers.append(worker)
         self.logger.info(f"Worker {worker_name} was registered in CLI")
+
+    def add_http_worker(
+        self,
+        worker_name: str,
+        host: str,
+        port: int,
+        route: str,
+        app: str
+    ) -> None:
+        
+        # REDONE to .utils methods
+        # Constraints check:
+        if worker_name in PROHIBITED_WORKER_NAMES:
+            raise RuntimeError(
+                f"{worker_name} name for worker is reserved for temporal-boost"
+            )
+
+        for registered_worker in self.registered_workers:
+            if worker_name == registered_worker.name:
+                raise RuntimeError(
+                    f"{worker_name} name for worker`s already reserved"
+                )
+
+        worker: BoostHTTPWorker = BoostHTTPWorker(
+            worker_name=worker_name,
+            host=host,
+            port=port,
+            route=route,
+            app=app
+        )
+        self.run_typer.command(name=worker_name)(worker.run)
+        self.registered_workers.append(worker)
+        self.logger.info(f"HTTP worker {worker_name} was registered in CLI")
 
     def run(self):
         asyncio.run(self._root_typer())

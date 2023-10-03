@@ -1,18 +1,16 @@
 # Import `BoostApp` class
-from temporal_boost import BoostApp, BoostLoggerConfig, DocServerConfig
+from temporal_boost import BoostApp, BoostLoggerConfig
 
 from temporalio import activity
 from temporalio import workflow
 
 
 # Create `BoostApp` object
-app = BoostApp(
+app: BoostApp = BoostApp(
     logger_config=BoostLoggerConfig(
         json=False
     ),
-    doc_config=DocServerConfig(
-        modules=["temporal_boost"]
-    )
+
 )
 
 
@@ -47,6 +45,30 @@ app.add_worker(
     workflows=[TestCronWorkflow],
     cron_schedule="* * * * *",
     cron_runner=TestCronWorkflow.run
+)
+
+async def aaa(scope, receive, send):
+    assert scope['type'] == 'http'
+
+    await send({
+        'type': 'http.response.start',
+        'status': 200,
+        'headers': [
+            [b'content-type', b'text/html'],
+        ],
+    })
+    await send({
+        'type': 'http.response.body',
+        'body': 'qwerty',
+    })
+
+
+app.add_http_worker(
+    "test_http_1",
+    host="0.0.0.0",
+    port=8888,
+    route="/",
+    app="example_app:aaa"
 )
 
 # Run your app and start workers with CLI
