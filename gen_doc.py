@@ -1,6 +1,6 @@
 import pdoc
 import subprocess
-
+import granian
 
 doc: str = pdoc.pdoc(
     "temporal_boost", "tests"

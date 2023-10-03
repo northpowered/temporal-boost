@@ -65,7 +65,7 @@ async def aaa(scope, receive, send):
 
 app.add_http_worker(
     "test_http_1",
-    host="0.0.0.0",
+    host="127.0.0.1",
     port=8888,
     route="/",
     app="example_app:aaa"

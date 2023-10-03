@@ -1,6 +1,6 @@
 import subprocess
 import asyncio
-
+import granian
 
 class BoostHTTPWorker:
 
@@ -19,30 +19,43 @@ class BoostHTTPWorker:
         self.route: str = route
         self.app: str = app
 
-    async def _run(self) -> int:
+    def _run_worker(self) -> int:
         # !!! https://superfastpython.com/asyncio-subprocess/
-        proc = subprocess.Popen(
-            [
-                "granian",
-                "--host",
-                self.host,
-                "--port",
-                str(self.port),
-                "--interface",
-                "asgi",
-                "--url-path-prefix",
-                self.route,
-                "--threading-mode",
-                "runtime",
-                "--no-ws",
-                "--loop",
-                "asyncio",
-                self.app
-            ],
-            stdout=subprocess.DEVNULL
-        )
-        proc.wait()
+        # proc = await asyncio.create_subprocess_exec( 
+        #     "granian",
+        #     "--host",
+        #     self.host,
+        #     "--port",
+        #     str(self.port),
+        #     "--interface",
+        #     "asgi",
+        #     "--url-path-prefix",
+        #     self.route,
+        #     "--threading-mode",
+        #     "runtime",
+        #     "--no-ws",
+        #     "--loop",
+        #     "asyncio",
+        #     self.app,
+        #     stdout=subprocess.DEVNULL
+        # )
+        
 
-    async def run(self):
-        asyncio.run(self._run())
+        # await proc.wait()
+        server = granian.server.Granian(
+            target=self.app,
+            address=self.host,
+            port=self.port,
+            interface="asgi",
+            threading_mode="runtime",
+            websockets=False,
+            loop="asyncio"
+        
+            
+        )
+        server.serve(None,None)
+
+    def run(self):
+        self._run_worker()
+        #asyncio.run(self._run_worker())
         return self.worker_name
