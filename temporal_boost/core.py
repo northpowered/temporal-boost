@@ -3,17 +3,19 @@ import typer
 import asyncio
 import typing
 from multiprocessing import Process
+
 # Local imports
 from .worker import BoostWorker
 from .schemas import ClientConnectorArgs, BoostOTLPConfig
 from .tracing import create_tracer, trace
 from .logger import BoostLogger, BoostLoggerConfig
-from .http import BoostHTTPWorker
-#from .http import DocServerConfig, serve_doc_page
+from .http import BoostHTTPWorker, BoostHTTPRoute
+
+# from .http import DocServerConfig, serve_doc_page
 import logging
 
 
-PROHIBITED_WORKER_NAMES: list[str] = ['all', 'doc']
+PROHIBITED_WORKER_NAMES: list[str] = ["all", "doc"]
 
 
 class BoostApp:
@@ -25,8 +27,7 @@ class BoostApp:
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
-        #doc_config: DocServerConfig | None = None
-
+        # doc_config: DocServerConfig | None = None
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
@@ -35,7 +36,7 @@ class BoostApp:
         self.otlp_config: BoostOTLPConfig | None = otlp_config
         self.logger_config = logger_config
 
-        #self.doc_config: DocServerConfig | None = doc_config
+        # self.doc_config: DocServerConfig | None = doc_config
 
         # Logger creating logic:
         # Priority:
@@ -46,7 +47,9 @@ class BoostApp:
             self.logger: logging.Logger = BoostLogger().get_default_logger()
         else:
             if logger is None:
-                self.logger: logging.Logger = BoostLogger(config=self.logger_config).get_default_logger()
+                self.logger: logging.Logger = BoostLogger(
+                    config=self.logger_config
+                ).get_default_logger()
             else:
                 self.logger: logging.Logger = logger
 
@@ -57,20 +60,15 @@ class BoostApp:
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
             temporal_endpoint=self.temporal_endpoint,
             temporal_namespace=self.temporal_namespace,
-            otlp_config=self.otlp_config
+            otlp_config=self.otlp_config,
         )
 
         self._root_typer: typer.Typer = typer.Typer(
-            name=self.name,
-            no_args_is_help=True
+            name=self.name, no_args_is_help=True
         )
-        self.run_typer: typer.Typer = typer.Typer(
-            name="run"
-        )
+        self.run_typer: typer.Typer = typer.Typer(name="run")
 
-        self.cron_typer: typer.Typer = typer.Typer(
-            name="cron"
-        )
+        self.cron_typer: typer.Typer = typer.Typer(name="cron")
 
         self._root_typer.add_typer(self.run_typer, no_args_is_help=True)
         self._root_typer.add_typer(self.cron_typer, no_args_is_help=True)
@@ -88,8 +86,7 @@ class BoostApp:
                 service_name = self.name
             # Create tracer and add it into the app
             self.tracer = create_tracer(
-                service_name=service_name,
-                otlp_endpoint=self.otlp_config.otlp_endpoint
+                service_name=service_name, otlp_endpoint=self.otlp_config.otlp_endpoint
             )
 
         # if self.doc_config:
@@ -103,9 +100,8 @@ class BoostApp:
         activities: list = [],
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
-        metrics_endpoint: str | None = None
+        metrics_endpoint: str | None = None,
     ) -> None:
-
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
             raise RuntimeError(
@@ -114,9 +110,7 @@ class BoostApp:
 
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
-                raise RuntimeError(
-                    f"{worker_name} name for worker`s already reserved"
-                )
+                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
 
         worker: BoostWorker = BoostWorker(
             app=self,
@@ -127,7 +121,7 @@ class BoostApp:
             activities=activities,
             cron_schedule=cron_schedule,
             cron_runner=cron_runner,
-            metrics_endpoint=metrics_endpoint
+            metrics_endpoint=metrics_endpoint,
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
@@ -142,14 +136,8 @@ class BoostApp:
         self.logger.info(f"Worker {worker_name} was registered in CLI")
 
     def add_http_worker(
-        self,
-        worker_name: str,
-        host: str,
-        port: int,
-        route: str,
-        app: str
+        self, worker_name: str, host: str, port: int, routes: list[BoostHTTPRoute]
     ) -> None:
-        
         # REDONE to .utils methods
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
@@ -159,16 +147,10 @@ class BoostApp:
 
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
-                raise RuntimeError(
-                    f"{worker_name} name for worker`s already reserved"
-                )
+                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
 
         worker: BoostHTTPWorker = BoostHTTPWorker(
-            worker_name=worker_name,
-            host=host,
-            port=port,
-            route=route,
-            app=app
+            app=self, worker_name=worker_name, host=host, port=port, routes=routes
         )
         self.run_typer.command(name=worker_name)(worker.run)
         self.registered_workers.append(worker)
@@ -178,12 +160,10 @@ class BoostApp:
         asyncio.run(self._root_typer())
 
     def register_all(self):
-
-        self.logger.warning('Use all-in-one mode only in development!')
+        self.logger.warning("Use all-in-one mode only in development!")
         procs: list[Process] = list()
         # Creating worker
         for worker in self.registered_workers:
-
             proc = Process(
                 target=worker.run,
             )

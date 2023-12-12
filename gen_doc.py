@@ -1,28 +1,28 @@
 import pdoc
 import subprocess
-import granian
-
-doc: str = pdoc.pdoc(
-    "temporal_boost", "tests"
-)
 
 
-import granian
+doc: str = pdoc.pdoc("temporal_boost", "tests")
+
 
 async def app(scope, receive, send):
-    assert scope['type'] == 'http'
+    assert scope["type"] == "http"
 
-    await send({
-        'type': 'http.response.start',
-        'status': 200,
-        'headers': [
-            [b'content-type', b'text/html'],
-        ],
-    })
-    await send({
-        'type': 'http.response.body',
-        'body': doc.encode(),
-    })
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [
+                [b"content-type", b"text/html"],
+            ],
+        }
+    )
+    await send(
+        {
+            "type": "http.response.body",
+            "body": doc.encode(),
+        }
+    )
 
 
 # granian.server.Granian(
@@ -44,11 +44,9 @@ proc = subprocess.Popen(
         "--no-ws",
         "--loop",
         "asyncio",
-        "gen_doc:app"
+        "gen_doc:app",
     ],
-    stdout=subprocess.DEVNULL
+    stdout=subprocess.DEVNULL,
 )
 
 proc.wait()
-
-

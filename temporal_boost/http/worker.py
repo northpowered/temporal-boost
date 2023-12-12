@@ -1,61 +1,39 @@
-import subprocess
+from aiohttp import web
+from dataclasses import dataclass
+import typing
 import asyncio
-import granian
+
+if typing.TYPE_CHECKING:
+    from core import BoostApp
+
+
+@dataclass
+class BoostHTTPRoute:
+    route: str
+    handler: typing.Coroutine
+
 
 class BoostHTTPWorker:
-
     def __init__(
         self,
+        app: "BoostApp",
         worker_name: str,
         host: str,
         port: int,
-        route: str,
-        app: str
-
+        routes: list[BoostHTTPRoute],
     ) -> None:
-        self.worker_name = worker_name,
+        self.app = app
+        self.worker_name = (worker_name,)
         self.host: str = host
         self.port: int = port
-        self.route: str = route
-        self.app: str = app
+        self.routes: list[BoostHTTPRoute] = routes
 
     def _run_worker(self) -> int:
-        # !!! https://superfastpython.com/asyncio-subprocess/
-        # proc = await asyncio.create_subprocess_exec( 
-        #     "granian",
-        #     "--host",
-        #     self.host,
-        #     "--port",
-        #     str(self.port),
-        #     "--interface",
-        #     "asgi",
-        #     "--url-path-prefix",
-        #     self.route,
-        #     "--threading-mode",
-        #     "runtime",
-        #     "--no-ws",
-        #     "--loop",
-        #     "asyncio",
-        #     self.app,
-        #     stdout=subprocess.DEVNULL
-        # )
-        
-
-        # await proc.wait()
-        server = granian.server.Granian(
-            target=self.app,
-            address=self.host,
-            port=self.port,
-            interface="asgi",
-            threading_mode="runtime",
-            websockets=False,
-            loop="asyncio"
-        
-            
-        )
-        server.serve(None,None)
+        http_app = web.Application(logger=self.app.logger)
+        for route in self.routes:
+            http_app.add_routes([web.get(route.route, route.handler)])
+        web.run_app(app=http_app, host=self.host, port=self.port)
 
     def run(self):
-        self._run_worker()
-        #asyncio.run(self._run_worker())
+        asyncio.run(self._run_worker())
         return self.worker_name
