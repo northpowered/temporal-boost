@@ -14,8 +14,10 @@ opentelemetry-exporter-otlp = "^1.20.0"
 loguru = "^0.7.2"
 opentelemetry-sdk = "^1.20.0"
 temporalio = "1.4.0"
-pdoc = "^14.1.0"
 aiohttp = "^3.9.1"
+aiohttp-swagger = "^1.0.16"
+swagger-ui-py = "^23.9.23"
+pdoc3 = "^0.10.0"
 
 
 [tool.poetry.group.test.dependencies]
