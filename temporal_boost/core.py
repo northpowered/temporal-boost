@@ -27,6 +27,7 @@ class BoostApp:
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
+        use_pydantic: bool = False
         # doc_config: DocServerConfig | None = None
     ) -> None:
         self.name: str = name
@@ -36,6 +37,7 @@ class BoostApp:
         self.otlp_config: BoostOTLPConfig | None = otlp_config
         self.logger_config = logger_config
 
+        self.use_pydantic: bool = use_pydantic
         # self.doc_config: DocServerConfig | None = doc_config
 
         # Logger creating logic:
