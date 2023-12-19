@@ -7,14 +7,14 @@ from temporal_boost import BoostApp, BoostLoggerConfig
 from temporalio import activity
 from temporalio import workflow
 from datetime import timedelta
-from pydantic import BaseModel
-
+from dataclasses import dataclass
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(logger_config=BoostLoggerConfig(json=False), use_pydantic=True)
 
 
-class TestModel(BaseModel):
+@dataclass
+class TestModel:
     foo: str
     bar: int
 
@@ -37,7 +37,7 @@ async def test_boost_activity_2(payload: TestModel) -> TestModel:
 @workflow.defn(sandboxed=False)
 class MyWorkflow:
     @workflow.run
-    async def run(self):
+    async def run(self, foo: str):
         start_payload: TestModel = TestModel(foo="hello", bar=0)
         print(type(start_payload))
         result_1 = await workflow.execute_activity(
@@ -68,6 +68,10 @@ app.add_worker(
 app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 
 app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
+
+app.add_http_worker("test_http_worker_!", "0.0.0.0", 8000, routes=[])
+
+
 
 # Run your app and start workers with CLI
 app.run()
