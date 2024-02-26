@@ -1,3 +1,1 @@
-import inspect as i
-
-
+import inspect as i  # noqa: F401

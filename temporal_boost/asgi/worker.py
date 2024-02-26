@@ -22,7 +22,7 @@ class ASGIWorker:
         self.host: str = host
         self.port: int = port
         self.asgi_app: typing.Any = asgi_app
-    
+
     async def _run_worker(self) -> int:
         config: Config = Config()
         config.bind = [f"{self.host}:{self.port}"]

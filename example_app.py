@@ -71,7 +71,7 @@ app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 
 app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
-#app.add_http_worker("test_http_worker_!", "0.0.0.0", 8000, routes=[])
+# app.add_http_worker("test_http_worker_!", "0.0.0.0", 8000, routes=[])
 
 app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
 

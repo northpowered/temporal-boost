@@ -1,6 +1,5 @@
 import pdoc
 from pathlib import Path
-import json
 
 from aiohttp import web
 
