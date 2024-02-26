@@ -1,6 +1,7 @@
 import pdoc
-import subprocess
 from pathlib import Path
+
+from aiohttp import web
 
 
 def _build_html_doc(*modules: Path | str) -> str:
@@ -11,53 +12,27 @@ def _build_html_doc(*modules: Path | str) -> str:
     Returns:
         str: HTML static doc page
     """
+
     html: str = pdoc.pdoc(modules)
     return html
 
 
-def serve_doc_page(
-    *modules: Path | str,
-    host: str = "127.0.0.1",
-    port: int = 8000,
-    route: str = "/doc"
-) -> int:
+async def html_doc_handler(request):
 
-    html: str = _build_html_doc(modules)
+    # pdoc.html("temporal_boost/core.py")
 
-    async def app(scope, receive, send):
-        assert scope['type'] == 'http'
+    modules = ["temporal_boost"]
+    context = pdoc.Context()
 
-        await send({
-            'type': 'http.response.start',
-            'status': 200,
-            'headers': [
-                [b'content-type', b'text/html'],
-            ],
-        })
-        await send({
-            'type': 'http.response.body',
-            'body': html.encode(),
-        })
+    modules = [pdoc.Module(mod, context=context) for mod in modules]
+    pdoc.link_inheritance(context)
 
-    proc = subprocess.Popen(
-        [
-            "granian",
-            "--host",
-            host,
-            "--port",
-            port,
-            "--interface",
-            "asgi",
-            "--url-path-prefix",
-            route,
-            "--threading-mode",
-            "runtime",
-            "--no-ws",
-            "--loop",
-            "asyncio",
-            "doc:app"
-        ],
-        stdout=subprocess.DEVNULL
-    )
+    def recursive_htmls(mod):
+        yield mod.name, mod.html()
+        for submod in mod.submodules():
+            yield from recursive_htmls(submod)
 
-    return proc.wait()
+    for mod in modules:
+        for module_name, html in recursive_htmls(mod):
+            ...  # Process
+    return web.Response(text=pdoc.html("temporal_boost"), content_type="text/html")
