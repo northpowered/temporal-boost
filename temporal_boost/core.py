@@ -10,7 +10,7 @@ from .schemas import ClientConnectorArgs, BoostOTLPConfig
 from .tracing import create_tracer, trace
 from .logger import BoostLogger, BoostLoggerConfig
 from .http import BoostHTTPWorker, BoostHTTPRoute
-
+from .asgi import ASGIWorker
 # from .http import DocServerConfig, serve_doc_page
 import logging
 
@@ -58,6 +58,7 @@ class BoostApp:
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
         self.registered_http_workers: list[BoostHTTPWorker] = []
+        self.registered_asgi_workers: list[ASGIWorker] = []
 
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
             temporal_endpoint=self.temporal_endpoint,
@@ -156,7 +157,30 @@ class BoostApp:
         )
         self.run_typer.command(name=worker_name)(worker.run)
         self.registered_workers.append(worker)
+        self.registered_http_workers.append(worker)
         self.logger.info(f"HTTP worker {worker_name} was registered in CLI")
+
+    def add_asgi_worker(
+        self, worker_name: str, asgi_app: typing.Any, host: str, port: int
+    ) -> None:
+        # REDONE to .utils methods
+        # Constraints check:
+        if worker_name in PROHIBITED_WORKER_NAMES:
+            raise RuntimeError(
+                f"{worker_name} name for worker is reserved for temporal-boost"
+            )
+
+        for registered_worker in self.registered_workers:
+            if worker_name == registered_worker.name:
+                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
+
+        worker: ASGIWorker = ASGIWorker(
+            app=self, worker_name=worker_name, host=host, port=port, asgi_app=asgi_app
+        )
+        self.run_typer.command(name=worker_name)(worker.run)
+        self.registered_workers.append(worker)
+        self.registered_asgi_workers.append(worker)
+        self.logger.info(f"ASGI worker {worker_name} was registered in CLI")
 
     def run(self):
         asyncio.run(self._root_typer())

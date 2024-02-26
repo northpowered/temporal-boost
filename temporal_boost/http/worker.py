@@ -38,7 +38,6 @@ class BoostHTTPWorker:
         # http_app.add_routes([web.get("/api.json", generate_redoc_json)])
         # http_app.add_routes([web.get("/doc", generate_redoc_data)])
         http_app.add_routes([web.get("/html", html_doc_handler)])
-        
 
         web.run_app(app=http_app, host=self.host, port=self.port)
 
