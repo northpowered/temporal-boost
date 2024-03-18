@@ -12,7 +12,10 @@ from dataclasses import dataclass
 from example_asgi_app import fastapi_app
 
 # Create `BoostApp` object
-app: BoostApp = BoostApp(logger_config=BoostLoggerConfig(json=False), use_pydantic=True)
+app: BoostApp = BoostApp(
+    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}),
+    use_pydantic=True,
+)
 
 
 @dataclass

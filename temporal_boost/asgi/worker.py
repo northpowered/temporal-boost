@@ -25,8 +25,15 @@ class ASGIWorker:
 
     async def _run_worker(self) -> int:
         config: Config = Config()
+        # Provide Base logger to ASGI as an extra arg
+        self.asgi_app.logger = self.app.logger
+        # Supressing default hypercorn loggers
+        config.accesslog = None
+        config.errorlog = None
+        # Serving params config
         config.bind = [f"{self.host}:{self.port}"]
-        await serve(self.asgi_app, config)
+        # ASGI corutine
+        await serve(self.asgi_app, config, mode="asgi")
 
     def run(self):
         asyncio.run(self._run_worker())
