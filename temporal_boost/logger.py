@@ -24,7 +24,7 @@ class BoostLoggerConfig:
     bind_extra: dict | None = None
 
 
-class BoostLogger:
+class  BoostLogger:
 
     def __init__(self, config: BoostLoggerConfig = BoostLoggerConfig()) -> None:
         self.config = config
@@ -42,7 +42,7 @@ class BoostLogger:
             enqueue=self.config.multiprocess_safe
         )
         if self.config.bind_extra:
-            logger = loguru.logger.bind(spam="eggs")
+            logger = loguru.logger.bind(**self.config.bind_extra)
         else:
             logger = loguru.logger
 
