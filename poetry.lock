@@ -1708,17 +1708,17 @@ exceptiongroup = "*"
 
 [[package]]
 name = "temporalio"
-version = "1.4.0"
+version = "1.5.1"
 description = "Temporal.io Python SDK"
 optional = false
-python-versions = ">=3.7,<4.0"
+python-versions = ">=3.8,<4.0"
 files = [
-    {file = "temporalio-1.4.0-cp37-abi3-macosx_10_9_x86_64.whl", hash = "sha256:344a75f559d9a0aabde59da0072688523a0c344e8c916d5b5597e6a618696dd4"},
-    {file = "temporalio-1.4.0-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:f39b7977d1f7f2e3938172980764ec5c50755653fd986d6e68c6b4db242594d6"},
-    {file = "temporalio-1.4.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:58e29300bdb586160b8d8f2208106ff9e9d9f740bfb3385b82a509fa38d9a743"},
-    {file = "temporalio-1.4.0-cp37-abi3-win_amd64.whl", hash = "sha256:16bc76cb4d57e633f9e26381d941e3c251a42b5bef6b3668cc4cc2fc08ad6696"},
-    {file = "temporalio-1.4.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:209369da8e529838a238fc6ec464727f7c922d9314ec0ab8f4c19be6dddf0339"},
-    {file = "temporalio-1.4.0.tar.gz", hash = "sha256:56ef81b4b57e709e8f52d49e16b5c7a77d4b63cb697b1d991dd9eaa7fbbda591"},
+    {file = "temporalio-1.5.1-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:cd1f8930787c728e30ca2fecf86175cafd1781d97e3ee7cdf6e41915c566a835"},
+    {file = "temporalio-1.5.1-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:2b3765e0b6b0ef0b670cf39720a80280fd35be2444633c715b741d2b5428ceb6"},
+    {file = "temporalio-1.5.1-cp38-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:47149204b6430c8553d5dd6dfe2fbc6830bf6fd8ab08463ee4c97885c68f3082"},
+    {file = "temporalio-1.5.1-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:1167f6fc31355170cdb4f5f7b89f0f7e36c54d0aecb0ee9aa611f73e32db7d78"},
+    {file = "temporalio-1.5.1-cp38-abi3-win_amd64.whl", hash = "sha256:15d36d2038b0ac33511163619bea7ead6f10aca3db5bad4b9d464d3fa0f4ff48"},
+    {file = "temporalio-1.5.1.tar.gz", hash = "sha256:4c7bbc8a3e8df1ffc0c7d213bdcad26ae055bdd615567ce1ca4bfa9f28f831b8"},
 ]
 
 [package.dependencies]
@@ -1728,7 +1728,7 @@ types-protobuf = ">=3.20"
 typing-extensions = ">=4.2.0,<5.0.0"
 
 [package.extras]
-grpc = ["grpcio (>=1.53.0,<2.0.0)"]
+grpc = ["grpcio (>=1.59.0,<2.0.0)"]
 opentelemetry = ["opentelemetry-api (>=1.11.1,<2.0.0)", "opentelemetry-sdk (>=1.11.1,<2.0.0)"]
 
 [[package]]
@@ -2055,4 +2055,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "89a20c970a5af101c53ee2880638ff917deaa4a0208ace14867a24c6b2986839"
+content-hash = "255cfd885183289ba5d86617267878fbeae4b3550cadaf8aa546b00992c3d908"
