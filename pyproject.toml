@@ -14,12 +14,9 @@ opentelemetry-exporter-otlp = "^1.20.0"
 loguru = "^0.7.2"
 opentelemetry-sdk = "^1.20.0"
 temporalio = "1.5.1"
-aiohttp = "^3.9.1"
-aiohttp-swagger = "^1.0.16"
-swagger-ui-py = "^23.9.23"
-pdoc3 = "^0.10.0"
 pydantic = "^2.5.2"
 hypercorn = {version = "^0.16.0", extras = ["trio"]}
+robyn = "^0.58.0"
 
 
 [tool.poetry.group.test.dependencies]
@@ -29,14 +26,24 @@ pytest-asyncio = "^0.21.1"
 fastapi = "^0.110.0"
 
 
-[tool.poetry.group.lint.dependencies]
-black = "^23.7.0"
-flake8 = "^6.1.0"
 
+[tool.poetry.group.lint.dependencies]
+ruff = "^0.5.5"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.ruff]
+line-length = 130
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C", "UP", "I", "SIM", "N"]
+# Ignore 815 and 803 to avoid aliased for external APIs
+ignore = ["N815", "N803"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 130
 
 

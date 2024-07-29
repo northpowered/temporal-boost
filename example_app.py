@@ -78,5 +78,7 @@ app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
 app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
 
+app.add_internal_worker("0.0.0.0", 8888)
+
 # Run your app and start workers with CLI
 app.run()

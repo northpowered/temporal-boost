@@ -9,8 +9,9 @@ from .worker import BoostWorker
 from .schemas import ClientConnectorArgs, BoostOTLPConfig
 from .tracing import create_tracer, trace
 from .logger import BoostLogger, BoostLoggerConfig
-from .http import BoostHTTPWorker, BoostHTTPRoute
 from .asgi import ASGIWorker
+from .internal import InternalWorker
+
 # from .http import DocServerConfig, serve_doc_page
 import logging
 
@@ -27,7 +28,7 @@ class BoostApp:
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
-        use_pydantic: bool = False
+        use_pydantic: bool = False,
         # doc_config: DocServerConfig | None = None
     ) -> None:
         self.name: str = name
@@ -49,15 +50,12 @@ class BoostApp:
             self.logger: logging.Logger = BoostLogger().get_default_logger()
         else:
             if logger is None:
-                self.logger: logging.Logger = BoostLogger(
-                    config=self.logger_config
-                ).get_default_logger()
+                self.logger: logging.Logger = BoostLogger(config=self.logger_config).get_default_logger()
             else:
                 self.logger: logging.Logger = logger
 
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
-        self.registered_http_workers: list[BoostHTTPWorker] = []
         self.registered_asgi_workers: list[ASGIWorker] = []
 
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
@@ -66,9 +64,7 @@ class BoostApp:
             otlp_config=self.otlp_config,
         )
 
-        self._root_typer: typer.Typer = typer.Typer(
-            name=self.name, no_args_is_help=True
-        )
+        self._root_typer: typer.Typer = typer.Typer(name=self.name, no_args_is_help=True)
         self.run_typer: typer.Typer = typer.Typer(name="run")
 
         self.cron_typer: typer.Typer = typer.Typer(name="cron")
@@ -88,9 +84,7 @@ class BoostApp:
             if not service_name:
                 service_name = self.name
             # Create tracer and add it into the app
-            self.tracer = create_tracer(
-                service_name=service_name, otlp_endpoint=self.otlp_config.otlp_endpoint
-            )
+            self.tracer = create_tracer(service_name=service_name, otlp_endpoint=self.otlp_config.otlp_endpoint)
 
         # if self.doc_config:
         #     self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))
@@ -107,9 +101,7 @@ class BoostApp:
     ) -> None:
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
-            raise RuntimeError(
-                f"{worker_name} name for worker is reserved for temporal-boost"
-            )
+            raise RuntimeError(f"{worker_name} name for worker is reserved for temporal-boost")
 
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
@@ -138,45 +130,25 @@ class BoostApp:
         self.registered_workers.append(worker)
         self.logger.info(f"Worker {worker_name} was registered in CLI")
 
-    def add_http_worker(
-        self, worker_name: str, host: str, port: int, routes: list[BoostHTTPRoute]
-    ) -> None:
-        # REDONE to .utils methods
-        # Constraints check:
-        if worker_name in PROHIBITED_WORKER_NAMES:
-            raise RuntimeError(
-                f"{worker_name} name for worker is reserved for temporal-boost"
-            )
+    def add_internal_worker(self, host: str, port: int) -> None:
+        _worker_name: str = "internal"
+        worker: InternalWorker = InternalWorker(self, worker_name=_worker_name, host=host, port=port)
 
-        for registered_worker in self.registered_workers:
-            if worker_name == registered_worker.name:
-                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
-
-        worker: BoostHTTPWorker = BoostHTTPWorker(
-            app=self, worker_name=worker_name, host=host, port=port, routes=routes
-        )
-        self.run_typer.command(name=worker_name)(worker.run)
+        self.run_typer.command(name=_worker_name)(worker.run)
         self.registered_workers.append(worker)
-        self.registered_http_workers.append(worker)
-        self.logger.info(f"HTTP worker {worker_name} was registered in CLI")
+        self.logger.info("Internal worker was registered in CLI")
 
-    def add_asgi_worker(
-        self, worker_name: str, asgi_app: typing.Any, host: str, port: int
-    ) -> None:
+    def add_asgi_worker(self, worker_name: str, asgi_app: typing.Any, host: str, port: int) -> None:
         # REDONE to .utils methods
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
-            raise RuntimeError(
-                f"{worker_name} name for worker is reserved for temporal-boost"
-            )
+            raise RuntimeError(f"{worker_name} name for worker is reserved for temporal-boost")
 
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
                 raise RuntimeError(f"{worker_name} name for worker`s already reserved")
 
-        worker: ASGIWorker = ASGIWorker(
-            app=self, worker_name=worker_name, host=host, port=port, asgi_app=asgi_app
-        )
+        worker: ASGIWorker = ASGIWorker(app=self, worker_name=worker_name, host=host, port=port, asgi_app=asgi_app)
         self.run_typer.command(name=worker_name)(worker.run)
         self.registered_workers.append(worker)
         self.registered_asgi_workers.append(worker)
