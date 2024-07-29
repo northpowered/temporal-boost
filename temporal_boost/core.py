@@ -98,6 +98,7 @@ class BoostApp:
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
+        description: str = ""
     ) -> None:
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
@@ -117,6 +118,7 @@ class BoostApp:
             cron_schedule=cron_schedule,
             cron_runner=cron_runner,
             metrics_endpoint=metrics_endpoint,
+            description=description
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
@@ -132,7 +134,7 @@ class BoostApp:
 
     def add_internal_worker(self, host: str, port: int) -> None:
         _worker_name: str = "internal"
-        worker: InternalWorker = InternalWorker(self, worker_name=_worker_name, host=host, port=port)
+        worker: InternalWorker = InternalWorker(self, task_queue="internal_queue", worker_name=_worker_name, host=host, port=port)
 
         self.run_typer.command(name=_worker_name)(worker.run)
         self.registered_workers.append(worker)

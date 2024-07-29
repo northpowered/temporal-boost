@@ -17,6 +17,7 @@ temporalio = "1.5.1"
 pydantic = "^2.5.2"
 hypercorn = {version = "^0.16.0", extras = ["trio"]}
 robyn = "^0.58.0"
+pyyaml = "^6.0.1"
 
 
 [tool.poetry.group.test.dependencies]

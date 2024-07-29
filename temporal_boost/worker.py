@@ -7,7 +7,7 @@ from temporalio.worker import Worker
 from temporalio.client import Client
 from temporalio import workflow
 # Local imports
-from .schemas import ClientConnectorArgs
+from .schemas import ClientConnectorArgs, WorkerType
 from .connect import create_temporal_client_connector
 
 # Avoid circular import for type hints
@@ -26,7 +26,8 @@ class BoostWorker:
         workflows: list = [],
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
-        metrics_endpoint: str | None = None
+        metrics_endpoint: str | None = None,
+        description: str = ""
     ) -> None:
 
         self.app: "BoostApp" = app
@@ -38,6 +39,8 @@ class BoostWorker:
         self.cron_schedule: str | None = cron_schedule
         self.cron_runner: workflow.run | None = cron_runner
         self.metrics_endpoint: str | None = metrics_endpoint
+        self.description: str = description
+        self._type: WorkerType = WorkerType.TEMPORAL
 
     async def _run_worker(self):
         client: Client = await create_temporal_client_connector(

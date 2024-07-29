@@ -41,6 +41,9 @@ async def test_boost_activity_2(payload: TestModel) -> TestModel:
 
 @workflow.defn(sandboxed=False)
 class MyWorkflow:
+    """
+    Example doc for workflow
+    """
     @workflow.run
     async def run(self, foo: str):
         start_payload: TestModel = TestModel(foo="hello", bar=0)
@@ -69,6 +72,7 @@ app.add_worker(
     "task_q_1",
     activities=[test_boost_activity_1],
     metrics_endpoint="0.0.0.0:9000",
+    description="Test long description Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nu",
 )
 app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 

@@ -1,5 +1,6 @@
 # Local imports
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass
@@ -10,7 +11,12 @@ class BoostOTLPConfig:
 
 @dataclass
 class ClientConnectorArgs:
-
     temporal_endpoint: str = "localhost:7233"
     temporal_namespace: str = "default"
     otlp_config: BoostOTLPConfig | None = None
+
+
+class WorkerType(Enum):
+    TEMPORAL = "Temporal"
+    ASGI = "ASGI"
+    INTERNAL = "Internal"
