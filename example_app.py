@@ -39,13 +39,13 @@ async def test_boost_activity_2(payload: TestModel) -> TestModel:
     return payload
 
 
-@workflow.defn(sandboxed=False)
+@workflow.defn(sandboxed=False, name="MyCustomFlowName")
 class MyWorkflow:
     """
     Example doc for workflow
     """
     @workflow.run
-    async def run(self, foo: str):
+    async def run2(self, foo: str):
         start_payload: TestModel = TestModel(foo="hello", bar=0)
         print(type(start_payload))
         result_1 = await workflow.execute_activity(
@@ -63,6 +63,11 @@ class MyWorkflow:
         )
         print(type(result_2))
         return result_2
+    @workflow.signal(name="my_custom_signal_name")
+    async def my_signal(self, signal_arg: TestModel):
+        print(signal_arg)
+
+
 
 
 # Add async workers to your app
