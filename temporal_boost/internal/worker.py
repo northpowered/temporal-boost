@@ -39,17 +39,18 @@ class InternalWorker:
         self._type: WorkerType = WorkerType.INTERNAL
         self.description: str = ""  # create arg
 
-    def build_html_body(self) -> str:
-        return self.doc_schema.html()
-
-    def build_html_nav(self) -> str:
+    @property
+    def nav(self) -> str:
         return self.doc_schema.nav()
+
+    @property
+    def body(self) -> str:
+        return self.doc_schema.html()
 
     async def build_html_doc(self):
         content: str = f"""
             <!DOCTYPE html>
             <html>
-
                 <head>
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -68,7 +69,7 @@ class InternalWorker:
                                 <h3>Temporal boost doc</h3>
                             </div>
                             <ul class="list-unstyled components">
-                                {self.build_html_nav()}
+                                {self.nav}
                             </ul>
                             <ul class="list-unstyled CTAs">
                                 <li>
@@ -81,7 +82,7 @@ class InternalWorker:
                         <div id="content">
                             <h2>{self.app.name}</h2>
                             <p>Auto generated documentation</p>
-                            {self.build_html_body()}
+                            {self.body}
                             <div class="line"></div>
                         </div>
                     </div>

@@ -1,14 +1,18 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 from .worker import WorkerSchema
 from .workflow import WorkflowSchema
+from .signal import SignalSchema
+from .activity import ActivitySchema
 
 
 class MainSchema(BaseModel):
     workers: List[WorkerSchema] | None = []
     workflows: List[WorkflowSchema] | None = []
+    activities: List[ActivitySchema] | None = []
+    signals: List[SignalSchema] | None = []
 
     def nav(self) -> str:
         workers_nav: str = ""
@@ -19,24 +23,39 @@ class MainSchema(BaseModel):
         for w in self.workflows:
             workflows_nav = workflows_nav + str(w.nav())
 
+        activities_nav: str = ""
+        for a in self.activities:
+            activities_nav = activities_nav + str(a.nav())
+
+        signals_nav: str = ""
+        for s in self.signals:
+            signals_nav = signals_nav + str(s.nav())
+
         return f""" <li>
-                <a href="#workers" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-primary">Workers</span></a>
+                <a href="#workers" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-primary text-dark">Workers</span></a>
                 <ul class="collapse list-unstyled" id="workers">
                     {workers_nav}
                 </ul>
             </li>
             <li>
-                <a href="#workflows" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-success">Workflows</span></a>
+                <a href="#workflows" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-success text-dark">Workflows</span></a>
                 <ul class="collapse list-unstyled" id="workflows">
                     {workflows_nav}
                 </ul>
             </li>
             <li>
-                <a href="#activities" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-info">Activities</span></a>
+                <a href="#activities" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-info text-dark">Activities</span></a>
                 <ul class="collapse list-unstyled" id="activities">
-                    
+                {activities_nav}
                 </ul>
-            </li>"""
+            </li>
+            <li>
+                <a href="#signals" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-warning text-dark">Signals</span></a>
+                <ul class="collapse list-unstyled" id="signals">
+                    {signals_nav}
+                </ul>
+            </li>
+            """
 
     def html(self) -> str:
         # Workers block
@@ -50,8 +69,16 @@ class MainSchema(BaseModel):
             workflows_html = workflows_html + str(w.html())
         workflows_html = workflows_html + """<div class="line"></div>"""
         # Activities block
+        activities_html: str = """<h2>Activities</h2><div class="line"></div>"""
+        for a in self.activities:
+            activities_html = activities_html + str(a.html())
+        activities_html = activities_html + """<div class="line"></div>"""
+        # Signals block
+        signals_html: str = """<h2>Signals</h2><div class="line"></div>"""
+        for s in self.signals:
+            signals_html = signals_html + str(s.html())
+        signals_html = signals_html + """<div class="line"></div>"""
 
-
-        result = "".join([workers_html,workflows_html])
+        result = "".join([workers_html, workflows_html, activities_html, signals_html])
 
         return result

@@ -1,13 +1,16 @@
 import inspect as i
-from typing import Any
+from typing import Any, List
 
 from pydantic import BaseModel
-from temporalio.workflow import _Definition
-
+from temporalio.workflow import _Definition, _SignalDefinition
+#from .common_lists import SignalSchema, common_signals
+from .signal import SignalSchema
 
 class WorkflowSchema(BaseModel):
     obj: Any
     workflow_worker: str
+    signals: List[SignalSchema] | None = []
+
 
     @property
     def inspection(self) -> dict:
@@ -37,30 +40,41 @@ class WorkflowSchema(BaseModel):
         """
 
     def html(self) -> str:
-        # workflows: str = ""
-        # activities: str = ""
-        # if self.worker_type == WorkerType.TEMPORAL.value:
-        #     workflows: str = "<h5>Workflows:</h5><ul>"
-        #     for workflow in self.obj.workflows:
-        #         workflows = workflows + f"""<li><a href="#workflow_{workflow.__name__}">{workflow.__name__}</a></li>"""
-        #     workflows = workflows + "</ul><br>"
-        #     if not len(self.obj.workflows):
-        #         workflows = "<h5>No registered workflows</h5><br>"
+        # Signals block
+        signals: str = "<h5>Signals:</h5><ul>"
+        for signal in self.signals:
+            signals = signals + f"""<li><span class="badge bg-warning">Signal</span> <a href="#signal_{signal.code_name}">{signal.execution_name}</a></li>"""
 
-        #     activities: str = "<h5>Activities:</h5><ul>"
-        #     for activity in self.obj.activities:
-        #         activities = activities + f"""<li><a href="#activity_{activity.__name__}">{activity.__name__}</a></li>"""
-        #     activities = activities + "</ul>"
-        #     if not len(self.obj.activities):
-        #         activities = "<h5>No registered activities</h5>"
+        signals = signals + "</ul>"
 
-
+        if not len(self.definition.signals):
+                signals = "<h5>No registered signals</h5>"
+        # Executions args block
+        execution_args: str = "<h5>Execution args:</h5><ul>"
+        for arg in self.execution_args:
+            if arg == "self":
+                continue
+            execution_args = execution_args + f"""<li>{self.execution_args.get(arg)}</a></li>"""
+        execution_args = execution_args + "</ul>"
+        # Ignoring `self`
+        if len(self.execution_args) <= 1:
+                execution_args = "<h5>No execution args</h5>"
+        # Return block
+        return_type = f"""<div><strong>Return: {str(self.definition.ret_type.__name__)}</strong></div>"""
         html_str: str = f"""
         <div id="workflow_{self.code_name}"><h4><span class="badge bg-success">Workflow</span> {self.code_name}</h4></div>
         <div><span class="badge bg-secondary">Worker: {self.workflow_worker}</span></div>
-        <div>Execution name: <i>{self.execution_name}</i></div>
-        <div>{self.obj.__doc__}</div>
+        <p>
+            <div><strong>Execution name: <i>{self.execution_name}</i></strong></div>
+        </p>
+        <div class="card">
+            <div class="card-body text-dark">
+                {self.obj.__doc__}
+            </div>
+        </div>
+        {execution_args}
+        {signals}
+        {return_type}
         <br>
         """
-        # return html_str
         return html_str

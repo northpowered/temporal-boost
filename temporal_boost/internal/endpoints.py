@@ -9,7 +9,7 @@ async def custom_css():
 
             @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
             body {
-                font-family: 'Poppins', sans-serif;
+                font-family: Aeonik,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
                 background: #fafafa;
             }
 
@@ -64,7 +64,8 @@ async def custom_css():
             #sidebar {
                 min-width: 250px;
                 max-width: 250px;
-                background: #7952b3;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
                 color: #fff;
                 transition: all 0.3s;
             }
@@ -75,16 +76,18 @@ async def custom_css():
 
             #sidebar .sidebar-header {
                 padding: 20px;
-                background: #7952b3;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
+                color: #CDF5FD
             }
 
             #sidebar ul.components {
                 padding: 20px 0;
-                border-bottom: 1px solid #7952b3;
+                border-bottom: 1px solid #A7E6FF;
             }
 
             #sidebar ul p {
-                color: #fff;
+                color: #3ABEF9;
                 padding: 10px;
             }
 
@@ -95,14 +98,16 @@ async def custom_css():
             }
 
             #sidebar ul li a:hover {
-                color: #7386D5;
-                background: #fff;
+                color: #A7E6FF;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
             }
 
             #sidebar ul li.active>a,
             a[aria-expanded="true"] {
-                color: #fff;
-                background: #6d7fcc;
+                color: #3ABEF9;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
             }
 
             a[data-toggle="collapse"] {
@@ -120,7 +125,9 @@ async def custom_css():
             ul ul a {
                 font-size: 0.9em !important;
                 padding-left: 30px !important;
-                background: #6d7fcc;
+                bbackground: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
+                color: #fff;
             }
 
             ul.CTAs {
@@ -137,13 +144,13 @@ async def custom_css():
 
             a.download {
                 background: #fff;
-                color: #7386D5;
+                color: #00A9FF;
             }
 
             a.article,
             a.article:hover {
-                background: #6d7fcc !important;
-                color: #fff !important;
+                background-image: linear-gradient(45deg,#b664ff,#444ce7);
+                color: rgb(248 250 252 / var(--tw-text-opacity));
             }
 
             /* ---------------------------------------------------
@@ -155,6 +162,9 @@ async def custom_css():
                 padding: 20px;
                 min-height: 100vh;
                 transition: all 0.3s;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
+                color: #fff;
             }
 
             /* ---------------------------------------------------

@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from temporal_boost.schemas import WorkerType
 from typing import Any
+
+from pydantic import BaseModel
+
+from temporal_boost.schemas import WorkerType
 
 
 class WorkerSchema(BaseModel):
@@ -11,7 +13,6 @@ class WorkerSchema(BaseModel):
     worker_description: str
 
     def nav(self) -> str:
-        
         return f"""
             <li>
                 <a href="#worker_{self.worker_name}"><span class="badge bg-primary">{self.worker_type}</span> {self.worker_name}</a>
@@ -35,7 +36,6 @@ class WorkerSchema(BaseModel):
             activities = activities + "</ul>"
             if not len(self.obj.activities):
                 activities = "<h5>No registered activities</h5>"
-
 
         html_str: str = f"""
         <div id="worker_{self.worker_name}"><h4><span class="badge bg-primary">{self.worker_type}</span> {self.worker_name}</h4></div>

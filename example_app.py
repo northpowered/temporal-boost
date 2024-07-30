@@ -13,7 +13,7 @@ from example_asgi_app import fastapi_app
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(
-    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}),
+    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="ERROR"),
     use_pydantic=True,
 )
 
@@ -38,6 +38,12 @@ async def test_boost_activity_2(payload: TestModel) -> TestModel:
     payload.bar = payload.bar + 1
     return payload
 
+@activity.defn(name="custom_test_boost_activity_3")
+async def test_boost_activity_3(payload: TestModel, foo: str, bar: int) -> TestModel:
+    payload.foo = f"{payload.foo}+activity2"
+    payload.bar = payload.bar + 1
+    return payload
+
 
 @workflow.defn(sandboxed=False, name="MyCustomFlowName")
 class MyWorkflow:
@@ -45,7 +51,7 @@ class MyWorkflow:
     Example doc for workflow
     """
     @workflow.run
-    async def run2(self, foo: str):
+    async def run2(self, foo: str) -> TestModel:
         start_payload: TestModel = TestModel(foo="hello", bar=0)
         print(type(start_payload))
         result_1 = await workflow.execute_activity(
@@ -75,9 +81,9 @@ class MyWorkflow:
 app.add_worker(
     "worker_1",
     "task_q_1",
-    activities=[test_boost_activity_1],
+    activities=[test_boost_activity_1, test_boost_activity_3],
     metrics_endpoint="0.0.0.0:9000",
-    description="Test long description Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nu",
+    description="This workers serves activity test_boost_activity_1 on task_q_1 queue",
 )
 app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 

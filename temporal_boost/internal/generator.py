@@ -1,6 +1,11 @@
-from .doc_generator import WorkerSchema, MainSchema, WorkflowSchema
+import inspect as i
 import typing
+
+from temporalio.workflow import _Definition, _SignalDefinition
+from temporalio.activity import _Definition as _ActivityDefinition
 from temporal_boost.schemas import WorkerType
+
+from .doc_generator import MainSchema, SignalSchema, WorkerSchema, WorkflowSchema, ActivitySchema
 
 if typing.TYPE_CHECKING:
     from temporal_boost.core import BoostApp
@@ -20,6 +25,39 @@ def generate_doc_schema(app: "BoostApp") -> MainSchema:
         )
         if worker._type == WorkerType.TEMPORAL:
             for workflow in worker.workflows:
-                schema.workflows.append(WorkflowSchema(obj=workflow, workflow_worker=worker.name))
+                workflow_schema: WorkflowSchema = WorkflowSchema(obj=workflow, workflow_worker=worker.name)
+
+                # Find content in workflow
+                inspection: dict = dict(i.getmembers(workflow))
+                definition: _Definition = inspection.get("__temporal_workflow_definition")
+                # Find signals in workflow
+                for signal_name in definition.signals:
+                    signal: _SignalDefinition = definition.signals.get(signal_name)
+                    signal_exec_inspection: dict = dict(i.getmembers(signal.fn))
+                    signal_schema: SignalSchema = SignalSchema(
+                        execution_name=signal_name,
+                        code_name=signal.fn.__name__,
+                        workflow_name=workflow.__name__,
+                        signal_args=signal_exec_inspection.get("__annotations__"),
+                        description=signal.fn.__doc__,
+                    )
+                    schema.signals.append(signal_schema)
+                    workflow_schema.signals.append(signal_schema)
+
+                schema.workflows.append(workflow_schema)
+
+            for activity in worker.activities:
+                inspection: dict = dict(i.getmembers(activity))
+                definition: _ActivityDefinition = inspection.get("__temporal_activity_definition")
+                fn_inspection: dict = dict(i.getmembers(definition.fn))
+                schema.activities.append(
+                    ActivitySchema(
+                        code_name=activity.__name__,
+                        execution_name=definition.name,
+                        description=activity.__doc__,
+                        worker_name=worker.name,
+                        execution_args=fn_inspection.get("__annotations__"),
+                    )
+                )
 
     return schema
