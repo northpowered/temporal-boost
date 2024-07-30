@@ -2,15 +2,15 @@ import inspect as i
 from typing import Any, List
 
 from pydantic import BaseModel
-from temporalio.workflow import _Definition, _SignalDefinition
-#from .common_lists import SignalSchema, common_signals
+from temporalio.workflow import _Definition
+
 from .signal import SignalSchema
+
 
 class WorkflowSchema(BaseModel):
     obj: Any
     workflow_worker: str
     signals: List[SignalSchema] | None = []
-
 
     @property
     def inspection(self) -> dict:
@@ -43,12 +43,15 @@ class WorkflowSchema(BaseModel):
         # Signals block
         signals: str = "<h5>Signals:</h5><ul>"
         for signal in self.signals:
-            signals = signals + f"""<li><span class="badge bg-warning">Signal</span> <a href="#signal_{signal.code_name}">{signal.execution_name}</a></li>"""
+            signals = (
+                signals
+                + f"""<li><span class="badge bg-warning">Signal</span> <a href="#signal_{signal.code_name}">{signal.execution_name}</a></li>"""
+            )
 
         signals = signals + "</ul>"
 
         if not len(self.definition.signals):
-                signals = "<h5>No registered signals</h5>"
+            signals = "<h5>No registered signals</h5>"
         # Executions args block
         execution_args: str = "<h5>Execution args:</h5><ul>"
         for arg in self.execution_args:
@@ -58,7 +61,7 @@ class WorkflowSchema(BaseModel):
         execution_args = execution_args + "</ul>"
         # Ignoring `self`
         if len(self.execution_args) <= 1:
-                execution_args = "<h5>No execution args</h5>"
+            execution_args = "<h5>No execution args</h5>"
         # Return block
         return_type = f"""<div><strong>Return: {str(self.definition.ret_type.__name__)}</strong></div>"""
         html_str: str = f"""

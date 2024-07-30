@@ -6,6 +6,7 @@ from .worker import WorkerSchema
 from .workflow import WorkflowSchema
 from .signal import SignalSchema
 from .activity import ActivitySchema
+from .typeschema import TypeSchema
 
 
 class MainSchema(BaseModel):
@@ -13,6 +14,7 @@ class MainSchema(BaseModel):
     workflows: List[WorkflowSchema] | None = []
     activities: List[ActivitySchema] | None = []
     signals: List[SignalSchema] | None = []
+    schemas: List[TypeSchema] | None = []
 
     def nav(self) -> str:
         workers_nav: str = ""
@@ -30,6 +32,10 @@ class MainSchema(BaseModel):
         signals_nav: str = ""
         for s in self.signals:
             signals_nav = signals_nav + str(s.nav())
+
+        schemas_nav: str = ""
+        for s in self.schemas:
+            schemas_nav = schemas_nav + str(s.nav())
 
         return f""" <li>
                 <a href="#workers" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-primary text-dark">Workers</span></a>
@@ -55,6 +61,12 @@ class MainSchema(BaseModel):
                     {signals_nav}
                 </ul>
             </li>
+            <li>
+                <a href="#schemas" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><span class="badge bg-danger text-dark">Schemas</span></a>
+                <ul class="collapse list-unstyled" id="schemas">
+                    {schemas_nav}
+                </ul>
+            </li>
             """
 
     def html(self) -> str:
@@ -78,7 +90,11 @@ class MainSchema(BaseModel):
         for s in self.signals:
             signals_html = signals_html + str(s.html())
         signals_html = signals_html + """<div class="line"></div>"""
-
-        result = "".join([workers_html, workflows_html, activities_html, signals_html])
+        # Schemas block
+        schemas_html: str = """<h2>Schemas</h2><div class="line"></div>"""
+        for s in self.schemas:
+            schemas_html = schemas_html + str(s.html())
+        schemas_html = schemas_html + """<div class="line"></div>"""
+        result = "".join([workers_html, workflows_html, activities_html, signals_html, schemas_html])
 
         return result

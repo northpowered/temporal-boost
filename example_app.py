@@ -22,6 +22,9 @@ app: BoostApp = BoostApp(
 class TestModel:
     foo: str
     bar: int
+    spam: int = 3
+    eggs: bool | None = None
+
 
 
 # Describe your activities/workflows
