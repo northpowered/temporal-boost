@@ -78,7 +78,8 @@ class InternalWorker:
                             </ul>
                             <ul class="list-unstyled CTAs">
                                 <li>
-                                    <a href="https://github.com/northpowered/temporal-boost" target="_blank" class="article">Temporal-boost on github</a>
+                                    <a href="https://github.com/northpowered/temporal-boost" target="_blank" class="article">Temporal-boost on github
+                                    </a>
                                 </li>
                             </ul>
                         </nav>

@@ -24,9 +24,9 @@ class ASGIWorker:
         self.host: str = host
         self.port: int = port
         self.asgi_app: typing.Any = asgi_app
-        self.task_queue: str = "null" # temp fix
+        self.task_queue: str = "null"  # temp fix
         self._type: WorkerType = WorkerType.ASGI
-        self.description: str = "" # create arg
+        self.description: str = ""  # create arg
 
     async def _run_worker(self) -> int:
         config: Config = Config()

@@ -4,24 +4,20 @@ import typing
 # Temporal SDK imports
 from temporalio import workflow
 from temporalio.client import Client
+from temporalio.contrib.opentelemetry import TracingInterceptor
+from temporalio.converter import DataConverter
 from temporalio.runtime import (
     PrometheusConfig,
     Runtime,
     TelemetryConfig,
     _default_runtime,
 )
-from temporalio.converter import DataConverter
-
-# Local imports
-from .opentelemetry import TracingInterceptor
-
 
 # Avoid circular import for type hints
 if typing.TYPE_CHECKING:
     from . import BoostApp
 
 with workflow.unsafe.imports_passed_through():
-
     from .extentions import pydantic_data_converter
 
 
@@ -31,7 +27,6 @@ async def create_temporal_client_connector(
     temporal_namespace: str = "default",
     metrics_endpoint: str | None = None,
 ) -> Client | None:  # pragma: no cover
-
     interceptors: list = []
 
     runtime: Runtime = _default_runtime

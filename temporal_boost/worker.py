@@ -1,14 +1,18 @@
 # Base imports
 import asyncio
-import uuid
 import typing
+import uuid
+
+from temporalio import workflow
+from temporalio.client import Client
+
 # Temporal SDK imports
 from temporalio.worker import Worker
-from temporalio.client import Client
-from temporalio import workflow
+
+from .connect import create_temporal_client_connector
+
 # Local imports
 from .schemas import ClientConnectorArgs, WorkerType
-from .connect import create_temporal_client_connector
 
 # Avoid circular import for type hints
 if typing.TYPE_CHECKING:
@@ -27,10 +31,9 @@ class BoostWorker:
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
-        description: str = ""
+        description: str = "",
     ) -> None:
-
-        self.app: "BoostApp" = app
+        self.app: BoostApp = app
         self.name: str = name
         self.client_connector_args: ClientConnectorArgs = client_connector_args
         self.task_queue: str = task_queue
@@ -47,7 +50,7 @@ class BoostWorker:
             app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
             temporal_namespace=self.client_connector_args.temporal_namespace,
-            metrics_endpoint=self.metrics_endpoint
+            metrics_endpoint=self.metrics_endpoint,
         )
         if not client:
             return
@@ -61,7 +64,6 @@ class BoostWorker:
         await worker.run()
 
     async def _run_with_cron(self):
-
         client: Client = await create_temporal_client_connector(
             app=self.app,
             temporal_endpoint=self.client_connector_args.temporal_endpoint,
@@ -77,12 +79,7 @@ class BoostWorker:
             workflows=self.workflows,
         ):
             workflow_id: str = str(uuid.uuid4())
-            await client.start_workflow(
-                self.cron_runner,
-                id=workflow_id,
-                task_queue=self.task_queue,
-                cron_schedule=self.cron_schedule
-            )
+            await client.start_workflow(self.cron_runner, id=workflow_id, task_queue=self.task_queue, cron_schedule=self.cron_schedule)
             await asyncio.Future()
 
     def run(self):

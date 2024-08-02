@@ -1,22 +1,19 @@
 # Base imports
-import typer
 import asyncio
+import logging
 import typing
 from multiprocessing import Process
 
-# Local imports
-from .worker import BoostWorker
-from .schemas import ClientConnectorArgs, BoostOTLPConfig
-from .tracing import create_tracer, trace
-from .logger import BoostLogger, BoostLoggerConfig
+import typer
+
 from .asgi import ASGIWorker
 from .internal import InternalWorker
+from .logger import BoostLogger, BoostLoggerConfig
+from .schemas import BoostOTLPConfig, ClientConnectorArgs
+from .tracing import create_tracer, trace
+from .worker import BoostWorker
 
-# from .http import DocServerConfig, serve_doc_page
-import logging
-
-
-PROHIBITED_WORKER_NAMES: list[str] = ["all", "doc"]
+PROHIBITED_WORKER_NAMES: list[str] = ["all", "internal"]
 
 
 class BoostApp:
@@ -29,7 +26,6 @@ class BoostApp:
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
         use_pydantic: bool = False,
-        # doc_config: DocServerConfig | None = None
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
@@ -98,7 +94,7 @@ class BoostApp:
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
-        description: str = ""
+        description: str = "",
     ) -> None:
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
@@ -118,7 +114,7 @@ class BoostApp:
             cron_schedule=cron_schedule,
             cron_runner=cron_runner,
             metrics_endpoint=metrics_endpoint,
-            description=description
+            description=description,
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
@@ -161,7 +157,7 @@ class BoostApp:
 
     def register_all(self):
         self.logger.warning("Use all-in-one mode only in development!")
-        procs: list[Process] = list()
+        procs: list[Process] = []
         # Creating worker
         for worker in self.registered_workers:
             proc = Process(

@@ -9,7 +9,8 @@ async def custom_css():
 
             @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
             body {
-                font-family: Aeonik,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,
+                font-family: Aeonik,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,
+                Helvetica Neue,Arial,Noto Sans,sans-serif,
                 "Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
                 background: #fafafa;
             }
@@ -87,7 +88,7 @@ async def custom_css():
                 background: rgb(31 32 63 / var(--tw-bg-opacity));
                 --tw-bg-opacity: 1;
                 color: #CDF5FD
-                
+
             }
 
             .accordion-dark[aria-expanded="true"] {
@@ -95,7 +96,7 @@ async def custom_css():
                 background: rgb(31 32 63 / var(--tw-bg-opacity));
                 --tw-bg-opacity: 1;
                 color: #CDF5FD
-                
+
             }
 
             .table-temporal-style {

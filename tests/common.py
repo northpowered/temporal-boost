@@ -1,11 +1,11 @@
 import asyncio
-from temporalio import activity, workflow
-from temporalio.client import Client
-from temporalio.worker import Worker
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Sequence
 
+from temporalio import activity, workflow
+from temporalio.client import Client
+from temporalio.worker import Worker
 
 MOCK_QUEUE_NAME: str = "test-executor-mock"
 MOCK_TEMPORAL_ENDPOINT: str = "localhost:7233"
@@ -87,18 +87,12 @@ class SeqArgWorkflow:
 
 
 test_workflows: list = [
-            DataclassArgWorkflow,
-            SingleArgWorkflow,
-            NoArgWorkflow,
-            SeqArgWorkflow,
-        ]
-test_activities: list = [
-            dataclass_arg_activity,
-            single_arg_activity,
-            no_arg_activity,
-            seq_arg_activity,
-            retry_activity
-        ]
+    DataclassArgWorkflow,
+    SingleArgWorkflow,
+    NoArgWorkflow,
+    SeqArgWorkflow,
+]
+test_activities: list = [dataclass_arg_activity, single_arg_activity, no_arg_activity, seq_arg_activity, retry_activity]
 
 
 async def create_worker() -> Worker:  # pragma: no cover

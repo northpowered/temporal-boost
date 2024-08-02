@@ -3,13 +3,13 @@ For development purposes
 """
 
 # Import `BoostApp` class
-from temporal_boost import BoostApp, BoostLoggerConfig
-from temporalio import activity
-from temporalio import workflow
-from datetime import timedelta
 from dataclasses import dataclass
+from datetime import timedelta
+
+from temporalio import activity, workflow
 
 from example_asgi_app import fastapi_app
+from temporal_boost import BoostApp, BoostLoggerConfig
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(
@@ -26,7 +26,6 @@ class TestModel:
     eggs: bool | None = None
 
 
-
 # Describe your activities/workflows
 @activity.defn(name="test_boost_activity_1")
 async def test_boost_activity_1(payload: TestModel) -> TestModel:
@@ -41,6 +40,7 @@ async def test_boost_activity_2(payload: TestModel) -> TestModel:
     payload.bar = payload.bar + 1
     return payload
 
+
 @activity.defn(name="custom_test_boost_activity_3")
 async def test_boost_activity_3(payload: TestModel, foo: str, bar: int) -> TestModel:
     payload.foo = f"{payload.foo}+activity2"
@@ -53,6 +53,7 @@ class MyWorkflow:
     """
     Example doc for workflow
     """
+
     @workflow.run
     async def run2(self, foo: str) -> TestModel:
         start_payload: TestModel = TestModel(foo="hello", bar=0)
@@ -72,11 +73,10 @@ class MyWorkflow:
         )
         print(type(result_2))
         return result_2
+
     @workflow.signal(name="my_custom_signal_name")
     async def my_signal(self, signal_arg: TestModel):
         print(signal_arg)
-
-
 
 
 # Add async workers to your app
