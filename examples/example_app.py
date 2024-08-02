@@ -8,12 +8,13 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 
-from example_asgi_app import fastapi_app
 from temporal_boost import BoostApp, BoostLoggerConfig
+
+from .example_asgi_app import fastapi_app
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(
-    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="ERROR"),
+    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="DEBUG"),
     use_pydantic=True,
 )
 
