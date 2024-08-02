@@ -61,12 +61,16 @@ class BoostApp:
         )
 
         self._root_typer: typer.Typer = typer.Typer(name=self.name, no_args_is_help=True)
+        # Typer for running workers
         self.run_typer: typer.Typer = typer.Typer(name="run")
-
+        # Typer for running cron workflows
         self.cron_typer: typer.Typer = typer.Typer(name="cron")
+        # Typer for separate commands (without runtime)
+        self.exec_typer: typer.Typer = typer.Typer(name="exec")
 
         self._root_typer.add_typer(self.run_typer, no_args_is_help=True)
         self._root_typer.add_typer(self.cron_typer, no_args_is_help=True)
+        self._root_typer.add_typer(self.exec_typer, no_args_is_help=True)
 
         self.run_typer.command(name="all")(self.register_all)
 
@@ -170,6 +174,9 @@ class BoostApp:
         self.registered_workers.append(worker)
         self.registered_asgi_workers.append(worker)
         self.logger.info(f"ASGI worker {worker_name} was registered in CLI")
+
+    def add_exec_method_sync(self, name: str, callback: typing.Callable):
+        self.exec_typer.command(name=name)(callback)
 
     def run(self):
         asyncio.run(self._root_typer())

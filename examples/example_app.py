@@ -17,7 +17,6 @@ app: BoostApp = BoostApp(
     use_pydantic=True,
 )
 
-
 @dataclass
 class TestModel:
     foo: str
@@ -25,6 +24,11 @@ class TestModel:
     spam: int = 3
     eggs: bool | None = None
 
+def fake_db_migration():
+    """
+        Fake fn for db migrations
+    """
+    print("fake")
 
 # Describe your activities/workflows
 @activity.defn(name="test_boost_activity_1")
@@ -96,5 +100,6 @@ app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
 
 app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
 
+app.add_exec_method_sync("migrate_db", fake_db_migration)
 # Run your app and start workers with CLI
 app.run()
