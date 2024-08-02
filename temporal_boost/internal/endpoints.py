@@ -9,7 +9,8 @@ async def custom_css():
 
             @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
             body {
-                font-family: Aeonik,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
+                font-family: Aeonik,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,
+                "Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
                 background: #fafafa;
             }
 
@@ -78,6 +79,26 @@ async def custom_css():
                 padding: 20px;
                 background: rgb(31 32 63 / var(--tw-bg-opacity));
                 --tw-bg-opacity: 1;
+                color: #CDF5FD
+            }
+
+            .accordion-dark {
+                border: 1px solid #A7E6FF;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
+                color: #CDF5FD
+                
+            }
+
+            .accordion-dark[aria-expanded="true"] {
+                border: 1px solid #A7E6FF;
+                background: rgb(31 32 63 / var(--tw-bg-opacity));
+                --tw-bg-opacity: 1;
+                color: #CDF5FD
+                
+            }
+
+            .table-temporal-style {
                 color: #CDF5FD
             }
 
@@ -188,8 +209,45 @@ async def custom_css():
 
 async def custom_js():
     content = """$(document).ready(function () {
+
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
             });
+
+            $('.workers-nav-element').on('click', function () {
+                $('#flush-workers').toggle(true);
+            });
+            $('#workers-main-header').on('click', function () {
+                $('#flush-workers').toggle();
+            });
+
+            $('.workflows-nav-element').on('click', function () {
+                $('#flush-workflows').toggle(true);
+            });
+            $('#workflows-main-header').on('click', function () {
+                $('#flush-workflows').toggle();
+            });
+
+            $('.activities-nav-element').on('click', function () {
+                $('#flush-activities').toggle(true);
+            });
+            $('#activities-main-header').on('click', function () {
+                $('#flush-activities').toggle();
+            });
+
+            $('.signals-nav-element').on('click', function () {
+                $('#flush-signals').toggle(true);
+            });
+            $('#signals-main-header').on('click', function () {
+                $('#flush-signals').toggle();
+            });
+
+            $('.schemas-nav-element').on('click', function () {
+                $('#flush-schemas').toggle(true);
+            });
+            $('#schemas-main-header').on('click', function () {
+                $('#flush-schemas').toggle();
+            });
+
         });"""
     return Response(status_code=200, headers={"Content-Type": "text/javascript; charset=utf-8"}, description=content)

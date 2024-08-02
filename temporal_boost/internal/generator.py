@@ -1,11 +1,12 @@
 import inspect as i
 import typing
 
-from temporalio.workflow import _Definition, _SignalDefinition
 from temporalio.activity import _Definition as _ActivityDefinition
+from temporalio.workflow import _Definition, _SignalDefinition
+
 from temporal_boost.schemas import WorkerType
 
-from .doc_generator import MainSchema, SignalSchema, WorkerSchema, WorkflowSchema, ActivitySchema, TypeSchema
+from .doc_generator import ActivitySchema, MainSchema, SignalSchema, TypeSchema, WorkerSchema, WorkflowSchema
 
 if typing.TYPE_CHECKING:
     from temporal_boost.core import BoostApp
@@ -14,16 +15,19 @@ if typing.TYPE_CHECKING:
 def generate_doc_schema(app: "BoostApp") -> MainSchema:
     schema: MainSchema = MainSchema()
     for worker in app.registered_workers:
-        schema.workers.append(
-            WorkerSchema(
-                obj=worker,
-                worker_name=worker.name,
-                worker_queue=worker.task_queue,
-                worker_type=worker._type,
-                worker_description=worker.description,
-            )
-        )
+        # Collecting only temporal workers
+        # FUTURE: make universal doc generator
         if worker._type == WorkerType.TEMPORAL:
+            schema.workers.append(
+                WorkerSchema(
+                    obj=worker,
+                    worker_name=worker.name,
+                    worker_queue=worker.task_queue,
+                    worker_type=worker._type,
+                    worker_description=worker.description,
+                )
+            )
+
             for workflow in worker.workflows:
                 workflow_schema: WorkflowSchema = WorkflowSchema(obj=workflow, workflow_worker=worker.name)
 
@@ -53,12 +57,8 @@ def generate_doc_schema(app: "BoostApp") -> MainSchema:
                 for activity_schema in fn_inspection.get("__annotations__").values():
                     dataclass_fields: dict | None = dict(i.getmembers(activity_schema)).get("__dataclass_fields__")
                     if dataclass_fields:
-                        schema.schemas.append(TypeSchema(
-                            name=activity_schema.__name__,
-                            fields=dataclass_fields
+                        schema.schemas.append(TypeSchema(name=activity_schema.__name__, fields=dataclass_fields))
 
-                        ))
-                    
                 schema.activities.append(
                     ActivitySchema(
                         code_name=activity.__name__,

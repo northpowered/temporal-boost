@@ -13,7 +13,9 @@ class SignalSchema(BaseModel):
     def nav(self) -> str:
         return f"""
             <li>
-                <a href="#signal_{self.code_name}"><span class="badge bg-warning">Signal</span> {self.execution_name}</a>
+                <a class="signals-nav-element" href="#signal_{self.code_name}">
+                    <span class="badge bg-warning">  </span> {self.execution_name}
+                </a>
             </li>
         """
 
@@ -29,17 +31,16 @@ class SignalSchema(BaseModel):
 
         html_str: str = f"""
         <div id="signal_{self.code_name}"><h4><span class="badge bg-warning">Signal</span> {self.code_name}</h4></div>
-        <div><span class="badge bg-secondary">Workflow: {self.workflow_name}</span></div>
-        <p>
-            <div><strong>Execution name: <i>{self.execution_name}</i></strong></div>
-        </p>
-        <div class="card">
-            <div class="card-body text-dark">
-                {self.description}
+            <div><span class="badge bg-secondary">Workflow: {self.workflow_name}</span></div>
+            <p>
+                <div><strong>Execution name: <i>{self.execution_name}</i></strong></div>
+            </p>
+            <div class="card">
+                <div class="card-body text-dark">
+                    {self.description}
+                </div>
             </div>
-        </div>
         {execution_args}
-
         <br>
         """
         return html_str

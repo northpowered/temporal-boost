@@ -15,7 +15,8 @@ class WorkerSchema(BaseModel):
     def nav(self) -> str:
         return f"""
             <li>
-                <a href="#worker_{self.worker_name}"><span class="badge bg-primary">{self.worker_type}</span> {self.worker_name}</a>
+                <a class="workers-nav-element" href="#worker_{self.worker_name}">
+                <span class="badge bg-primary">  </span> {self.worker_name} </a>
             </li>
         """
 
@@ -38,12 +39,15 @@ class WorkerSchema(BaseModel):
                 activities = "<h5>No registered activities</h5>"
 
         html_str: str = f"""
-        <div id="worker_{self.worker_name}"><h4><span class="badge bg-primary">{self.worker_type}</span> {self.worker_name}</h4></div>
-        <div><span class="badge bg-secondary">Queue: {self.worker_queue}</span></div>
+        <div id="worker_{self.worker_name}">
+            <h4><span class="badge bg-primary">{self.worker_type}</span> {self.worker_name}</h4>
+        </div>
+        <div>
+            <span class="badge bg-secondary">Queue: {self.worker_queue}</span>
+        </div>
         <div>{self.worker_description}</div>
         {workflows}
         {activities}
-        
         <br>
         """
         return html_str

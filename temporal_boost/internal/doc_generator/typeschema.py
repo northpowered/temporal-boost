@@ -14,12 +14,16 @@ class TypeSchema(BaseModel):
     def nav(self) -> str:
         return f"""
             <li>
-                <a href="#schema_{self.name}"><span class="badge bg-danger">Schema</span> {self.name}</a>
+                <a class="schemas-nav-element" href="#schema_{self.name}"><span class="badge bg-danger">  </span> {self.name}</a>
             </li>
         """
 
     def html(self) -> str:
-        fields: str = f"""<div id="schema_{self.name}"><h4><span class="badge bg-danger text-dark">Schema</span> Schema {self.name}:</h4></div><table class="table">
+        fields: str = f"""
+        <div id="schema_{self.name}">
+            <h4><span class="badge bg-danger">Schema</span> Schema {self.name}:</h4>
+        </div>
+        <table class="table table-temporal-style">
             <thead>
                 <tr>
                 <th scope="col">Field name</th>
@@ -27,7 +31,8 @@ class TypeSchema(BaseModel):
                 <th scope="col">Default value</th>
                 </tr>
             </thead>
-            <tbody>"""
+        <tbody>
+        """
         for field in self.fields:
             # Field type check
             field_type: str = ""
@@ -41,7 +46,6 @@ class TypeSchema(BaseModel):
             field_default = self.fields.get(field).default
             if isinstance(self.fields.get(field).default, _MISSING_TYPE):
                 field_default = " - "
-
             fields = (
                 fields
                 + f"""<tr>

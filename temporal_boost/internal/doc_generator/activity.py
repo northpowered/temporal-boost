@@ -13,7 +13,9 @@ class ActivitySchema(BaseModel):
     def nav(self) -> str:
         return f"""
             <li>
-                <a href="#activity_{self.code_name}"><span class="badge bg-info">Activity</span> {self.execution_name}</a>
+                <a class="activities-nav-element" href="#activity_{self.code_name}">
+                <span class="badge bg-info">  </span> {self.execution_name}
+                </a>
             </li>
         """
 

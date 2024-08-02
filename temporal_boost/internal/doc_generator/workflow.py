@@ -35,7 +35,7 @@ class WorkflowSchema(BaseModel):
     def nav(self) -> str:
         return f"""
             <li>
-                <a href="#workflow_{self.code_name}"><span class="badge bg-success">Workflow</span> {self.code_name}</a>
+                <a class="workflows-nav-element" href="#workflow_{self.code_name}"><span class="badge bg-success">  </span> {self.code_name}</a>
             </li>
         """
 
@@ -65,7 +65,9 @@ class WorkflowSchema(BaseModel):
         # Return block
         return_type = f"""<div><strong>Return: {str(self.definition.ret_type.__name__)}</strong></div>"""
         html_str: str = f"""
-        <div id="workflow_{self.code_name}"><h4><span class="badge bg-success">Workflow</span> {self.code_name}</h4></div>
+        <div id="workflow_{self.code_name}">
+            <h4><span class="badge bg-success">Workflow</span> {self.code_name}</h4>
+        </div>
         <div><span class="badge bg-secondary">Worker: {self.workflow_worker}</span></div>
         <p>
             <div><strong>Execution name: <i>{self.execution_name}</i></strong></div>
