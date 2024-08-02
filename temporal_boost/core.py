@@ -128,9 +128,28 @@ class BoostApp:
         self.registered_workers.append(worker)
         self.logger.info(f"Worker {worker_name} was registered in CLI")
 
-    def add_internal_worker(self, host: str, port: int) -> None:
+    def add_internal_worker(
+        self,
+        host: str,
+        port: int,
+        doc_endpoint: str | None = "/doc",
+        doc_css_endpoint: str | None = "/style.css",
+        doc_js_endpoint: str | None = "/scripts.js",
+    ) -> None:
         _worker_name: str = "internal"
-        worker: InternalWorker = InternalWorker(self, task_queue="internal_queue", worker_name=_worker_name, host=host, port=port)
+
+        # While intrenal worker is fully HTTP without Temporal connection,
+        # left `task_queue` hardcoded
+        worker: InternalWorker = InternalWorker(
+            self,
+            task_queue="internal_queue",
+            worker_name=_worker_name,
+            host=host,
+            port=port,
+            doc_endpoint=doc_endpoint,
+            doc_css_endpoint=doc_css_endpoint,
+            doc_js_endpoint=doc_js_endpoint,
+        )
 
         self.run_typer.command(name=_worker_name)(worker.run)
         self.registered_workers.append(worker)

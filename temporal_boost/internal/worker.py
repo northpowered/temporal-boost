@@ -19,25 +19,30 @@ class InternalWorker:
         worker_name: str,
         host: str,
         port: int,
+        doc_endpoint: str | None = "/doc",
+        doc_css_endpoint: str | None = "/style.css",
+        doc_js_endpoint: str | None = "/scripts.js",
     ) -> None:
         self.app = app
-        self.name = "internal"
+        self.name = worker_name
         self.task_queue = task_queue
         self.host: str = host
         self.port: int = port
-        self.doc_endpoint: str | None = "/doc"
+        self.doc_endpoint: str | None = doc_endpoint
         # Creating robyn app for internal web server
         robyn_config = config
         # Suppressing robyn rust logger
         config.log_level = "ERROR"
 
-        self._local_css_endpoint: str = "/style.css"
-        self._local_js_endpoint: str = "/scripts.js"
+        self._local_css_endpoint: str = doc_css_endpoint
+        self._local_js_endpoint: str = doc_js_endpoint
 
         self.web_app = Robyn("__internal__", config=robyn_config)
-        self.web_app.add_route("GET", self._local_css_endpoint, custom_css)
-        self.web_app.add_route("GET", self._local_js_endpoint, custom_js)
-        self.web_app.add_route("GET", self.doc_endpoint, self.build_html_doc, is_const=True)
+
+        if self.doc_endpoint:
+            self.web_app.add_route("GET", self._local_css_endpoint, custom_css)
+            self.web_app.add_route("GET", self._local_js_endpoint, custom_js)
+            self.web_app.add_route("GET", self.doc_endpoint, self.build_html_doc, is_const=True)
 
         self.doc_schema = generate_doc_schema(self.app)
         self.rendered_doc: str | None = None

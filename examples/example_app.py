@@ -8,9 +8,8 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 
+from examples.example_asgi_app import fastapi_app
 from temporal_boost import BoostApp, BoostLoggerConfig
-
-from .example_asgi_app import fastapi_app
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(
@@ -93,11 +92,9 @@ app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 
 app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
-# app.add_http_worker("test_http_worker_!", "0.0.0.0", 8000, routes=[])
-
 app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
 
-app.add_internal_worker("0.0.0.0", 8888)
+app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
 
 # Run your app and start workers with CLI
 app.run()
