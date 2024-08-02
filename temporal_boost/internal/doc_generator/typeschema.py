@@ -8,7 +8,7 @@ class TypeSchema(BaseModel):
     name: str
     fields: dict | None = None
 
-    def __hash__(self) -> str:
+    def __hash__(self) -> int:
         return hash(self.name)
 
     def nav(self) -> str:
