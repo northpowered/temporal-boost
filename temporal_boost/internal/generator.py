@@ -50,7 +50,6 @@ def generate_doc_schema(app: "BoostApp") -> MainSchema:
                 inspection: dict = dict(i.getmembers(activity))
                 definition: _ActivityDefinition = inspection.get("__temporal_activity_definition")
                 fn_inspection: dict = dict(i.getmembers(definition.fn))
-                #print(fn_inspection)
                 for activity_schema in fn_inspection.get("__annotations__").values():
                     dataclass_fields: dict | None = dict(i.getmembers(activity_schema)).get("__dataclass_fields__")
                     if dataclass_fields:
@@ -59,7 +58,6 @@ def generate_doc_schema(app: "BoostApp") -> MainSchema:
                             fields=dataclass_fields
 
                         ))
-                        print(dataclass_fields)
                     
                 schema.activities.append(
                     ActivitySchema(

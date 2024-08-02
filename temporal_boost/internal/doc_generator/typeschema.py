@@ -1,3 +1,6 @@
+import types
+from dataclasses import _MISSING_TYPE
+
 from pydantic import BaseModel
 
 
@@ -16,23 +19,36 @@ class TypeSchema(BaseModel):
         """
 
     def html(self) -> str:
-        fields: str = f"""<div>Schema {self.name}:</div><table class="table">
+        fields: str = f"""<div id="schema_{self.name}"><h4><span class="badge bg-danger text-dark">Schema</span> Schema {self.name}:</h4></div><table class="table">
             <thead>
                 <tr>
-                <th scope="col">#</th>
-                <th scope="col">First</th>
-                <th scope="col">Last</th>
-                <th scope="col">Handle</th>
+                <th scope="col">Field name</th>
+                <th scope="col">Field type</th>
+                <th scope="col">Default value</th>
                 </tr>
             </thead>
             <tbody>"""
         for field in self.fields:
-            print(dir(self.fields.get(field).type))
-            fields = fields + f"""<tr>
+            # Field type check
+            field_type: str = ""
+            if isinstance(self.fields.get(field).type, type):
+                field_type = str(self.fields.get(field).type.__name__)
+
+            if isinstance(self.fields.get(field).type, types.UnionType):
+                field_type = self.fields.get(field).type
+            # Default value check
+            field_default: str = ""
+            field_default = self.fields.get(field).default
+            if isinstance(self.fields.get(field).default, _MISSING_TYPE):
+                field_default = " - "
+
+            fields = (
+                fields
+                + f"""<tr>
             <th scope="row">{self.fields.get(field).name}</th>
-            <td>{str(self.fields.get(field).type)}</td>
-            <td>Otto</td>
-            <td>@mdo</td>
+            <td>{field_type}</td>
+            <td>{field_default}</td>
             </tr>"""
+            )
         fields = fields + "</tbody></table>"
         return fields
