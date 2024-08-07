@@ -10,12 +10,16 @@ from datetime import timedelta
 from temporalio import activity, workflow
 
 from examples.example_asgi_app import fastapi_app
-from temporal_boost import BoostApp, BoostLoggerConfig
+from temporal_boost import BoostApp, BoostLoggerConfig, BoostOTLPConfig
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(
-    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="DEBUG"),
+    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="DEBUG", multiprocess_safe=True),
     use_pydantic=True,
+    name="BoostApp example",
+    temporal_endpoint="localhost:7233",
+    temporal_namespace="default",
+    otlp_config=BoostOTLPConfig(otlp_endpoint="otlp-collector", service_name="example-app")
 )
 
 @dataclass

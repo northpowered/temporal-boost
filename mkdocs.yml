@@ -1,0 +1,32 @@
+site_name: Temporal-boost
+site_description: Extemely fast development for Temporal-based microservices
+repo_url: https://github.com/northpowered/temporal-boost
+repo_name: northpowered/temporal-boost
+
+theme:
+  name: material
+  language: en
+  logo: https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg
+  favicon: https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg
+  features:
+  - navigation.tracking
+  - content.code.copy
+  
+
+plugins:
+  - tags
+
+markdown_extensions:
+  - tables
+
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+nav:
+  - Getting started: index.md
+  - Creating application: creating_application.md
