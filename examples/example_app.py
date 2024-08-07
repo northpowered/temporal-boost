@@ -3,6 +3,7 @@ For development purposes
 """
 
 # Import `BoostApp` class
+import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -60,6 +61,9 @@ class MyWorkflow:
 
     @workflow.run
     async def run2(self, foo: str) -> TestModel:
+        app.logger.info("Sync logger")
+        with contextlib.suppress(TypeError):
+            await app.logger.info("Async logger")
         start_payload: TestModel = TestModel(foo="hello", bar=0)
         print(type(start_payload))
         result_1 = await workflow.execute_activity(

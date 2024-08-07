@@ -12,7 +12,7 @@ async def main():
 
     # Run workflow
     result = await client.execute_workflow(
-        "MyWorkflow",
+        "MyCustomFlowName",
         "blabla",
         id="pydantic_converter-workflow-id",
         task_queue="task_q_3",
