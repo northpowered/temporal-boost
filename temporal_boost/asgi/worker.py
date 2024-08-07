@@ -1,8 +1,10 @@
-import typing
 import asyncio
-from hypercorn.config import Config
-from hypercorn.asyncio import serve
+import typing
 
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
+
+from temporal_boost.schemas import WorkerType
 
 if typing.TYPE_CHECKING:
     from core import BoostApp
@@ -18,10 +20,13 @@ class ASGIWorker:
         port: int,
     ) -> None:
         self.app = app
-        self.worker_name = worker_name
+        self.name = worker_name
         self.host: str = host
         self.port: int = port
         self.asgi_app: typing.Any = asgi_app
+        self.task_queue: str = "null"  # temp fix
+        self._type: WorkerType = WorkerType.ASGI
+        self.description: str = ""  # create arg
 
     async def _run_worker(self) -> int:
         config: Config = Config()

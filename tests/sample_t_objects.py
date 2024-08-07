@@ -1,5 +1,4 @@
-from temporalio import activity
-from temporalio import workflow
+from temporalio import activity, workflow
 
 
 @activity.defn(name="test_boost_activity_1")

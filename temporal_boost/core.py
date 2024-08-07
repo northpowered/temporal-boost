@@ -1,21 +1,19 @@
 # Base imports
-import typer
 import asyncio
+import logging
 import typing
 from multiprocessing import Process
 
-# Local imports
-from .worker import BoostWorker
-from .schemas import ClientConnectorArgs, BoostOTLPConfig
-from .tracing import create_tracer, trace
-from .logger import BoostLogger, BoostLoggerConfig
-from .http import BoostHTTPWorker, BoostHTTPRoute
+import typer
+
 from .asgi import ASGIWorker
-# from .http import DocServerConfig, serve_doc_page
-import logging
+from .internal import InternalWorker
+from .logger import BoostLogger, BoostLoggerConfig
+from .schemas import BoostOTLPConfig, ClientConnectorArgs
+from .tracing import create_tracer, trace
+from .worker import BoostWorker
 
-
-PROHIBITED_WORKER_NAMES: list[str] = ["all", "doc"]
+PROHIBITED_WORKER_NAMES: list[str] = ["all", "internal"]
 
 
 class BoostApp:
@@ -27,8 +25,7 @@ class BoostApp:
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
-        use_pydantic: bool = False
-        # doc_config: DocServerConfig | None = None
+        use_pydantic: bool = False,
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
@@ -49,15 +46,12 @@ class BoostApp:
             self.logger: logging.Logger = BoostLogger().get_default_logger()
         else:
             if logger is None:
-                self.logger: logging.Logger = BoostLogger(
-                    config=self.logger_config
-                ).get_default_logger()
+                self.logger: logging.Logger = BoostLogger(config=self.logger_config).get_default_logger()
             else:
                 self.logger: logging.Logger = logger
 
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
-        self.registered_http_workers: list[BoostHTTPWorker] = []
         self.registered_asgi_workers: list[ASGIWorker] = []
 
         self.client_connector_args: ClientConnectorArgs = ClientConnectorArgs(
@@ -66,15 +60,17 @@ class BoostApp:
             otlp_config=self.otlp_config,
         )
 
-        self._root_typer: typer.Typer = typer.Typer(
-            name=self.name, no_args_is_help=True
-        )
+        self._root_typer: typer.Typer = typer.Typer(name=self.name, no_args_is_help=True)
+        # Typer for running workers
         self.run_typer: typer.Typer = typer.Typer(name="run")
-
+        # Typer for running cron workflows
         self.cron_typer: typer.Typer = typer.Typer(name="cron")
+        # Typer for separate commands (without runtime)
+        self.exec_typer: typer.Typer = typer.Typer(name="exec")
 
         self._root_typer.add_typer(self.run_typer, no_args_is_help=True)
         self._root_typer.add_typer(self.cron_typer, no_args_is_help=True)
+        self._root_typer.add_typer(self.exec_typer, no_args_is_help=True)
 
         self.run_typer.command(name="all")(self.register_all)
 
@@ -88,9 +84,7 @@ class BoostApp:
             if not service_name:
                 service_name = self.name
             # Create tracer and add it into the app
-            self.tracer = create_tracer(
-                service_name=service_name, otlp_endpoint=self.otlp_config.otlp_endpoint
-            )
+            self.tracer = create_tracer(service_name=service_name, otlp_endpoint=self.otlp_config.otlp_endpoint)
 
         # if self.doc_config:
         #     self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))
@@ -104,12 +98,11 @@ class BoostApp:
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
+        description: str = "",
     ) -> None:
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
-            raise RuntimeError(
-                f"{worker_name} name for worker is reserved for temporal-boost"
-            )
+            raise RuntimeError(f"{worker_name} name for worker is reserved for temporal-boost")
 
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
@@ -125,6 +118,7 @@ class BoostApp:
             cron_schedule=cron_schedule,
             cron_runner=cron_runner,
             metrics_endpoint=metrics_endpoint,
+            description=description,
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
@@ -138,56 +132,58 @@ class BoostApp:
         self.registered_workers.append(worker)
         self.logger.info(f"Worker {worker_name} was registered in CLI")
 
-    def add_http_worker(
-        self, worker_name: str, host: str, port: int, routes: list[BoostHTTPRoute]
+    def add_internal_worker(
+        self,
+        host: str,
+        port: int,
+        doc_endpoint: str | None = "/doc",
+        doc_css_endpoint: str | None = "/style.css",
+        doc_js_endpoint: str | None = "/scripts.js",
     ) -> None:
-        # REDONE to .utils methods
-        # Constraints check:
-        if worker_name in PROHIBITED_WORKER_NAMES:
-            raise RuntimeError(
-                f"{worker_name} name for worker is reserved for temporal-boost"
-            )
+        _worker_name: str = "internal"
 
-        for registered_worker in self.registered_workers:
-            if worker_name == registered_worker.name:
-                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
-
-        worker: BoostHTTPWorker = BoostHTTPWorker(
-            app=self, worker_name=worker_name, host=host, port=port, routes=routes
+        # While intrenal worker is fully HTTP without Temporal connection,
+        # left `task_queue` hardcoded
+        worker: InternalWorker = InternalWorker(
+            self,
+            task_queue="internal_queue",
+            worker_name=_worker_name,
+            host=host,
+            port=port,
+            doc_endpoint=doc_endpoint,
+            doc_css_endpoint=doc_css_endpoint,
+            doc_js_endpoint=doc_js_endpoint,
         )
-        self.run_typer.command(name=worker_name)(worker.run)
+
+        self.run_typer.command(name=_worker_name)(worker.run)
         self.registered_workers.append(worker)
-        self.registered_http_workers.append(worker)
-        self.logger.info(f"HTTP worker {worker_name} was registered in CLI")
+        self.logger.info("Internal worker was registered in CLI")
 
-    def add_asgi_worker(
-        self, worker_name: str, asgi_app: typing.Any, host: str, port: int
-    ) -> None:
+    def add_asgi_worker(self, worker_name: str, asgi_app: typing.Any, host: str, port: int) -> None:
         # REDONE to .utils methods
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
-            raise RuntimeError(
-                f"{worker_name} name for worker is reserved for temporal-boost"
-            )
+            raise RuntimeError(f"{worker_name} name for worker is reserved for temporal-boost")
 
         for registered_worker in self.registered_workers:
             if worker_name == registered_worker.name:
                 raise RuntimeError(f"{worker_name} name for worker`s already reserved")
 
-        worker: ASGIWorker = ASGIWorker(
-            app=self, worker_name=worker_name, host=host, port=port, asgi_app=asgi_app
-        )
+        worker: ASGIWorker = ASGIWorker(app=self, worker_name=worker_name, host=host, port=port, asgi_app=asgi_app)
         self.run_typer.command(name=worker_name)(worker.run)
         self.registered_workers.append(worker)
         self.registered_asgi_workers.append(worker)
         self.logger.info(f"ASGI worker {worker_name} was registered in CLI")
+
+    def add_exec_method_sync(self, name: str, callback: typing.Callable):
+        self.exec_typer.command(name=name)(callback)
 
     def run(self):
         asyncio.run(self._root_typer())
 
     def register_all(self):
         self.logger.warning("Use all-in-one mode only in development!")
-        procs: list[Process] = list()
+        procs: list[Process] = []
         # Creating worker
         for worker in self.registered_workers:
             proc = Process(

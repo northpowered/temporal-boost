@@ -9,7 +9,7 @@ from temporalio.converter import (
     JSONPlainPayloadConverter,
 )
 
-try:
+try:  # noqa: SIM105
     from pydantic.json import pydantic_encoder
 except ImportError:
     pass
@@ -32,9 +32,7 @@ class PydanticJSONPayloadConverter(JSONPlainPayloadConverter):
         # We let JSON conversion errors be thrown to caller
         return Payload(
             metadata={"encoding": self.encoding.encode()},
-            data=json.dumps(
-                value, separators=(",", ":"), sort_keys=True, default=pydantic_encoder
-            ).encode(),
+            data=json.dumps(value, separators=(",", ":"), sort_keys=True, default=pydantic_encoder).encode(),
         )
 
 
@@ -46,14 +44,10 @@ class PydanticPayloadConverter(CompositePayloadConverter):
     def __init__(self) -> None:
         super().__init__(
             *(
-                c
-                if not isinstance(c, JSONPlainPayloadConverter)
-                else PydanticJSONPayloadConverter()
+                c if not isinstance(c, JSONPlainPayloadConverter) else PydanticJSONPayloadConverter()
                 for c in DefaultPayloadConverter.default_encoding_payload_converters
             )
         )
 
 
-pydantic_data_converter = DataConverter(
-    payload_converter_class=PydanticPayloadConverter
-)
+pydantic_data_converter = DataConverter(payload_converter_class=PydanticPayloadConverter)

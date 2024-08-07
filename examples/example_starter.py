@@ -3,11 +3,11 @@ For development purposes
 """
 
 import asyncio
+
 from temporalio.client import Client
 
 
 async def main():
-
     client = await Client.connect("localhost:7233")
 
     # Run workflow

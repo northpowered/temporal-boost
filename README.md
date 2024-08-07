@@ -5,6 +5,14 @@
 
 Small framework based on [temporalio/sdk-python](https://github.com/temporalio/sdk-python) - create [Temporal](https://temporal.io/) microservices as fast as you can
 
+# Features
+
+* Create Temporal workers with FastAPI-style
+* Add CRON workers with one code line
+* Append ASGI (ex. FastAPI) workers like Temporal
+* Auto documentation with web UI (like SwaggerUI in FastAPI)
+* Build-in logger and OTLP tracer
+
 # Quick start
 ```python
 from temporal_boost import BoostApp
