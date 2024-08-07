@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 import typing
 
-from hypercorn.asyncio import serve
+import trio
 from hypercorn.config import Config
+from hypercorn.trio import serve
 
 from temporal_boost.schemas import WorkerType
 
@@ -10,10 +13,15 @@ if typing.TYPE_CHECKING:
     from core import BoostApp
 
 
+class CustomHypercornConfig(Config):
+    boost_app: BoostApp | None = None
+
+
+
 class ASGIWorker:
     def __init__(
         self,
-        app: "BoostApp",
+        app: BoostApp,
         asgi_app: typing.Any,
         worker_name: str,
         host: str,
@@ -29,16 +37,17 @@ class ASGIWorker:
         self.description: str = ""  # create arg
 
     async def _run_worker(self) -> int:
-        config: Config = Config()
+        config: CustomHypercornConfig = CustomHypercornConfig()
         # Provide Base logger to ASGI as an extra arg
+        config.boost_app = self.app
         self.asgi_app.logger = self.app.logger
         # Supressing default hypercorn loggers
         config.accesslog = None
-        config.errorlog = None
         # Serving params config
         config.bind = [f"{self.host}:{self.port}"]
-        # ASGI corutine
-        await serve(self.asgi_app, config, mode="asgi")
+
+        trio.run(serve, self.asgi_app, config)
+
 
     def run(self):
         asyncio.run(self._run_worker())
