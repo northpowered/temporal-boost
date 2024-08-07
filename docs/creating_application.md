@@ -24,11 +24,13 @@ app: BoostApp = BoostApp(
     use_pydantic=True # Use special JSON serializer inside Temporal SDK
 )
 ```
+### BoostLoggerConfig
+
+### BoostOTLPConfig
 
 ## Adding temporal workers
 
-
-
+### Examples
 ```python
 app.add_worker(
     "my_worker_1",
@@ -52,3 +54,9 @@ app.add_worker(
 )
 
 ```
+
+## Adding CRON workers
+
+## Adding internal worker
+
+## Adding ASGI workers
