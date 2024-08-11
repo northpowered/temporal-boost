@@ -2,6 +2,8 @@
 
 ## Base code example
 
+This\`s the base code snippet to start working with the framework. Create `BoostApp` object, set configuration for an app and run it.
+
 ```python
 # Creating `BoostApp` object
 
@@ -12,23 +14,92 @@ app: BoostApp = BoostApp(
     temporal_endpoint="localhost:7233", # Temporal endpoint
     temporal_namespace="default", # Temporal namespace
     logger_config=BoostLoggerConfig(
-        json=True, # Serialize logs in JSON format
-        bind_extra={"foo": "bar",}, # Add global `extra` for JSON logs
-        level="DEBUG", # Log level
-        multiprocess_safe=True # Enqueue mode of loguru
+        json=True,
+        bind_extra={"foo": "bar",},
+        level="DEBUG",
+        multiprocess_safe=True
     ),    
     otlp_config=BoostOTLPConfig(
-        otlp_endpoint="otlp-collector", # OTLP reciever endpoint
-        service_name="example-app" #  Service name for OTLP
+        otlp_endpoint="otlp-collector",
+        service_name="example-app"
     ),
     use_pydantic=True # Use special JSON serializer inside Temporal SDK
 )
 ```
 ### BoostLoggerConfig
 
+BoostLoggerConfig is an object with setting for internal logger, based on loguru. There are the description:
+
+Logs output. Can be io object of filename
+> ```sink: typing.TextIO = sys.stdout```
+
+Log severity
+> ```level: str = "DEBUG" ```
+
+Internal seriallizer for logs
+> ```json: bool = True ```
+
+We use internal formatter, but ypu can provide anyone
+> ```formatter: typing.Callable | str = _default_json_formatter```
+
+Enqueue mode of loguru. Use it in async and muliprocess apps
+> ```multiprocess_safe: bool = True```
+
+Dict, that you can fill with anythind you want. It\`ll be added to `extra` field of log format
+> ```bind_extra: dict | None = None```
+
+
 ### BoostOTLPConfig
 
+Similar to BoostLoggerConfig, BoostOTLPConfig is an object with setting for OTLP tracer. This tracer will be provided for original Tempral SDK tracer too.
+
+OTLP collector endpoint
+> ```otlp_endpoint: str```
+
+OTLP service name
+> ```service_name: str | None = None```
+
 ## Adding temporal workers
+
+For adding worker to the app, you should use `add_worker` method. There are arguments for it:
+
+```python
+def add_worker(
+    self,
+    worker_name: str,
+    task_queue: str,
+    workflows: list = [],
+    activities: list = [],
+    cron_schedule: str | None = None,
+    cron_runner: typing.Coroutine | None = None,
+    metrics_endpoint: str | None = None,
+    description: str = "",
+) -> None:
+```
+Name of the worker. Should be unique for the app and non-matching with TemporalBoost system worker names
+> ```worker_name: str```
+
+Task queue, there activities and workflows of this worker will`be registered.
+> ```task_queue: str```
+
+List of workflows for this worker, defaults to []
+> ```workflows: list = []```
+
+List of activities for this worker, defaults to []
+> ```activities: list = []```
+
+Cron schedule string, if you want to create cron worker, ex `* * * * *`
+> ```cron_schedule: str | None = None```
+
+Workflow `run` method, which will be executed, if you created cron worker. Required, if `cron_schedule` is not `None`
+> ```cron_runner: typing.Coroutine | None = None```
+
+Prometheus metrics endpoint for this worker. Should looks like `0.0.0.0:9000`
+> ```metrics_endpoint: str | None = None```
+
+Non-nessesary description for the worker
+> ```description: str = ""```
+
 
 ### Examples
 ```python
@@ -56,7 +127,20 @@ app.add_worker(
 ```
 
 ## Adding CRON workers
+```python
+app.add_worker(
+    "worker_4",
+    "task_q_4",
+    workflows=[MyWorkflow],
+    cron_runner=MyWorkflow.run,
+    cron_schedule="* * * * *"
+)
+```
 
 ## Adding internal worker
+
+```python
+app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
+```
 
 ## Adding ASGI workers

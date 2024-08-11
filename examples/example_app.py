@@ -104,6 +104,8 @@ app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 
 app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
+app.add_worker("worker_4", "task_q_4", workflows=[MyWorkflow], cron_runner=MyWorkflow.run, cron_schedule="* * * * *")
+
 app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
 
 app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
