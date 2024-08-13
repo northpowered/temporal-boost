@@ -10,12 +10,16 @@ from datetime import timedelta
 from temporalio import activity, workflow
 
 from examples.example_asgi_app import fastapi_app
-from temporal_boost import BoostApp, BoostLoggerConfig
+from temporal_boost import BoostApp, BoostLoggerConfig, BoostOTLPConfig
 
 # Create `BoostApp` object
 app: BoostApp = BoostApp(
-    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="DEBUG"),
+    logger_config=BoostLoggerConfig(json=True, bind_extra={"app": "my", "ww": "xx"}, level="DEBUG", multiprocess_safe=True),
     use_pydantic=True,
+    name="BoostApp example",
+    temporal_endpoint="localhost:7233",
+    temporal_namespace="default",
+    otlp_config=BoostOTLPConfig(otlp_endpoint="otlp-collector", service_name="example-app")
 )
 
 @dataclass
@@ -60,7 +64,7 @@ class MyWorkflow:
     """
 
     @workflow.run
-    async def run2(self, foo: str) -> TestModel:
+    async def run(self, foo: str) -> TestModel:
         app.logger.info("Sync logger")
         with contextlib.suppress(TypeError):
             await app.logger.info("Async logger")
@@ -100,7 +104,9 @@ app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
 
 app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
-app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
+#app.add_worker("worker_4", "task_q_4", workflows=[MyWorkflow], cron_runner=MyWorkflow.run, cron_schedule="* * * * *")
+
+app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8001)
 
 app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
 
