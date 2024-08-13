@@ -92,7 +92,7 @@ class InternalWorker:
                         <!-- Page Content  -->
                         <div id="content">
                             <h2>{self.app.name}</h2>
-                            <p>Auto generated documentation (Alpha variant)</p>
+                            <p>Auto generated documentation (Alpha version)</p>
                             {self.body}
                             <div class="line"></div>
                         </div>
