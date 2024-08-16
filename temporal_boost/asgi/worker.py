@@ -36,7 +36,7 @@ class ASGIWorker:
         self._type: WorkerType = WorkerType.ASGI
         self.description: str = ""  # create arg
 
-    async def _run_worker(self) -> int:
+    def _run_worker(self) -> int:
         config: CustomHypercornConfig = CustomHypercornConfig()
         # Provide Base logger to ASGI as an extra arg
         config.boost_app = self.app
@@ -50,5 +50,5 @@ class ASGIWorker:
 
 
     def run(self):
-        asyncio.run(self._run_worker())
+        self._run_worker()
         return self.worker_name
