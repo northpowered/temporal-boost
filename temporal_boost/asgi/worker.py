@@ -3,9 +3,8 @@ from __future__ import annotations
 import asyncio
 import typing
 
-import trio
+from hypercorn.asyncio import serve
 from hypercorn.config import Config
-from hypercorn.trio import serve
 
 from temporal_boost.schemas import WorkerType
 
@@ -36,7 +35,7 @@ class ASGIWorker:
         self._type: WorkerType = WorkerType.ASGI
         self.description: str = ""  # create arg
 
-    def _run_worker(self) -> int:
+    async def _run_worker(self) -> int:
         config: CustomHypercornConfig = CustomHypercornConfig()
         # Provide Base logger to ASGI as an extra arg
         config.boost_app = self.app
@@ -46,9 +45,9 @@ class ASGIWorker:
         # Serving params config
         config.bind = [f"{self.host}:{self.port}"]
 
-        trio.run(serve, self.asgi_app, config)
+        await serve(self.asgi_app, config, mode="asgi")
 
 
     def run(self):
-        self._run_worker()
+        asyncio.run(self._run_worker())
         return self.worker_name

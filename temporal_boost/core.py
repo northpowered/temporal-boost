@@ -13,7 +13,7 @@ from .schemas import BoostOTLPConfig, ClientConnectorArgs
 from .tracing import create_tracer, trace
 from .worker import BoostWorker
 
-PROHIBITED_WORKER_NAMES: list[str] = ["all", "internal"]
+PROHIBITED_WORKER_NAMES: list[str] = ["all", "internal_boost"]
 
 
 class BoostApp:
@@ -140,7 +140,7 @@ class BoostApp:
         doc_css_endpoint: str | None = "/style.css",
         doc_js_endpoint: str | None = "/scripts.js",
     ) -> None:
-        _worker_name: str = "internal"
+        _worker_name: str = "internal_boost"
 
         # While intrenal worker is fully HTTP without Temporal connection,
         # left `task_queue` hardcoded
