@@ -3,7 +3,9 @@ For development purposes
 """
 
 # Import `BoostApp` class
+import asyncio
 import contextlib
+import random
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -91,6 +93,19 @@ class MyWorkflow:
         print(signal_arg)
 
 
+
+
+class TestAsyncRuntime:
+    """
+        Class must implement `run` method
+    """
+    async def _test_async_runtime(self):
+        while True:
+            print(random.random())
+            await asyncio.sleep(1)
+    def run(self):
+        asyncio.run(self._test_async_runtime())
+
 # Add async workers to your app
 if __name__ == "__main__":
     app.add_worker(
@@ -111,5 +126,7 @@ if __name__ == "__main__":
     app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
 
     app.add_exec_method_sync("migrate_db", fake_db_migration)
+
+    app.add_async_runtime("test_async", runtime=TestAsyncRuntime())
     # Run your app and start workers with CLI
     app.run()

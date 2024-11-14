@@ -178,6 +178,11 @@ class BoostApp:
     def add_exec_method_sync(self, name: str, callback: typing.Callable):
         self.exec_typer.command(name=name)(callback)
 
+    def add_async_runtime(self, name: str, runtime):
+        self.run_typer.command(name=name)(runtime.run)
+        self.registered_workers.append(runtime)
+        self.logger.info(f"Async runtime {name} was registered in CLI")
+
     def run(self):
         asyncio.run(self._root_typer())
 
