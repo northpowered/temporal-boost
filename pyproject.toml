@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "temporal-boost"
-version = "1.0.2"
+version = "1.0.3"
 description = "Small framework for Temporal development"
 authors = ["northpowered <you@example.com>"]
 readme = "README.md"
