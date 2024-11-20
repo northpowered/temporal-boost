@@ -1,8 +1,10 @@
 # Base imports
 import asyncio
 import logging
+import platform
 import typing
 from multiprocessing import Process
+from threading import Thread
 
 import typer
 
@@ -187,15 +189,30 @@ class BoostApp:
         asyncio.run(self._root_typer())
 
     def register_all(self):
-        self.logger.warning("Use all-in-one mode only in development!")
-        procs: list[Process] = []
-        # Creating worker
-        for worker in self.registered_workers:
-            proc = Process(
-                target=worker.run,
-            )
-            procs.append(proc)
-            proc.start()
+        if platform.system() == "Windows":
+            self.logger.warning("Use all-in-one mode only in development! Yoy are working via Threads")
+            threads: list[Thread] = []
 
-        for proc in procs:
-            proc.join()
+            # Make threads
+            for worker in self.registered_workers:
+                thread = Thread(
+                    target=worker.run,
+                )
+                threads.append(thread)
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+        else:
+            self.logger.warning("Use all-in-one mode only in development!")
+            procs: list[Process] = []
+            # Creating worker
+            for worker in self.registered_workers:
+                proc = Process(
+                    target=worker.run,
+                )
+                procs.append(proc)
+                proc.start()
+
+            for proc in procs:
+                proc.join()
