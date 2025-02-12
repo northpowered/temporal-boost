@@ -42,6 +42,7 @@ class ASGIWorker:
         self.asgi_app.logger = self.app.logger
         # Supressing default hypercorn loggers
         config.accesslog = None
+        config.errorlog = self.app.logger
         # Serving params config
         config.bind = [f"{self.host}:{self.port}"]
 
