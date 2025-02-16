@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import typing
-
+import sys
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
-
+from hypercorn.logging import Logger
 from temporal_boost.schemas import WorkerType
-
+from temporal_boost.logger import BoostLogger
 if typing.TYPE_CHECKING:
     from core import BoostApp
 
 class CustomHypercornConfig(Config):
     boost_app: BoostApp | None = None
+
 
 class ASGIWorker:
     def __init__(
@@ -39,7 +40,7 @@ class ASGIWorker:
         self.asgi_app.logger = self.app.logger
         # Supressing default hypercorn loggers
         config.accesslog = None
-        config.errorlog = self.app.logger
+        config.errorlog = "-"
         # Serving params config
         config.bind = [f"{self.host}:{self.port}"]
 

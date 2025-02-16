@@ -3,10 +3,10 @@ import asyncio
 import logging
 import platform
 import typing
-from multiprocess import Process
 from threading import Thread
 
 import typer
+from multiprocess import Process
 
 from .asgi import ASGIWorker
 from .internal import InternalWorker
@@ -101,6 +101,7 @@ class BoostApp:
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
         description: str = "",
+        **worker_kwargs: typing.Any
     ) -> None:
         # Constraints check:
         if worker_name in PROHIBITED_WORKER_NAMES:
@@ -121,6 +122,7 @@ class BoostApp:
             cron_runner=cron_runner,
             metrics_endpoint=metrics_endpoint,
             description=description,
+            **worker_kwargs
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)

@@ -32,6 +32,7 @@ class BoostWorker:
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
         description: str = "",
+        **worker_kwargs: typing.Any
     ) -> None:
         self.app: BoostApp = app
         self.name: str = name
@@ -44,6 +45,7 @@ class BoostWorker:
         self.metrics_endpoint: str | None = metrics_endpoint
         self.description: str = description
         self._type: WorkerType = WorkerType.TEMPORAL
+        self._worker_kwargs = worker_kwargs
 
     async def _run_worker(self):
         client: Client = await create_temporal_client_connector(
@@ -60,6 +62,7 @@ class BoostWorker:
             task_queue=self.task_queue,
             activities=self.activities,
             workflows=self.workflows,
+            **self._worker_kwargs
         )
         await worker.run()
 

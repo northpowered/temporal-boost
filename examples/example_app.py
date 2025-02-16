@@ -123,10 +123,10 @@ if __name__ == "__main__":
 
     app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8001)
 
-    app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
+    app.add_internal_worker("0.0.0.0", 8998, doc_endpoint="/doc")
 
     app.add_exec_method_sync("migrate_db", fake_db_migration)
 
-    app.add_async_runtime("test_async", runtime=TestAsyncRuntime())
+    #app.add_async_runtime("test_async", runtime=TestAsyncRuntime())
     # Run your app and start workers with CLI
     app.run()
