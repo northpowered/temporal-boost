@@ -11,11 +11,8 @@ from temporal_boost.schemas import WorkerType
 if typing.TYPE_CHECKING:
     from core import BoostApp
 
-
 class CustomHypercornConfig(Config):
     boost_app: BoostApp | None = None
-
-
 
 class ASGIWorker:
     def __init__(
@@ -48,7 +45,6 @@ class ASGIWorker:
 
         await serve(self.asgi_app, config, mode="asgi")
 
-
     def run(self):
         asyncio.run(self._run_worker())
-        return self.worker_name
+        return self.name
