@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import typing
-import sys
+
 from hypercorn.asyncio import serve
 from hypercorn.config import Config
-from hypercorn.logging import Logger
+
 from temporal_boost.schemas import WorkerType
-from temporal_boost.logger import BoostLogger
+
 if typing.TYPE_CHECKING:
     from core import BoostApp
 

@@ -1,7 +1,7 @@
 import asyncio
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Sequence
 
 from temporalio import activity, workflow
 from temporalio.client import Client

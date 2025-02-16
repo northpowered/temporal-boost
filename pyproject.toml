@@ -48,7 +48,7 @@ line-length = 150
 [tool.ruff.lint]
 select = ["E", "F", "W", "C", "UP", "I", "SIM", "N"]
 # Ignore 815 and 803 to avoid aliased for external APIs
-ignore = ["N815", "N803"]
+ignore = ["N815", "N803", "UP035", "UP006"]
 
 [tool.ruff.format]
 docstring-code-format = true
