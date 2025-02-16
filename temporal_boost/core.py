@@ -190,7 +190,7 @@ class BoostApp:
 
     def register_all(self):
         if platform.system() == "Windows":
-            self.logger.warning("Use all-in-one mode only in development! Yoy are working via Threads")
+            self.logger.warning("Use all-in-one mode only in development! You are working via Threads")
             threads: list[Thread] = []
 
             # Make threads
