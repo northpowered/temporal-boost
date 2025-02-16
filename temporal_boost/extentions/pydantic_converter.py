@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional
+from typing import Any
 
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
@@ -22,7 +22,7 @@ class PydanticJSONPayloadConverter(JSONPlainPayloadConverter):
     :py:meth:`to_payload` using the Pydantic encoder.
     """
 
-    def to_payload(self, value: Any) -> Optional[Payload]:
+    def to_payload(self, value: Any) -> Payload | None:
         """Convert all values with Pydantic encoder or fail.
 
         Like the base class, we fail if we cannot convert. This payload
@@ -44,9 +44,9 @@ class PydanticPayloadConverter(CompositePayloadConverter):
     def __init__(self) -> None:
         super().__init__(
             *(
-                c if not isinstance(c, JSONPlainPayloadConverter) else PydanticJSONPayloadConverter()
-                for c in DefaultPayloadConverter.default_encoding_payload_converters
-            )
+                converter if not isinstance(converter, JSONPlainPayloadConverter) else PydanticJSONPayloadConverter()
+                for converter in DefaultPayloadConverter.default_encoding_payload_converters
+            ),
         )
 
 

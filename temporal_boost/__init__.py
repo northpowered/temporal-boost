@@ -1,5 +1,9 @@
-from .core import BoostApp  # noqa: F401
-from .logger import BoostLoggerConfig  # noqa: F401
-from .schemas import BoostOTLPConfig  # noqa: F401
+from .core import BoostApp
+from .logger import BoostLoggerConfig
+from .schemas import BoostOTLPConfig
 
-__all__ = ["BoostApp", "BoostLoggerConfig", "BoostOTLPConfig"]
+__all__ = (
+    "BoostApp",
+    "BoostLoggerConfig",
+    "BoostOTLPConfig",
+)

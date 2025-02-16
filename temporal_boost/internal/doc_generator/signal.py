@@ -24,8 +24,8 @@ class SignalSchema(BaseModel):
         for arg in self.signal_args:
             if arg == "self":
                 continue
-            execution_args = execution_args + f"""<li>{arg}: {self.signal_args.get(arg).__name__}</a></li>"""
-        execution_args = execution_args + "</ul>"
+            execution_args += f"""<li>{arg}: {self.signal_args.get(arg).__name__}</a></li>"""
+        execution_args += "</ul>"
         if not len(self.signal_args):
             execution_args = "<h5>No execution args</h5>"
 

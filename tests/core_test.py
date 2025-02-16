@@ -13,7 +13,13 @@ def test_create_worker():
 
 def test_create_cron():
     app = BoostApp()
-    app.add_worker("test_worker_1", "test_queue_1", workflows=[TestCronWorkflow], cron_schedule="* * * * *", cron_runner=TestCronWorkflow.run)
+    app.add_worker(
+        "test_worker_1",
+        "test_queue_1",
+        workflows=[TestCronWorkflow],
+        cron_schedule="* * * * *",
+        cron_runner=TestCronWorkflow.run,
+    )
     assert app.registered_cron_workers[0].name == "test_worker_1"
 
 

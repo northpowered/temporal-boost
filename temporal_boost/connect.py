@@ -10,7 +10,7 @@ from temporalio.runtime import (
     PrometheusConfig,
     Runtime,
     TelemetryConfig,
-    _default_runtime,
+    _default_runtime,  # noqa: PLC2701
 )
 
 # Avoid circular import for type hints
@@ -40,7 +40,7 @@ async def create_temporal_client_connector(
         runtime = Runtime(
             telemetry=TelemetryConfig(
                 metrics=PrometheusConfig(bind_address=metrics_endpoint),
-            )
+            ),
         )
     # Check PyDantic usage:
     data_converter: DataConverter = DataConverter.default
@@ -56,7 +56,7 @@ async def create_temporal_client_connector(
             data_converter=data_converter,
         )
     except RuntimeError:
-        app.logger.error(
+        app.logger.exception(
             "Cannot connect with Temporal server",
             temporal_endpoint=temporal_endpoint,
             temporal_namespace=temporal_namespace,

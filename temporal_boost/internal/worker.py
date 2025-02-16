@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
 
 
 class InternalWorker:
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         app: "BoostApp",
         task_queue: str,
@@ -34,8 +34,8 @@ class InternalWorker:
         # Suppressing robyn rust logger
         config.log_level = "ERROR"
 
-        self._local_css_endpoint: str = doc_css_endpoint
-        self._local_js_endpoint: str = doc_js_endpoint
+        self._local_css_endpoint = doc_css_endpoint
+        self._local_js_endpoint = doc_js_endpoint
 
         self.web_app = Robyn("__internal__", config=robyn_config)
 
@@ -57,7 +57,7 @@ class InternalWorker:
     def body(self) -> str:
         return self.doc_schema.html()
 
-    async def build_html_doc(self):
+    async def build_html_doc(self) -> Response:
         content: str = f"""
             <!DOCTYPE html>
             <html>
@@ -102,10 +102,10 @@ class InternalWorker:
                     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
                     <script src="{self._local_js_endpoint}" type="text/javascript"></script>
                 </body>
-            </html>"""
+            </html>"""  # noqa: E501
 
         return Response(status_code=200, headers={"Content-Type": "text/html; charset=utf-8"}, description=content)
 
-    def run(self):
+    def run(self) -> str:
         self.web_app.start(port=self.port, host=self.host)
-        return self.worker_name
+        return self.name

@@ -19,7 +19,7 @@ PROHIBITED_WORKER_NAMES: list[str] = ["all", "internal_boost"]
 
 
 class BoostApp:
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         name: str = "temporal_generic_service",
         temporal_endpoint: str = "localhost:7233",
@@ -27,7 +27,7 @@ class BoostApp:
         otlp_config: BoostOTLPConfig | None = None,
         logger_config: BoostLoggerConfig | None = None,
         logger: logging.Logger | None = None,
-        use_pydantic: bool = False,
+        use_pydantic: bool = False,  # noqa: FBT002
     ) -> None:
         self.name: str = name
         self.temporal_endpoint: str = temporal_endpoint
@@ -37,7 +37,7 @@ class BoostApp:
         self.logger_config = logger_config
 
         self.use_pydantic: bool = use_pydantic
-        # self.doc_config: DocServerConfig | None = doc_config
+        # self.doc_config: DocServerConfig | None = doc_config  # noqa: ERA001
 
         # Logger creating logic:
         # Priority:
@@ -46,11 +46,10 @@ class BoostApp:
         # 2. Using external logger
         if self.logger_config is None:
             self.logger: logging.Logger = BoostLogger().get_default_logger()
+        elif logger is None:
+            self.logger: logging.Logger = BoostLogger(config=self.logger_config).get_default_logger()
         else:
-            if logger is None:
-                self.logger: logging.Logger = BoostLogger(config=self.logger_config).get_default_logger()
-            else:
-                self.logger: logging.Logger = logger
+            self.logger: logging.Logger = logger
 
         self.registered_workers: list[BoostWorker] = []
         self.registered_cron_workers: list[BoostWorker] = []
@@ -89,21 +88,25 @@ class BoostApp:
             self.tracer = create_tracer(service_name=service_name, otlp_endpoint=self.otlp_config.otlp_endpoint)
 
         # if self.doc_config:
-        #     self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))
+        #     self.run_typer.command(name="doc")(serve_doc_page(self.doc_config))  # noqa: ERA001
 
-    def add_worker(
+    def add_worker(  # noqa: PLR0913, PLR0917
         self,
         worker_name: str,
         task_queue: str,
-        workflows: list = [],
-        activities: list = [],
+        workflows: list | None = None,
+        activities: list | None = None,
         cron_schedule: str | None = None,
         cron_runner: typing.Coroutine | None = None,
         metrics_endpoint: str | None = None,
         description: str = "",
-        **worker_kwargs: typing.Any
+        **worker_kwargs: typing.Any,
     ) -> None:
         # Constraints check:
+        if activities is None:
+            activities = []
+        if workflows is None:
+            workflows = []
         if worker_name in PROHIBITED_WORKER_NAMES:
             raise RuntimeError(f"{worker_name} name for worker is reserved for temporal-boost")
 
@@ -122,7 +125,7 @@ class BoostApp:
             cron_runner=cron_runner,
             metrics_endpoint=metrics_endpoint,
             description=description,
-            **worker_kwargs
+            **worker_kwargs,
         )
         # Add this worker to `run` section in CLI
         self.run_typer.command(name=worker_name)(worker.run)
@@ -144,14 +147,14 @@ class BoostApp:
         doc_css_endpoint: str | None = "/style.css",
         doc_js_endpoint: str | None = "/scripts.js",
     ) -> None:
-        _worker_name: str = "internal_boost"
+        worker_name: str = "internal_boost"
 
         # While intrenal worker is fully HTTP without Temporal connection,
         # left `task_queue` hardcoded
         worker: InternalWorker = InternalWorker(
             self,
             task_queue="internal_queue",
-            worker_name=_worker_name,
+            worker_name=worker_name,
             host=host,
             port=port,
             doc_endpoint=doc_endpoint,
@@ -159,7 +162,7 @@ class BoostApp:
             doc_js_endpoint=doc_js_endpoint,
         )
 
-        self.run_typer.command(name=_worker_name)(worker.run)
+        self.run_typer.command(name=worker_name)(worker.run)
         self.registered_workers.append(worker)
         self.logger.info("Internal worker was registered in CLI")
 
@@ -179,18 +182,18 @@ class BoostApp:
         self.registered_asgi_workers.append(worker)
         self.logger.info(f"ASGI worker {worker_name} was registered in CLI")
 
-    def add_exec_method_sync(self, name: str, callback: typing.Callable):
+    def add_exec_method_sync(self, name: str, callback: typing.Callable) -> None:
         self.exec_typer.command(name=name)(callback)
 
-    def add_async_runtime(self, name: str, runtime):
+    def add_async_runtime(self, name: str, runtime: BoostWorker) -> None:
         self.run_typer.command(name=name)(runtime.run)
         self.registered_workers.append(runtime)
         self.logger.info(f"Async runtime {name} was registered in CLI")
 
-    def run(self):
+    def run(self) -> None:
         asyncio.run(self._root_typer())
 
-    def register_all(self):
+    def register_all(self) -> None:
         if platform.system() == "Windows":
             self.logger.warning("Use all-in-one mode only in development! You are working via Threads")
             threads: list[Thread] = []
