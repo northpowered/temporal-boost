@@ -19,6 +19,7 @@ robyn = "^0.65.0"
 pyyaml = "^6.0.1"
 hypercorn = "^0.17.3"
 multiprocess = "^0.70.0"
+grpcio = "^1.60.0"
 
 
 [tool.poetry.group.test.dependencies]
