@@ -3,7 +3,7 @@ import asyncio
 import logging
 import platform
 import typing
-from multiprocessing import Process
+from multiprocess import Process
 from threading import Thread
 
 import typer
