@@ -56,7 +56,7 @@ class TestCronWorkflow:
 
 app.add_worker(
     "worker_1",
-    "task_q_1", 
+    "task_q_1",
     activities=[test_boost_activity_1],
     metrics_endpoint="0.0.0.0:9000"
 )
@@ -81,7 +81,7 @@ app.run()
 ```
 
 ```bash
-python3 main.py 
+python3 main.py
 
 # Usage: main.py [OPTIONS] COMMAND [ARGS]...
 

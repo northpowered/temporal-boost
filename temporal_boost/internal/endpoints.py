@@ -1,7 +1,14 @@
-from robyn import Response
+import logging
+import sys
+
+try:
+    from robyn import Response
+except ImportError:
+    logging.error("Install `robyn` package to use doc_generator")
+    sys.exit(1)
 
 
-async def custom_css():
+def custom_css() -> Response:
     content = """
             /*
                 DEMO STYLE
@@ -208,7 +215,7 @@ async def custom_css():
     return Response(status_code=200, headers={"Content-Type": "text/css; charset=utf-8"}, description=content)
 
 
-async def custom_js():
+def custom_js() -> Response:
     content = """$(document).ready(function () {
 
             $('#sidebarCollapse').on('click', function () {

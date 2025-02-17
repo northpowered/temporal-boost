@@ -6,11 +6,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
 def create_tracer(service_name: str, otlp_endpoint: str, tracer_name: str = __name__) -> trace.Tracer:
-
     trace.set_tracer_provider(
         TracerProvider(
             resource=Resource.create({SERVICE_NAME: service_name}),
-        )
+        ),
     )
 
     tempo_exporter = OTLPSpanExporter(endpoint=otlp_endpoint)
@@ -21,6 +20,4 @@ def create_tracer(service_name: str, otlp_endpoint: str, tracer_name: str = __na
 
     tracer.add_span_processor(tempo_span_processor)
 
-    tracer = trace.get_tracer(tracer_name)
-
-    return tracer
+    return trace.get_tracer(tracer_name)

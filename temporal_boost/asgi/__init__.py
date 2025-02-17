@@ -1,1 +1,3 @@
-from .worker import ASGIWorker  # noqa: F401
+from .worker import ASGIWorker
+
+__all__ = ("ASGIWorker",)
