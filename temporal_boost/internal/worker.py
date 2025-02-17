@@ -1,6 +1,12 @@
+import logging
+import sys
 import typing
 
-from robyn import Response, Robyn, config
+try:
+    from robyn import Response, Robyn, config
+except ImportError:
+    logging.error("Install `robyn` package to use doc_generator")
+    sys.exit(1)
 
 from temporal_boost.schemas import WorkerType
 

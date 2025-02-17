@@ -9,7 +9,6 @@ import typer
 from multiprocess import Process
 
 from .asgi import ASGIWorker
-from .internal import InternalWorker
 from .logger import BoostLogger, BoostLoggerConfig
 from .schemas import BoostOTLPConfig, ClientConnectorArgs
 from .tracing import create_tracer, trace
@@ -147,6 +146,12 @@ class BoostApp:
         doc_css_endpoint: str | None = "/style.css",
         doc_js_endpoint: str | None = "/scripts.js",
     ) -> None:
+        """
+            Importing InternalWorker class only if needs in case of uncompatible
+            dependencies of `robyn` package for Python3.13
+        """
+        from .internal import InternalWorker
+
         worker_name: str = "internal_boost"
 
         # While intrenal worker is fully HTTP without Temporal connection,

@@ -1,4 +1,11 @@
-from robyn import Response
+import logging
+import sys
+
+try:
+    from robyn import Response
+except ImportError:
+    logging.error("Install `robyn` package to use doc_generator")
+    sys.exit(1)
 
 
 def custom_css() -> Response:

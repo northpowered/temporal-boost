@@ -126,8 +126,11 @@ if __name__ == "__main__":
     # app.add_worker("worker_4", "task_q_4", workflows=[MyWorkflow], cron_runner=MyWorkflow.run, cron_schedule="* * * * *")
 
     app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8001)
-
-    app.add_internal_worker("0.0.0.0", 8998, doc_endpoint="/doc")
+    """
+        Internal worker is not supported for Pyhton3.13 yet
+        To use it, install `robyn` first
+    """
+    # app.add_internal_worker("0.0.0.0", 8998, doc_endpoint="/doc")
 
     app.add_exec_method_sync("migrate_db", fake_db_migration)
 
