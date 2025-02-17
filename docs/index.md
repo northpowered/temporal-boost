@@ -50,7 +50,7 @@ from temporal_boost import BoostApp, BoostLoggerConfig
 app: BoostApp = BoostApp(
     logger_config=BoostLoggerConfig(
         json=True,
-        bind_extra={"logging_extra_data": "foo_bar"}, 
+        bind_extra={"logging_extra_data": "foo_bar"},
         level="DEBUG"),
     use_pydantic=True,
 )

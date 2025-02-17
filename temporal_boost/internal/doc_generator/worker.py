@@ -26,15 +26,15 @@ class WorkerSchema(BaseModel):
         if self.worker_type == WorkerType.TEMPORAL.value:
             workflows: str = "<h5>Workflows:</h5><ul>"
             for workflow in self.obj.workflows:
-                workflows = workflows + f"""<li><a href="#workflow_{workflow.__name__}">{workflow.__name__}</a></li>"""
-            workflows = workflows + "</ul><br>"
+                workflows += f'<li><a href="#workflow_{workflow.__name__}">{workflow.__name__}</a></li>'
+            workflows += "</ul><br>"
             if not len(self.obj.workflows):
                 workflows = "<h5>No registered workflows</h5><br>"
 
             activities: str = "<h5>Activities:</h5><ul>"
             for activity in self.obj.activities:
-                activities = activities + f"""<li><a href="#activity_{activity.__name__}">{activity.__name__}</a></li>"""
-            activities = activities + "</ul>"
+                activities += f'<li><a href="#activity_{activity.__name__}">{activity.__name__}</a></li>'
+            activities += "</ul>"
             if not len(self.obj.activities):
                 activities = "<h5>No registered activities</h5>"
 

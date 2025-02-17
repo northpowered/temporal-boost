@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel
 
 from .activity import ActivitySchema
@@ -10,32 +8,32 @@ from .workflow import WorkflowSchema
 
 
 class MainSchema(BaseModel):
-    workers: List[WorkerSchema] | None = []
-    workflows: List[WorkflowSchema] | None = []
-    activities: List[ActivitySchema] | None = []
-    signals: List[SignalSchema] | None = []
-    schemas: List[TypeSchema] | None = []
+    workers: list[WorkerSchema] | None = []
+    workflows: list[WorkflowSchema] | None = []
+    activities: list[ActivitySchema] | None = []
+    signals: list[SignalSchema] | None = []
+    schemas: list[TypeSchema] | None = []
 
     def nav(self) -> str:
         workers_nav: str = ""
-        for w in self.workers:
-            workers_nav = workers_nav + str(w.nav())
+        for worker in self.workers or []:
+            workers_nav += str(worker.nav())
 
         workflows_nav: str = ""
-        for w in self.workflows:
-            workflows_nav = workflows_nav + str(w.nav())
+        for workflow in self.workflows or []:
+            workflows_nav += str(workflow.nav())
 
         activities_nav: str = ""
-        for a in self.activities:
-            activities_nav = activities_nav + str(a.nav())
+        for activity in self.activities or []:
+            activities_nav += str(activity.nav())
 
         signals_nav: str = ""
-        for s in self.signals:
-            signals_nav = signals_nav + str(s.nav())
+        for signal in self.signals or []:
+            signals_nav += str(signal.nav())
 
         schemas_nav: str = ""
-        for s in self.schemas:
-            schemas_nav = schemas_nav + str(s.nav())
+        for schema in self.schemas or []:
+            schemas_nav += str(schema.nav())
 
         return f"""
           <li>
@@ -73,33 +71,33 @@ class MainSchema(BaseModel):
                   {schemas_nav}
               </ul>
           </li>
-            """
+            """  # noqa: E501
 
     def html(self) -> str:
         # Workers block
         workers_html: str = """"""
-        for w in self.workers:
-            workers_html = workers_html + str(w.html())
+        for worker in self.workers or []:
+            workers_html += str(worker.html())
 
         # Workflows block
         workflows_html: str = """"""
-        for w in self.workflows:
-            workflows_html = workflows_html + str(w.html())
+        for workflow in self.workflows or []:
+            workflows_html += str(workflow.html())
 
         # Activities block
         activities_html: str = """"""
-        for a in self.activities:
-            activities_html = activities_html + str(a.html())
+        for activity in self.activities or []:
+            activities_html += str(activity.html())
 
         # Signals block
         signals_html: str = """"""
-        for s in self.signals:
-            signals_html = signals_html + str(s.html())
+        for signal in self.signals or []:
+            signals_html += str(signal.html())
 
         # Schemas block
         schemas_html: str = """"""
-        for s in self.schemas:
-            schemas_html = schemas_html + str(s.html())
+        for schema in self.schemas or []:
+            schemas_html += str(schema.html())
 
         result: str = f"""
             <div class="accordion accordion-flush accordion-dark" id="MainAccordion">
@@ -168,5 +166,5 @@ class MainSchema(BaseModel):
                 </div>
               </div>
             </div>
-        """
+        """  # noqa: E501
         return result

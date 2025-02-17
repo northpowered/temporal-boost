@@ -1,5 +1,6 @@
-import inspect as i
-from typing import Any, List
+from inspect import Parameter, getmembers, signature
+from types import MappingProxyType
+from typing import Any
 
 from pydantic import BaseModel
 from temporalio.workflow import _Definition
@@ -10,11 +11,11 @@ from .signal import SignalSchema
 class WorkflowSchema(BaseModel):
     obj: Any
     workflow_worker: str
-    signals: List[SignalSchema] | None = []
+    signals: list[SignalSchema] | None = []
 
     @property
-    def inspection(self) -> dict:
-        return dict(i.getmembers(self.obj))
+    def inspection(self) -> dict[str, Any]:
+        return dict(getmembers(self.obj))
 
     @property
     def definition(self) -> _Definition:
@@ -29,26 +30,23 @@ class WorkflowSchema(BaseModel):
         return self.definition.name
 
     @property
-    def execution_args(self):
-        return i.signature(self.definition.run_fn).parameters
+    def execution_args(self) -> MappingProxyType[str, Parameter]:
+        return signature(self.definition.run_fn).parameters
 
     def nav(self) -> str:
         return f"""
             <li>
                 <a class="workflows-nav-element" href="#workflow_{self.code_name}"><span class="badge bg-success">  </span> {self.code_name}</a>
             </li>
-        """
+        """  # noqa: E501
 
     def html(self) -> str:
         # Signals block
         signals: str = "<h5>Signals:</h5><ul>"
         for signal in self.signals:
-            signals = (
-                signals
-                + f"""<li><span class="badge bg-warning">Signal</span> <a href="#signal_{signal.code_name}">{signal.execution_name}</a></li>"""
-            )
+            signals += f'<li><span class="badge bg-warning">Signal</span> <a href="#signal_{signal.code_name}">{signal.execution_name}</a></li>'  # noqa: E501
 
-        signals = signals + "</ul>"
+        signals += "</ul>"
 
         if not len(self.definition.signals):
             signals = "<h5>No registered signals</h5>"
@@ -57,13 +55,13 @@ class WorkflowSchema(BaseModel):
         for arg in self.execution_args:
             if arg == "self":
                 continue
-            execution_args = execution_args + f"""<li>{self.execution_args.get(arg)}</a></li>"""
-        execution_args = execution_args + "</ul>"
+            execution_args += f"<li>{self.execution_args.get(arg)}</a></li>"
+        execution_args += "</ul>"
         # Ignoring `self`
         if len(self.execution_args) <= 1:
             execution_args = "<h5>No execution args</h5>"
         # Return block
-        return_type = f"""<div><strong>Return: {str(self.definition.ret_type.__name__)}</strong></div>"""
+        return_type = f"""<div><strong>Return: {self.definition.ret_type.__name__!s}</strong></div>"""
         html_str: str = f"""
         <div id="workflow_{self.code_name}">
             <h4><span class="badge bg-success">Workflow</span> {self.code_name}</h4>

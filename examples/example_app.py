@@ -21,8 +21,9 @@ app: BoostApp = BoostApp(
     name="BoostApp example",
     temporal_endpoint="localhost:7233",
     temporal_namespace="default",
-    otlp_config=BoostOTLPConfig(otlp_endpoint="otlp-collector", service_name="example-app")
+    otlp_config=BoostOTLPConfig(otlp_endpoint="otlp-collector", service_name="example-app"),
 )
+
 
 @dataclass
 class TestModel:
@@ -31,11 +32,13 @@ class TestModel:
     spam: int = 3
     eggs: bool | None = None
 
+
 def fake_db_migration():
     """
-        Fake fn for db migrations
+    Fake fn for db migrations
     """
     print("fake")
+
 
 # Describe your activities/workflows
 @activity.defn(name="test_boost_activity_1")
@@ -93,18 +96,19 @@ class MyWorkflow:
         print(signal_arg)
 
 
-
-
 class TestAsyncRuntime:
     """
-        Class must implement `run` method
+    Class must implement `run` method
     """
+
     async def _test_async_runtime(self):
         while True:
             print(random.random())
             await asyncio.sleep(1)
+
     def run(self):
         asyncio.run(self._test_async_runtime())
+
 
 # Add async workers to your app
 if __name__ == "__main__":
@@ -119,7 +123,7 @@ if __name__ == "__main__":
 
     app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
-    #app.add_worker("worker_4", "task_q_4", workflows=[MyWorkflow], cron_runner=MyWorkflow.run, cron_schedule="* * * * *")
+    # app.add_worker("worker_4", "task_q_4", workflows=[MyWorkflow], cron_runner=MyWorkflow.run, cron_schedule="* * * * *")
 
     app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8001)
 
@@ -127,6 +131,6 @@ if __name__ == "__main__":
 
     app.add_exec_method_sync("migrate_db", fake_db_migration)
 
-    #app.add_async_runtime("test_async", runtime=TestAsyncRuntime())
+    # app.add_async_runtime("test_async", runtime=TestAsyncRuntime())
     # Run your app and start workers with CLI
     app.run()

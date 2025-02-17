@@ -12,7 +12,7 @@ theme:
   - navigation.tracking
   - content.code.copy
   icon:
-    annotation: material/arrow-right-circle 
+    annotation: material/arrow-right-circle
 
 
 plugins:

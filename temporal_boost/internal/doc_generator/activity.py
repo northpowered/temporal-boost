@@ -23,10 +23,10 @@ class ActivitySchema(BaseModel):
         execution_args: str = "<h5>Execution args:</h5><ul>"
         for arg in self.execution_args:
             if arg == "return":
-                execution_args = execution_args + f"""<strong>{arg}: {self.execution_args.get(arg).__name__}</a></strong>"""
+                execution_args += f"""<strong>{arg}: {self.execution_args.get(arg).__name__}</a></strong>"""
             else:
-                execution_args = execution_args + f"""<li>{arg}: {self.execution_args.get(arg).__name__}</a></li>"""
-        execution_args = execution_args + "</ul>"
+                execution_args += f"""<li>{arg}: {self.execution_args.get(arg).__name__}</a></li>"""
+        execution_args += "</ul>"
         if not len(self.execution_args):
             execution_args = "<h5>No execution args</h5>"
 

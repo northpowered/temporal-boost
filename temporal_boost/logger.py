@@ -9,14 +9,12 @@ import loguru
 @dataclass
 class BoostLoggerConfig:
     @staticmethod
-    def _default_json_formatter(record):
-        base_fmt = "{message}"
-        return base_fmt
+    def _default_json_formatter(_: typing.Any) -> str:
+        return "{message}"
 
     @staticmethod
-    def _default_plain_formatter(record):
-        base_fmt = "<green>{time:YYYY-MM-DDTHH:mm:ss}</green> | <level>{level: <8}</level> | {message}\n"
-        return base_fmt
+    def default_plain_formatter(_: typing.Any) -> str:
+        return "<green>{time:YYYY-MM-DDTHH:mm:ss}</green> | <level>{level: <8}</level> | {message}\n"
 
     sink: typing.TextIO = sys.stdout
     level: str = "DEBUG"
@@ -27,14 +25,17 @@ class BoostLoggerConfig:
 
 
 class BoostLogger:
-    def __init__(self, config: BoostLoggerConfig = BoostLoggerConfig()) -> None:
+    def __init__(self, config: BoostLoggerConfig | None = None) -> None:
+        if not config:
+            config = BoostLoggerConfig()
+
         self.config = config
 
         loguru.logger.remove()
 
     def get_default_logger(self) -> logging.Logger:
         if not self.config.json:
-            self.config.formatter = BoostLoggerConfig._default_plain_formatter
+            self.config.formatter = BoostLoggerConfig.default_plain_formatter
         loguru.logger.add(
             sink=self.config.sink,
             level=self.config.level,

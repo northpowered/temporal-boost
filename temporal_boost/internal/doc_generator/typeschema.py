@@ -1,5 +1,5 @@
 import types
-from dataclasses import _MISSING_TYPE
+from dataclasses import _MISSING_TYPE  # noqa: PLC2701
 
 from pydantic import BaseModel
 
@@ -16,7 +16,7 @@ class TypeSchema(BaseModel):
             <li>
                 <a class="schemas-nav-element" href="#schema_{self.name}"><span class="badge bg-danger">  </span> {self.name}</a>
             </li>
-        """
+        """  # noqa: E501
 
     def html(self) -> str:
         fields: str = f"""
