@@ -1,7 +1,6 @@
 import json
 import logging
 import logging.config
-import signal
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -23,11 +22,6 @@ from temporal_boost.workers import (
 
 
 logger = logging.getLogger(__name__)
-
-HANDLED_SIGNALS = (
-    signal.SIGINT,  # Unix signal 2. Sent by Ctrl+C.
-    signal.SIGTERM,  # Unix signal 15. Sent by `kill <pid>`.
-)
 
 
 class BoostApp:
@@ -144,10 +138,14 @@ class BoostApp:
     def add_exec_method_sync(self, name: str, callback: Callable[..., Any]) -> None:
         self._exec_typer.command(name=name)(callback)
 
-    def add_async_runtime(self, name: str, boost_worker: TemporalBoostWorker) -> None:
-        self._run_typer.command(name=name)(boost_worker.run)
+    def add_async_runtime(self, worker_name: str, boost_worker: TemporalBoostWorker) -> None:
+        for registered_worker in self._registered_workers:
+            if worker_name == registered_worker.name:
+                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
+
+        self._run_typer.command(name=worker_name)(boost_worker.run)
         self._registered_workers.append(boost_worker)
-        logger.info(f"Async runtime {name} was registered in CLI")
+        logger.info(f"Async runtime {worker_name} was registered in CLI")
 
     def run(self) -> None:
         self._loop = loops.get(self._loop_impl)
