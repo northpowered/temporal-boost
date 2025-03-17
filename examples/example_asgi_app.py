@@ -1,11 +1,14 @@
-from fastapi import FastAPI, Response
+import logging
 
-fastapi_app: FastAPI = FastAPI(docs_url="/doc")
-
-
-async def foo():
-    fastapi_app.logger.info("hello", trace_id=123)
-    return Response(status_code=200)
+from fastapi import FastAPI
 
 
-fastapi_app.add_api_route("/foo", foo)
+logger = logging.getLogger("asgi")
+
+fastapi_app = FastAPI(docs_url="/doc")
+
+
+@fastapi_app.get("/foo")
+async def foo() -> dict[str, str]:
+    logger.info("hello")
+    return {"foo": "bar"}
