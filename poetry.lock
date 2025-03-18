@@ -474,7 +474,7 @@ description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "extra == \"uvicorn\" or extra == \"hypercorn\""
+markers = "extra == \"base-asgi\" or extra == \"uvicorn\" or extra == \"hypercorn\""
 files = [
     {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
     {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
@@ -1778,7 +1778,7 @@ description = "The lightning-fast ASGI server."
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "extra == \"uvicorn\""
+markers = "extra == \"base-asgi\" or extra == \"uvicorn\""
 files = [
     {file = "uvicorn-0.30.6-py3-none-any.whl", hash = "sha256:65fd46fe3fda5bdc1b03b94eb634923ff18cd35b2f084813ea79d1f103f711b5"},
     {file = "uvicorn-0.30.6.tar.gz", hash = "sha256:4b15decdda1e72be08209e860a1e10e92439ad5b97cf44cc945fcbee66fc5788"},
@@ -1799,7 +1799,7 @@ description = "Fast implementation of asyncio event loop on top of libuv"
 optional = true
 python-versions = ">=3.8.0"
 groups = ["main"]
-markers = "extra == \"uvloop\""
+markers = "extra == \"base-asgi\" or extra == \"uvloop\""
 files = [
     {file = "uvloop-0.21.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ec7e6b09a6fdded42403182ab6b832b71f4edaf7f37a9a0e371a01db5f0cb45f"},
     {file = "uvloop-0.21.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:196274f2adb9689a289ad7d65700d37df0c0930fd8e4e743fa4834e850d7719d"},
@@ -1926,6 +1926,7 @@ files = [
 h11 = ">=0.9.0,<1"
 
 [extras]
+base-asgi = ["uvicorn", "uvloop"]
 granian = ["granian"]
 hypercorn = ["hypercorn"]
 uvicorn = ["uvicorn"]
@@ -1934,4 +1935,4 @@ uvloop = ["uvloop"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "f92f91df38bdbc3e245cd59d1087fbfed0bd03be522a6b1750eaed0a13f28fb3"
+content-hash = "ddab9d2f666c51e787629b3c444dc2a2dbb6e17bf898457dce37505d533ae8e7"
