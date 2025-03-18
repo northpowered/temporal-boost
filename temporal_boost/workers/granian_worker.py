@@ -12,15 +12,16 @@ class GranianBoostWorker(BaseAsgiWorker):
         host: str,
         port: int,
         *,
-        log_level: str | int | None = None,
-        factory: bool = False,
+        log_level: str | None = None,
+        **asgi_worker_kwargs: Any,
     ) -> None:
         self.name = "granian"
         self._app = app
         self._host = host
         self._port = port
         self._log_level = log_level
-        self._factory = factory
+        self._asgi_worker_kwargs = asgi_worker_kwargs
+
         self._server: Any = None
 
     def run(self) -> None:
@@ -36,9 +37,8 @@ class GranianBoostWorker(BaseAsgiWorker):
             address=self._host,
             interface=Interfaces.ASGI,
             port=self._port,
-            log_level=LogLevels(self._log_level),
-            log_dictconfig=None,
-            factory=self._factory,
+            log_level=LogLevels(self._log_level.lower()) if self._log_level else LogLevels.debug,
+            **self._asgi_worker_kwargs,
         )
         self._server.serve()
 

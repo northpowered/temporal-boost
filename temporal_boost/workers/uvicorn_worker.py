@@ -16,15 +16,16 @@ class UvicornBoostWorker(BaseAsgiWorker):
         host: str,
         port: int,
         *,
-        factory: bool = False,
         log_level: str | int | None = None,
+        **asgi_worker_kwargs: Any,
     ) -> None:
         self.name = "uvicorn"
         self._app = app
         self._host = host
         self._port = port
-        self._factory = factory
         self._log_level = log_level
+        self._asgi_worker_kwargs = asgi_worker_kwargs
+
         self._server: Any = None
 
     def run(self) -> None:
@@ -40,7 +41,7 @@ class UvicornBoostWorker(BaseAsgiWorker):
             log_level=self._log_level,
             log_config=None,
             proxy_headers=True,
-            factory=self._factory,
+            **self._asgi_worker_kwargs,
         )
         self._server = uvicorn.Server(config=config)
         self._server.run()

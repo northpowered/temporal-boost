@@ -115,7 +115,7 @@ class BoostApp:
         *,
         log_level: str | int | None = None,
         asgi_worker_type: ASGIWorkerType = ASGIWorkerType.auto,
-        **kwargs: Any,
+        **asgi_worker_kwargs: Any,
     ) -> None:
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
@@ -127,7 +127,7 @@ class BoostApp:
             host=host,
             port=port,
             log_level=log_level,
-            **kwargs,
+            **asgi_worker_kwargs,
         )
 
         self._run_typer.command(name=worker_name)(worker.run)

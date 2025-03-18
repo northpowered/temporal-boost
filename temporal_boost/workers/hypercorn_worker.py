@@ -18,12 +18,15 @@ class HypercornBoostWorker(BaseAsgiWorker):
         port: int,
         *,
         log_level: str | int | None = None,
+        **asgi_worker_kwargs: Any,
     ) -> None:
         self.name = "hypercorn"
         self._app = app
         self._host = host
         self._port = port
         self._log_level = log_level
+        self._asgi_worker_kwargs = asgi_worker_kwargs
+
         self._server_task: asyncio.Task[Any] | None = None
 
     def run(self) -> None:
@@ -41,6 +44,10 @@ class HypercornBoostWorker(BaseAsgiWorker):
         config.bind = [f"{self._host}:{self._port}"]
         if self._log_level is not None:
             config.loglevel = str(self._log_level)
+
+        for key, value in self._asgi_worker_kwargs.items():
+            setattr(config, key, value)
+
         await serve(self._app, config, mode="asgi")
 
     async def shutdown(self) -> None:
