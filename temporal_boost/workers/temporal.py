@@ -70,7 +70,7 @@ class TemporalBoostWorker(BaseBoostWorker):
     def temporal_client(self) -> Client:
         if not self._client:
             raise RuntimeError(
-                "Temporal client has not been initialized. Ensure 'configur_temporal_client()' has been called"
+                "Temporal client has not been initialized. Ensure 'configure_temporal_client()' has been called"
             )
         return self._client
 
@@ -92,7 +92,7 @@ class TemporalBoostWorker(BaseBoostWorker):
             self.configur_temporal_runtime()
         return cast("Runtime", self._runtime)
 
-    def configur_temporal_client(  # noqa: PLR0913
+    def configure_temporal_client(  # noqa: PLR0913
         self,
         *,
         target_host: str | None = None,
@@ -161,7 +161,7 @@ class TemporalBoostWorker(BaseBoostWorker):
 
     async def _build_worker(self) -> None:
         if not self._client_builder:
-            self.configur_temporal_client()
+            self.configure_temporal_client()
             self._client_builder = cast("TemporalClientBuilder", self._client_builder)
 
         self._client = await self._client_builder.build()

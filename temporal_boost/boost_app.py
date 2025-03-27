@@ -39,7 +39,7 @@ class BoostApp:
         self._name: str = name or "temporal_generic_service"
         self._loop_impl = loop_impl
 
-        self._global_temporal_endpointe = temporal_endpoint
+        self._global_temporal_endpoint = temporal_endpoint
         self._global_temporal_namespace = temporal_namespace
         self._global_use_pydantic = use_pydantic
 
@@ -88,13 +88,13 @@ class BoostApp:
             debug_mode=self._debug_mode,
             **worker_kwargs,
         )
-        worker.configur_temporal_client(
-            target_host=self._global_temporal_endpointe,
+        worker.configure_temporal_client(
+            target_host=self._global_temporal_endpoint,
             namespace=self._global_temporal_namespace,
         )
 
         if self._global_use_pydantic is not None:
-            worker.configur_temporal_client(use_pydantic_data_converter=self._global_use_pydantic)
+            worker.configure_temporal_client(use_pydantic_data_converter=self._global_use_pydantic)
 
         self._run_typer.command(name=worker_name)(worker.run)
 
@@ -147,9 +147,9 @@ class BoostApp:
         self._registered_workers.append(boost_worker)
         logger.info(f"Async runtime {worker_name} was registered in CLI")
 
-    def run(self) -> None:
+    def run(self, *args: Any, **kwargs: Any) -> None:
         self._loop = loops.get(self._loop_impl)
-        self._loop.run_until_complete(self._root_typer())
+        self._loop.run_until_complete(self._root_typer(*args, **kwargs))
 
     @staticmethod
     def _configure_logging(log_config: dict[str, Any] | Path | None) -> None:

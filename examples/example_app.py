@@ -89,20 +89,15 @@ class TestAsyncRuntime(BaseBoostWorker):
         asyncio.run(self._test_async_runtime())
 
 
-if __name__ == "__main__":
-    app.add_worker(
-        "worker_1",
-        "task_q_1",
-        activities=[test_boost_activity_1, test_boost_activity_3],
-    )
-    app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
+app.add_worker(
+    "worker_1",
+    "task_q_1",
+    activities=[test_boost_activity_1, test_boost_activity_3],
+)
+app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
+boost_worker = app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
+boost_worker.configure_temporal_client(use_pydantic_data_converter=True)
+boost_worker.configur_temporal_runtime(prometheus_bind_address="0.0.0.0:8801")
 
-    boost_worker = app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
-    boost_worker.configur_temporal_client(use_pydantic_data_converter=True)
-    boost_worker.configur_temporal_runtime(prometheus_bind_address="0.0.0.0:8801")
-
-    app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8001)
-
-    app.add_exec_method_sync("migrate_db", fake_db_migration)
-
-    app.run()
+app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8001)
+app.add_exec_method_sync("migrate_db", fake_db_migration)

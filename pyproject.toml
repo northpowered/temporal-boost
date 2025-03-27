@@ -1,36 +1,36 @@
 [tool.poetry]
-name = "temporal-boost"
-version = "1.2.0"
-description = "Small framework for Temporal development"
 authors = [
-    "northpowered <you@example.com>",
-    "dmastapkovich <dm.astapkovich@gmail.com>",
+  "northpowered <you@example.com>",
+  "dmastapkovich <dm.astapkovich@gmail.com>",
 ]
-license = "MIT"
-readme = "README.md"
-packages = [{include = "temporal_boost"}]
-repository = "https://github.com/northpowered/temporal-boost"
+description = "Small framework for Temporal development"
 keywords = ["temporal", "framework", "development", "python"]
+license = "MIT"
+name = "temporal-boost"
+packages = [{include = "temporal_boost"}]
+readme = "README.md"
+repository = "https://github.com/northpowered/temporal-boost"
+version = "1.2.0"
 
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10.0"
-typer = "^0.15.0"
-temporalio = "^1.10.0"
-pydantic = "^2.10.0"
-pyyaml = "^6.0.0"
-uvicorn = {version = "^0.30.0", optional = true}
 granian = {version = "^2.0.0", optional = true}
 hypercorn = {version = "^0.17.0", optional = true}
+pydantic = "^2.10.0"
+python = "^3.10.0"
+pyyaml = "^6.0.0"
+temporalio = "^1.10.0"
+typer = "^0.15.0"
+uvicorn = {version = "^0.30.0", optional = true}
 uvloop = {version = "^0.21.0", optional = true}
 
 [tool.poetry.extras]
@@ -39,6 +39,9 @@ granian = ["granian"]
 hypercorn = ["hypercorn"]
 uvicorn = ["uvicorn"]
 uvloop = ["uvloop"]
+
+[tool.poetry.scripts]
+temporal-boost = "temporal_boost.__main__:cli"
 
 [tool.poetry.group.dev.dependencies]
 fastapi = "^0.110.0"
