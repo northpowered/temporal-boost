@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🧹 Lint & Fix",
+      "type": "shell",
+      "command": "poetry run ruff check . --fix || poetry run ruff format .",
+      "icon": {
+        "color": "terminal.ansiYellow",
+        "id": "wrench"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "detail": "Runs ruff to lint and auto-fix your code."
+    },
+    {
+      "label": "🔍 Mypy (Type Check)",
+      "type": "shell",
+      "command": "poetry run mypy .",
+      "icon": {
+        "color": "terminal.ansiBlue",
+        "id": "search"
+      },
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Performs static type checking using mypy."
+    },
+    {
+      "label": "🧪 Pytest",
+      "type": "shell",
+      "command": "poetry run pytest",
+      "icon": {
+        "color": "terminal.ansiMagenta",
+        "id": "beaker"
+      },
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Runs tests using pytest."
+    },
+    {
+      "label": "📦 Install Dependencies",
+      "type": "shell",
+      "command": "poetry install",
+      "icon": {
+        "color": "terminal.ansiCyan",
+        "id": "package"
+      },
+      "problemMatcher": [],
+      "detail": "Installs project dependencies via Poetry."
+    },
+    {
+      "label": "🔒 Install Pre-commit Hooks",
+      "type": "shell",
+      "command": "poetry run pre-commit install",
+      "icon": {
+        "color": "terminal.ansiRed",
+        "id": "lock"
+      },
+      "problemMatcher": [],
+      "detail": "Installs pre-commit hooks for the project."
+    },
+    {
+      "label": "Setup Environment",
+      "dependsOn": ["📦 Install Dependencies", "🔒 Install Pre-commit Hooks"],
+      "icon": {
+        "color": "terminal.ansiGreen",
+        "id": "gear"
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "clear": true,
+        "reveal": "always",
+        "focus": true,
+        "close": false,
+        "echo": true,
+        "showReuseMessage": true
+      },
+      "problemMatcher": [],
+      "detail": "Sets up the development environment by installing dependencies and pre-commit hooks."
+    }
+  ]
+}

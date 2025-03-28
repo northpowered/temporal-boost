@@ -1,57 +1,143 @@
 [tool.poetry]
-name = "temporal-boost"
-version = "1.2.0"
+authors = [
+  "northpowered <you@example.com>",
+  "dmastapkovich <dm.astapkovich@gmail.com>",
+]
 description = "Small framework for Temporal development"
-authors = ["northpowered <you@example.com>"]
-readme = "README.md"
+keywords = ["temporal", "framework", "development", "python"]
+license = "MIT"
+name = "temporal-boost"
 packages = [{include = "temporal_boost"}]
+readme = "README.md"
 repository = "https://github.com/northpowered/temporal-boost"
+version = "2.0.0-rc.1"
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-typer = "^0.9.0"
-opentelemetry-exporter-otlp = "^1.20.0"
-loguru = "^0.7.2"
-opentelemetry-sdk = "^1.20.0"
-temporalio = "^1.5.1"
+granian = {version = "^2.0.0", optional = true}
+hypercorn = {version = "^0.17.0", optional = true}
 pydantic = "^2.10.0"
-pyyaml = "^6.0.1"
-hypercorn = "^0.17.3"
-multiprocess = "^0.70.0"
-grpcio = "^1.60.0"
+python = "^3.10.0"
+pyyaml = "^6.0.0"
+temporalio = "^1.10.0"
+typer = "^0.15.0"
+uvicorn = {version = "^0.30.0", optional = true}
+uvloop = {version = "^0.21.0", optional = true}
 
+[tool.poetry.extras]
+base_asgi = ["uvicorn", "uvloop"]
+granian = ["granian"]
+hypercorn = ["hypercorn"]
+uvicorn = ["uvicorn"]
+uvloop = ["uvloop"]
+
+[tool.poetry.scripts]
+temporal-boost = "temporal_boost.__main__:cli"
+
+[tool.poetry.group.dev.dependencies]
+fastapi = "^0.110.0"
+pre-commit = "^3.8.0"
+pre-commit-hooks = "^4.6.0"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^7.4.0"
-pytest-cov = "^4.1.0"
-pytest-asyncio = "^0.21.1"
-fastapi = "^0.110.0"
-
-
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-cov = "^5.0.0"
+pytest-dotenv = "^0.5.2"
 
 [tool.poetry.group.lint.dependencies]
-ruff = "^0.5.5"
-
+mypy = "^1.15.0"
+ruff = "^0.11.0"
+types-pyyaml = "^6.0.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs-material = "^9.5.31"
 mkdocs-material-extensions = "^1.3.1"
 
-
 [build-system]
-requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
+
+[tool.mypy]
+allow_redefinition = true
+disallow_any_unimported = true
+files = ["temporal_boost", "examples", "tests"]
+implicit_reexport = false
+plugins = ["pydantic.mypy"]
+show_column_numbers = true
+show_error_codes = true
+strict = true
+strict_optional = true
+warn_no_return = true
+warn_unused_ignores = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
 
 [tool.ruff]
-line-length = 150
+fix = true
+line-length = 120
+preview = true
+target-version = "py310"
+unsafe-fixes = true
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "C", "UP", "I", "SIM", "N"]
-# Ignore 815 and 803 to avoid aliased for external APIs
-ignore = ["N815", "N803", "UP035", "UP006"]
+ignore = [
+  "CPY", # Ignore copyright notice checks in Python files
+  "FBT001", # Ignore specific flake8-bugbear warning
+  "D", # Ignore all docstring-related rules
+  "ISC001", # Ignore implicit string concatenation (conflicts with Ruff formatter)
+  "PLR6301", # Do not enforce @classmethod/@staticmethod when `self` is not used
+  "TRY003", # Ensure that `raise` within a try block uses `raise from` or `raise e`
+  "TRY004", # Avoid using a bare `except` clause
+  "TRY300", # Prefer `contextlib.suppress` over try-except-pass
+  "EM101", # Ignore string formatting issues in exception messages
+  "EM102", # Ignore error message formatting issues
+  "ANN401", # Ignore dynamically typed annotations (`Any`)
+  "BLE001", # Ignore blind except rule
+  "G004", # Ignore a specific Pylint rule (possibly related to global variables)
+  "COM812", # Require a trailing comma to reduce diff size when modifying lists, dicts, etc.
+  "TRY301", # Check for `raise` within try block for proper exception handling of caught exceptions
+]
+select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"examples/*" = ["S101", "S311", "S104", "ARG001", "RUF001"]
+"tests/*" = ["S101", "S311", "S106", "RUF029", "SLF001", "PLR2004", "SIM117"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
 
 [tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 130
+quote-style = "double"
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 
+[tool.pytest.ini_options]
+addopts = "-s -v --durations=0"
+cache_dir = ".cache/pytest_cache"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+command_line = "-m pytest"
+source = ["."]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.coverage.xml]
+output = "coverage.xml"
