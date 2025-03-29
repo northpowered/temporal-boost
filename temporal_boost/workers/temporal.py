@@ -18,7 +18,7 @@ from temporalio.worker._interceptor import Interceptor
 
 from temporal_boost.temporal import config
 from temporal_boost.temporal.client import TemporalClientBuilder
-from temporal_boost.temporal.runtime import create_runtime
+from temporal_boost.temporal.runtime import TemporalRuntimeBuilder
 from temporal_boost.temporal.worker import TemporalWorkerBuilder
 from temporal_boost.workers.base import BaseBoostWorker
 
@@ -64,6 +64,7 @@ class TemporalBoostWorker(BaseBoostWorker):
         self._client_builder: TemporalClientBuilder | None = None
         self._client: Client | None = None
 
+        self._runtime_builder: TemporalRuntimeBuilder | None = None
         self._runtime: Runtime | None = None
 
     @property
@@ -88,9 +89,13 @@ class TemporalBoostWorker(BaseBoostWorker):
 
     @property
     def temporal_client_runtime(self) -> Runtime:
-        if not self._runtime:
+        if not self._runtime_builder:
             self.configur_temporal_runtime()
-        return cast("Runtime", self._runtime)
+
+        if not self._runtime:
+            self._runtime = cast("TemporalRuntimeBuilder", self._runtime_builder).build()
+
+        return self._runtime
 
     def configure_temporal_client(  # noqa: PLR0913
         self,
@@ -132,7 +137,8 @@ class TemporalBoostWorker(BaseBoostWorker):
         if use_pydantic_data_converter is not None:
             self._client_builder.set_pydantic_data_converter()
 
-        self._client_builder.set_runtime(self.temporal_client_runtime)
+        if kwargs:
+            self._client_builder.set_kwargs(**kwargs)
 
     def configur_temporal_runtime(  # noqa: PLR0913
         self,
@@ -147,7 +153,7 @@ class TemporalBoostWorker(BaseBoostWorker):
         prometheus_unit_suffix: bool | None = config.PROMETHEUS_UNIT_SUFFIX,
         prometheus_durations_as_seconds: bool | None = config.PROMETHEUS_DURATIONS_AS_SECONDS,
     ) -> None:
-        self._runtime = create_runtime(
+        self._runtime_builder = TemporalRuntimeBuilder(
             logging=logging,
             metrics=metrics,
             global_tags=global_tags,
@@ -164,7 +170,9 @@ class TemporalBoostWorker(BaseBoostWorker):
             self.configure_temporal_client()
             self._client_builder = cast("TemporalClientBuilder", self._client_builder)
 
+        self._client_builder.set_runtime(self.temporal_client_runtime)
         self._client = await self._client_builder.build()
+
         self._worker_builder.set_client(self._client)
         self._worker = self._worker_builder.build()
 

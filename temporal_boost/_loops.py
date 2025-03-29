@@ -17,6 +17,7 @@ class Loops(str, Enum):
     auto = "auto"
     asyncio = "asyncio"
     uvloop = "uvloop"
+    rloop = "rloop"
 
 
 class BaseRegistry(Generic[T]):
@@ -91,8 +92,17 @@ def build_uv_loop(uvloop: Any) -> Any:
     return uvloop.new_event_loop()
 
 
+@loops.register("rloop", packages=["rloop"])
+def build_rloop(rloop: Any) -> Any:
+    loop = rloop.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop
+
+
 @loops.register("auto")
 def build_auto_loop() -> asyncio.AbstractEventLoop:
     if "uvloop" in loops:
         return loops.get("uvloop")
+    if "rloop" in loops:
+        return loops.get("rloop")
     return loops.get("asyncio")

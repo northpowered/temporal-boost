@@ -55,12 +55,18 @@ class TemporalClientBuilder:
     def set_identity(self, identity: str) -> None:
         self._identity = identity
 
+    def set_kwargs(self, **kwargs: Any) -> None:
+        self._client_kwargs.update(kwargs)
+
     def set_pydantic_data_converter(self) -> None:
         self._data_converter = pydantic_data_converter
 
     async def build(self) -> Client:
         if self._runtime is None:
             self._runtime = Runtime.default()
+
+        if self._data_converter:
+            self._client_kwargs["data_converter"] = self._data_converter
 
         return await Client.connect(
             target_host=self._target_host,
