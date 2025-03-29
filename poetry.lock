@@ -474,7 +474,7 @@ description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 optional = true
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "extra == \"base-asgi\" or extra == \"uvicorn\" or extra == \"hypercorn\""
+markers = "extra == \"hypercorn\" or extra == \"base-asgi\" or extra == \"uvicorn\""
 files = [
     {file = "h11-0.14.0-py3-none-any.whl", hash = "sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761"},
     {file = "h11-0.14.0.tar.gz", hash = "sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d"},
@@ -490,6 +490,7 @@ groups = ["main"]
 markers = "extra == \"hypercorn\""
 files = [
     {file = "h2-4.2.0-py3-none-any.whl", hash = "sha256:479a53ad425bb29af087f3458a61d30780bc818e4ebcf01f0b536ba916462ed0"},
+    {file = "h2-4.2.0.tar.gz", hash = "sha256:c8a52129695e88b1a0578d8d2cc6842bbd79128ac685463b887ee278126ad01f"},
 ]
 
 [package.dependencies]
@@ -1454,6 +1455,70 @@ typing-extensions = {version = ">=4.0.0,<5.0", markers = "python_version < \"3.1
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
+name = "rloop"
+version = "0.1.0"
+description = "An asyncio event loop implemented in Rust"
+optional = true
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "rloop-0.1.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:feef98bd9894748819c4ade00cabbcdc358bcc3e0bc000f093f4678ce2b59229"},
+    {file = "rloop-0.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:732e85c238efed34a2f5052dd12e2e0e251763eb334b08b1b326ad650bfec6c9"},
+    {file = "rloop-0.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:062e761957be24843e34ec14dc7bda27e5d282e55e4fa71a4f5f96f9c30ea255"},
+    {file = "rloop-0.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0a12d63fbd11d90aa8ee7055d021e199cb0213a21abe3ea49354845264d26196"},
+    {file = "rloop-0.1.0-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:d4d3c10f91262de263321693d478a7a2e959132d7cbab4eca6e12340b822f62a"},
+    {file = "rloop-0.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:3a3e70bf655f51b2daab48393071737af47ae88e8607747823bbde5ea1f53487"},
+    {file = "rloop-0.1.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:16f3ed026a3dcb2d644a7423542a99bff3c08a9417f0df00236f0a01d76c97a8"},
+    {file = "rloop-0.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d7222b5c9cc3ccf95983b9b07543f4525653f0c84f5d9afecd7ea20ce8ed7d72"},
+    {file = "rloop-0.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:da028cafface0a404891a57a412e8ec4a83d73a86ecd37cecbd1bff230c5b9df"},
+    {file = "rloop-0.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7c29c91e9deaa573ed73cdfc862014d2ec66a83353c4180456479adbcccad6a0"},
+    {file = "rloop-0.1.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:27f11139d6b568c2bf90629728790099470f4c4967ce25d4cd824750469cfa66"},
+    {file = "rloop-0.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:2031d51b0bee249f3ac5f779fb145ff3ee31e5b74d36bd345db797ac9bdedd87"},
+    {file = "rloop-0.1.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:7aee48495aa6aca41fc7776f3c81c291cbbe1ce0c41c6df76c98f727e643a301"},
+    {file = "rloop-0.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:46740b4a1a9af2a3820a183fac89f638803407298c23c25c1d0d6b525c737209"},
+    {file = "rloop-0.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ebabe285bb0b61ff7385dd868f7aab1977d0b6a4c3ab77e3a0d866f09b401422"},
+    {file = "rloop-0.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:520d7355a0248903006bf96313761bba2a7de35c0ad4cfdb76d7b4da7fecacbb"},
+    {file = "rloop-0.1.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:515a7b748472238d245133399f77eb46e93c851c86867fbfc23db71270defcd0"},
+    {file = "rloop-0.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:3f8e5573d80458fd5ff316fa84d978c5af4761cc1277fc4e8bfaae42c52a0a56"},
+    {file = "rloop-0.1.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:8d05ab370f990ab4d9aece2e87f2dd48365b85c4a3437df2c11ac8e293284e93"},
+    {file = "rloop-0.1.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f59d200af6f708d35156f1866f3ad8b71237388203cff639800ad0b4bb62748e"},
+    {file = "rloop-0.1.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:fabf99eedf9066829b99a8b322eda749e01a456861e848d881df01576c6a946a"},
+    {file = "rloop-0.1.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7e8b4f75b867e523021f0d3ad5e02f6e2b57fc7e4d94502ae3551c5628ad9b7e"},
+    {file = "rloop-0.1.0-cp313-cp313-musllinux_1_1_aarch64.whl", hash = "sha256:8ded3c44ff9e85676ec7314dc7caff283dcd92ff0098646993d153e419d9548b"},
+    {file = "rloop-0.1.0-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:dfd8f62d344c8ae2b6c86a08d36d6c729d660a3f91c95c60edf8d1e587cf5df9"},
+    {file = "rloop-0.1.0-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:8023d8e518a599e492300af9ed567e249f8f976ba518aeb860da96633b5b354d"},
+    {file = "rloop-0.1.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:f3440cbdb42ea666dd3620ce60ebd5f2e4423e865c37443eaceb3f373492497b"},
+    {file = "rloop-0.1.0-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f71875107c58bc9732b0769f9153b971970705a06d1ff99d74a7fab526a77a07"},
+    {file = "rloop-0.1.0-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6fdbb97939cb816dd71bd056b425b816ebd6292ecdd7e16a291f703fac110d54"},
+    {file = "rloop-0.1.0-cp313-cp313t-musllinux_1_1_aarch64.whl", hash = "sha256:fbfa5c779f63126d73f03935c1211fa1f0063f2a933fc7a264e6763acd0fed99"},
+    {file = "rloop-0.1.0-cp313-cp313t-musllinux_1_1_x86_64.whl", hash = "sha256:da69383c9e08530b94da09253580eb3afbe7fdc0631d30844cf70b90b8748ac3"},
+    {file = "rloop-0.1.0-cp39-cp39-macosx_10_12_x86_64.whl", hash = "sha256:07e2fa905992fd6c97e922dab93d266df7a2b66483265f1b9648c6e4d019dc7e"},
+    {file = "rloop-0.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:e409a70cf31ed7995e61536efb5106b859dd17579ada794a1844a19347dcbf4e"},
+    {file = "rloop-0.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9dfd4740a894f1b294dce8554f509d57e11df09eccdb528e9cfc847138271e35"},
+    {file = "rloop-0.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:92a8aaeb2c186a9a70abc26450c6d96d36ce556c0821f18203a981aa453fea08"},
+    {file = "rloop-0.1.0-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:18c28b2795229ad450133482d54a5781e6112dd54bcd567c4e3407b723fc94bc"},
+    {file = "rloop-0.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:5ba297465828ade1f8b8550c42f4421b704aa8a19c57a318cbfd9cdf175dec1b"},
+    {file = "rloop-0.1.0-pp310-pypy310_pp73-macosx_10_12_x86_64.whl", hash = "sha256:9f08e382a45b21abd132df546005e1b2ee69c8fde2e0e37f254aff9c82cecf3e"},
+    {file = "rloop-0.1.0-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:89a57311db107856007c94bf8dae63cdd2c0ba204970bf449f03d6ced5e3b1d8"},
+    {file = "rloop-0.1.0-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0ec3c8aa2a570dddb4d6787d4ae9e752ff5161413d7fbc46efce00a78cb2254e"},
+    {file = "rloop-0.1.0-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6baee543a8c8d4e8fe0510bcc170d8212206d05418ae655a5f92dcbfac74f60c"},
+    {file = "rloop-0.1.0-pp310-pypy310_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:af57c69abd88093eedf4a7ef02268a1395024c1d5ded863c73b6ed13263de408"},
+    {file = "rloop-0.1.0-pp310-pypy310_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:cba3fb863114ca71175013e073776821c13eaf3314fab0659e5299bb533fc7e1"},
+    {file = "rloop-0.1.0-pp39-pypy39_pp73-macosx_10_12_x86_64.whl", hash = "sha256:ec40b093032af3b42a175f347af7e69bddce51139732863d397341223477af7d"},
+    {file = "rloop-0.1.0-pp39-pypy39_pp73-macosx_11_0_arm64.whl", hash = "sha256:e2306f3fa322418e6690917dc776b1442ce2f654a0cb5f09ccf1bbe23a8002da"},
+    {file = "rloop-0.1.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:906daaa2a05360ed95102ee14d97c101aee77624fa86537e12c30dc5fc4c8dec"},
+    {file = "rloop-0.1.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9248a3a745bad06387fb2b0c439743562ddd6da94303d4800eee7a5ddae17e0f"},
+    {file = "rloop-0.1.0-pp39-pypy39_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:ca61c97d7a5d864bd998353ad6bea58e025043434307cadde78da5bdd09d3d1c"},
+    {file = "rloop-0.1.0-pp39-pypy39_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:059acfa329f6ad91d2fc269235f8bb2cfc6ba2af9a0df3b71b89b09edb210ca4"},
+    {file = "rloop-0.1.0.tar.gz", hash = "sha256:ab9f98f6e4e1df18dd7399a96024f8cfbe1d3c2e92e7177aaa53fb68d3f075b6"},
+]
+
+[package.extras]
+dev = ["rloop[lint,test]"]
+lint = ["ruff (>=0.5.0,<0.6.0)"]
+test = ["pytest (>=7.4.2,<7.5.0)", "pytest-asyncio (>=0.21.1,<0.22.0)"]
+
+[[package]]
 name = "ruamel-yaml"
 version = "0.18.10"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
@@ -1935,4 +2000,4 @@ uvloop = ["uvloop"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "ddab9d2f666c51e787629b3c444dc2a2dbb6e17bf898457dce37505d533ae8e7"
+content-hash = "0af80502f0759415332b74bbbbb2f08d96ea3fcc997f1cb05154b6aa63299400"
