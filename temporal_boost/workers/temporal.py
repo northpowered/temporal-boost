@@ -179,6 +179,9 @@ class TemporalBoostWorker(BaseBoostWorker):
             await self.temporal_worker.run()
         except asyncio.CancelledError:
             logger.info(f"Worker {self.name} cancelled during shutdown")
+        except Exception:
+            logger.exception(f"Worker {self.name} failed")
+            raise
         finally:
             await self.shutdown()
 
