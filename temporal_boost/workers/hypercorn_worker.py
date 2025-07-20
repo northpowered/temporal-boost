@@ -18,25 +18,27 @@ class HypercornBoostWorker(BaseAsgiWorker):
         port: int,
         *,
         log_level: str | int | None = None,
+        log_config: dict[str, Any] | None = None,
         **asgi_worker_kwargs: Any,
     ) -> None:
         self.name = "hypercorn"
-        self._app = app
-        self._host = host
-        self._port = port
-        self._log_level = log_level
-        self._asgi_worker_kwargs = asgi_worker_kwargs
-
+        super().__init__(
+            app,
+            host,
+            port,
+            log_level=log_level,
+            log_config=log_config,
+            **asgi_worker_kwargs,
+        )
         self._server_task: asyncio.Task[Any] | None = None
 
     def run(self) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._run_server())
+        asyncio.run(self._run_server())
 
     async def _run_server(self) -> None:
         try:
-            from hypercorn.asyncio import serve  # noqa: PLC0415
-            from hypercorn.config import Config  # noqa: PLC0415
+            from hypercorn.asyncio import serve  # type: ignore[import-not-found]  # noqa: PLC0415
+            from hypercorn.config import Config  # type: ignore[import-not-found]  # noqa: PLC0415
         except ImportError as exc:
             raise RuntimeError("hypercorn is not installed.") from exc
 
@@ -45,10 +47,21 @@ class HypercornBoostWorker(BaseAsgiWorker):
         if self._log_level is not None:
             config.loglevel = str(self._log_level)
 
+        config.logconfig_dict = self._log_config
+
         for key, value in self._asgi_worker_kwargs.items():
             setattr(config, key, value)
 
-        await serve(self._app, config, mode="asgi")
+        self._server_task = asyncio.create_task(serve(self._app, config, mode="asgi"))
+        try:
+            await self._server_task
+        except (KeyboardInterrupt, SystemExit, asyncio.CancelledError):
+            logger.info("Received interrupt signal, initiating shutdown")
+        except Exception:
+            logger.exception("Error during application run")
+            raise
+        finally:
+            await self.shutdown()
 
     async def shutdown(self) -> None:
         if self._server_task:
@@ -58,4 +71,5 @@ class HypercornBoostWorker(BaseAsgiWorker):
             except asyncio.CancelledError:
                 logger.info("Hypercorn server shutdown complete.")
         else:
-            raise RuntimeError("Hypercorn server is not running; cannot shutdown.")
+            msg = "Hypercorn server is not running; cannot shutdown."
+            raise RuntimeError(msg)

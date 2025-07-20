@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 from collections.abc import Mapping
 
 from temporalio.runtime import (
@@ -58,13 +59,19 @@ class TemporalRuntimeBuilder:
             metric_prefix=self._metric_prefix,
         )
         try:
-            return Runtime(telemetry=telemetry_config)
+            runtime = Runtime(telemetry=telemetry_config)
+            if self._prometheus_bind_address:
+                process_id = multiprocessing.current_process().name
+                logger.info(f"Process {process_id}: Metrics server bound to {self._prometheus_bind_address}")
+            return runtime
         except ValueError as err:
             err_msg = str(err)
             if "Address already in use" in err_msg and self._prometheus_bind_address:
                 _, port_str = self._prometheus_bind_address.split(":")
+                process_id = multiprocessing.current_process().name
                 logger.warning(
-                    f"Prometheus exporter port[{port_str}] is already in use. Disabling metrics for this process"
+                    f"Process {process_id}: Prometheus exporter port[{port_str}] is already in use. "
+                    "Disabling metrics for this process",
                 )
                 telemetry_config_no_metrics = TelemetryConfig()
                 return Runtime(telemetry=telemetry_config_no_metrics)

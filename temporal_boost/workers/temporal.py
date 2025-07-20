@@ -5,13 +5,7 @@ from collections.abc import Callable, Mapping
 from typing import Any, cast
 
 from temporalio.client import Client
-from temporalio.runtime import (
-    LoggingConfig,
-    MetricBuffer,
-    OpenTelemetryConfig,
-    PrometheusConfig,
-    Runtime,
-)
+from temporalio.runtime import LoggingConfig, MetricBuffer, OpenTelemetryConfig, PrometheusConfig, Runtime
 from temporalio.types import MethodAsyncNoParam
 from temporalio.worker import Worker
 from temporalio.worker._interceptor import Interceptor
@@ -67,6 +61,8 @@ class TemporalBoostWorker(BaseBoostWorker):
         self._runtime_builder: TemporalRuntimeBuilder | None = None
         self._runtime: Runtime | None = None
 
+        self._cron_future: asyncio.Future[Any] | None = None
+
     @property
     def temporal_client(self) -> Client:
         if not self._client:
@@ -90,7 +86,7 @@ class TemporalBoostWorker(BaseBoostWorker):
     @property
     def temporal_client_runtime(self) -> Runtime:
         if not self._runtime_builder:
-            self.configur_temporal_runtime()
+            self.configure_temporal_runtime()
 
         if not self._runtime:
             self._runtime = cast("TemporalRuntimeBuilder", self._runtime_builder).build()
@@ -140,7 +136,7 @@ class TemporalBoostWorker(BaseBoostWorker):
         if kwargs:
             self._client_builder.set_kwargs(**kwargs)
 
-    def configur_temporal_runtime(  # noqa: PLR0913
+    def configure_temporal_runtime(  # noqa: PLR0913
         self,
         *,
         logging: LoggingConfig | None = None,
@@ -178,7 +174,13 @@ class TemporalBoostWorker(BaseBoostWorker):
 
     async def _run_worker(self) -> None:
         await self._build_worker()
-        await self.temporal_worker.run()
+        try:
+            self._log_worker_start()
+            await self.temporal_worker.run()
+        except asyncio.CancelledError:
+            logger.info(f"Worker {self.name} cancelled during shutdown")
+        finally:
+            await self.shutdown()
 
     async def _run_with_cron(self) -> None:
         await self._build_worker()
@@ -190,20 +192,41 @@ class TemporalBoostWorker(BaseBoostWorker):
                 task_queue=self._worker_builder.task_queue,
                 cron_schedule=self._cron_schedule,
             )
-            await asyncio.Future()
+
+            self._cron_future = asyncio.Future()
+            try:
+                await self._cron_future
+            except asyncio.CancelledError:
+                logger.info(f"Cron worker {self.name} cancelled during shutdown")
+                raise
 
     def run(self) -> None:
-        logger.info(f"Worker {self.name} started on {self._worker_builder.task_queue} queue")
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._run_worker())
+        try:
+            asyncio.run(self._run_worker())
+        except Exception:
+            logger.exception(f"Worker {self.name} failed")
+            raise
 
     async def shutdown(self) -> None:
         await self.temporal_worker.shutdown()
+        logger.info(f"Worker {self.name} shutdown completed")
 
     def cron(self) -> None:
         logger.info(
             f"Cron worker {self.name} started on {self._worker_builder.task_queue} queue "
-            f"with schedule {self._cron_schedule}"
+            f"with schedule {self._cron_schedule}",
         )
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._run_with_cron())
+        try:
+            asyncio.run(self._run_with_cron())
+        except Exception:
+            logger.exception(f"Cron worker {self.name} failed")
+            raise
+
+    def _log_worker_start(self) -> None:
+        activity_names = [f"{act.__name__}" for act in self._worker_builder._activities]  # noqa: SLF001
+        workflow_names = [f"{wf.__name__}" for wf in self._worker_builder._workflows]  # noqa: SLF001
+
+        logger.info(
+            f"Worker '{self.name}' started on task queue '{self._worker_builder.task_queue}' with "
+            f"workflows: {workflow_names} and activities: {activity_names}",
+        )

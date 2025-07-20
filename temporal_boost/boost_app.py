@@ -1,16 +1,20 @@
 import json
 import logging
 import logging.config
+import os
+import sys
+import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
+import click
 import typer
 import yaml
 from temporalio.types import MethodAsyncNoParam
 from temporalio.worker._interceptor import Interceptor
 
-from temporal_boost._loops import Loops, loops
 from temporal_boost.common import DEFAULT_LOGGING_CONFIG
 from temporal_boost.workers import (
     ASGIWorkerType,
@@ -25,10 +29,11 @@ logger = logging.getLogger(__name__)
 
 
 class BoostApp:
+    _RESERVED_NAMES: ClassVar[set[str]] = {"run", "cron", "exec", "all"}
+
     def __init__(  # noqa: PLR0913
         self,
         name: str | None = None,
-        loop_impl: Loops = Loops.auto,
         *,
         temporal_endpoint: str | None = None,
         temporal_namespace: str | None = None,
@@ -37,12 +42,12 @@ class BoostApp:
         logger_config: dict[str, Any] | str | Path | None = DEFAULT_LOGGING_CONFIG,
     ) -> None:
         self._name: str = name or "temporal_generic_service"
-        self._loop_impl = loop_impl
 
         self._global_temporal_endpoint = temporal_endpoint
         self._global_temporal_namespace = temporal_namespace
         self._global_use_pydantic = use_pydantic
 
+        self._logger_config: dict[str, Any] | None = None
         log_config = Path(logger_config) if isinstance(logger_config, str) else logger_config
         self._configure_logging(log_config)
 
@@ -61,6 +66,8 @@ class BoostApp:
         self._root_typer.add_typer(self._cron_typer, no_args_is_help=True)
         self._root_typer.add_typer(self._exec_typer, no_args_is_help=True)
 
+        self._run_typer.command(name="all")(self.run_all_workers)
+
     def add_worker(  # noqa: PLR0913
         self,
         worker_name: str,
@@ -73,6 +80,9 @@ class BoostApp:
         cron_runner: MethodAsyncNoParam[Any, Any] | None = None,
         **worker_kwargs: Any,
     ) -> TemporalBoostWorker:
+        if worker_name in self._RESERVED_NAMES:
+            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
+
         for registered_worker in self._registered_workers:
             if worker_name == getattr(registered_worker, "name", None):
                 raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
@@ -103,7 +113,6 @@ class BoostApp:
             self._registered_cron_workers.append(worker)
 
         self._registered_workers.append(worker)
-        logger.info(f"Worker '{worker_name}' was registered in CLI.")
         return worker
 
     def add_asgi_worker(  # noqa: PLR0913
@@ -117,6 +126,9 @@ class BoostApp:
         asgi_worker_type: ASGIWorkerType = ASGIWorkerType.auto,
         **asgi_worker_kwargs: Any,
     ) -> None:
+        if worker_name in self._RESERVED_NAMES:
+            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
+
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
                 raise RuntimeError(f"{worker_name} name for worker`s already reserved")
@@ -127,39 +139,85 @@ class BoostApp:
             host=host,
             port=port,
             log_level=log_level,
+            log_config=self._logger_config,
             **asgi_worker_kwargs,
         )
+
+        worker.name = worker_name
 
         self._run_typer.command(name=worker_name)(worker.run)
         self._registered_workers.append(worker)
         self._registered_asgi_workers.append(worker)
-        logger.info(f"ASGI worker {worker_name} was registered in CLI")
 
     def add_exec_method_sync(self, name: str, callback: Callable[..., Any]) -> None:
         self._exec_typer.command(name=name)(callback)
 
     def add_async_runtime(self, worker_name: str, boost_worker: TemporalBoostWorker) -> None:
+        if worker_name in self._RESERVED_NAMES:
+            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
+
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
                 raise RuntimeError(f"{worker_name} name for worker`s already reserved")
 
         self._run_typer.command(name=worker_name)(boost_worker.run)
         self._registered_workers.append(boost_worker)
-        logger.info(f"Async runtime {worker_name} was registered in CLI")
+
+    def get_registered_workers(self) -> list[BaseBoostWorker]:
+        return self._registered_workers.copy()
+
+    def run_all_workers(self) -> None:
+        if not self._registered_workers:
+            logger.warning("No workers registered to run")
+            return
+
+        logger.info(f"Starting {len(self._registered_workers)} workers in separate threads")
+
+        worker_threads: list[threading.Thread] = []
+        for worker in self._registered_workers:
+            thread = threading.Thread(target=worker.run, name=f"worker-{worker.name}", daemon=True)
+            worker_threads.append(thread)
+            thread.start()
+            logger.info(f"Started worker thread: {worker.name}")
+
+        try:
+            while any(thread.is_alive() for thread in worker_threads):
+                time.sleep(1)
+        except Exception:
+            logger.exception("Error during application run")
+            raise
 
     def run(self, *args: Any, **kwargs: Any) -> None:
-        self._loop = loops.get(self._loop_impl)
-        self._loop.run_until_complete(self._root_typer(*args, **kwargs))
+        typer_args = list(args)
+        if not args:
+            typer_args = sys.argv[1:]
 
-    @staticmethod
-    def _configure_logging(log_config: dict[str, Any] | Path | None) -> None:
+            if os.name == "nt":
+                typer_args = click.utils._expand_args(typer_args)  # noqa: SLF001
+
+        if len(typer_args) > 1:
+            logger.info(f"Application '{self._name}' is starting. Selected worker: '{typer_args[1]}'")
+        else:
+            logger.info(f"Application '{self._name}' is starting. No specific worker selected.")
+
+        try:
+            self._root_typer(*args, **kwargs)
+        except SystemExit as exc:
+            logger.warning(f"Exit with code: {exc.code}")
+        except:
+            logger.exception("Error during application run")
+            raise
+
+    def _configure_logging(self, log_config: dict[str, Any] | Path | None) -> None:
         try:
             if isinstance(log_config, dict):
+                self._logger_config = log_config
                 logging.config.dictConfig(log_config)
             elif isinstance(log_config, Path):
                 if log_config.suffix in {".json", ".yaml", ".yml"}:
                     loader = json.loads if log_config.suffix == ".json" else yaml.safe_load
                     log_conf = loader(log_config.read_text())
+                    self._logger_config = log_conf
                     logging.config.dictConfig(log_conf)
                 else:
                     logging.config.fileConfig(log_config.as_posix(), disable_existing_loggers=False)
