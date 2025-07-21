@@ -18,4 +18,11 @@ DEFAULT_LOGGING_CONFIG = {
         "level": "DEBUG",
         "handlers": ["default"],
     },
+    "loggers": {
+        "uvicorn": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "hypercorn": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "_granian": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "asyncio": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "temporalio": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+    },
 }

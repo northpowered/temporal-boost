@@ -9,7 +9,9 @@ class ASGIWorkerRegistry:
         self._data: dict[str, type[BaseAsgiWorker]] = {}
 
     def register(
-        self, key: str, packages: list[str] | None = None
+        self,
+        key: str,
+        packages: list[str] | None = None,
     ) -> Callable[[type[BaseAsgiWorker]], type[BaseAsgiWorker]]:
         if packages is None:
             packages = []

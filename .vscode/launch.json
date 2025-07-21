@@ -4,14 +4,31 @@
     // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
-            "name": "Отладчик Python: Текущий файл с аргументами",
+            "name": "Python Debugger: Current File with Arguments",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "args": "${command:pickArgs}"
+        },
+        {
+            "name": "Python Debugger: Example App Worker 1",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "examples/example_app.py",
+            "console": "integratedTerminal",
+            "args": ["run", "worker_3"],
+            "justMyCode": false
+        },
+        {
+            "name": "Python Debugger: Example App ASGI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "examples/example_app.py",
+            "console": "integratedTerminal",
+            "args": ["run", "asgi_worker"],
+            "justMyCode": false
         }
     ]
 }

@@ -10,7 +10,7 @@ name = "temporal-boost"
 packages = [{include = "temporal_boost"}]
 readme = "README.md"
 repository = "https://github.com/northpowered/temporal-boost"
-version = "2.0.0-rc.2"
+version = "2.0.1"
 
 classifiers = [
   "Programming Language :: Python :: 3",
@@ -24,22 +24,18 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
-pydantic = "^2.10.0"
 pyyaml = "^6.0.0"
-temporalio = "^1.10.0"
-typer = "^0.15.0"
+typer = "^0.16.0"
+pydantic = "*"
+temporalio = "*"
 hypercorn = {version = "*", optional = true}
 granian = {version = "*", optional = true}
 uvicorn = {version = "*", optional = true}
-uvloop = {version = "*", optional = true}
-rloop = {version = "*", optional = true}
 
 [tool.poetry.extras]
-base_asgi = ["uvicorn", "uvloop"]
 granian = ["granian"]
 hypercorn = ["hypercorn"]
 uvicorn = ["uvicorn"]
-uvloop = ["uvloop"]
 
 [tool.poetry.scripts]
 temporal-boost = "temporal_boost.cli.runner:cli_app"

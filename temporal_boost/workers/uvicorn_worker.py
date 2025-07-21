@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any
 
@@ -17,20 +18,23 @@ class UvicornBoostWorker(BaseAsgiWorker):
         port: int,
         *,
         log_level: str | int | None = None,
+        log_config: dict[str, Any] | None = None,
         **asgi_worker_kwargs: Any,
     ) -> None:
         self.name = "uvicorn"
-        self._app = app
-        self._host = host
-        self._port = port
-        self._log_level = log_level
-        self._asgi_worker_kwargs = asgi_worker_kwargs
-
+        super().__init__(
+            app,
+            host,
+            port,
+            log_level=log_level,
+            log_config=log_config,
+            **asgi_worker_kwargs,
+        )
         self._server: Any = None
 
     def run(self) -> None:
         try:
-            import uvicorn  # noqa: PLC0415
+            import uvicorn  # type: ignore[import-not-found]  # noqa: PLC0415
         except ImportError as exc:
             raise RuntimeError("uvicorn is not installed.") from exc
 
@@ -39,12 +43,19 @@ class UvicornBoostWorker(BaseAsgiWorker):
             host=self._host,
             port=self._port,
             log_level=self._log_level,
-            log_config=None,
-            proxy_headers=True,
+            log_config=self._log_config,
             **self._asgi_worker_kwargs,
         )
         self._server = uvicorn.Server(config=config)
-        self._server.run()
+        try:
+            self._server.run()
+        except (KeyboardInterrupt, SystemExit, asyncio.CancelledError):
+            logger.info("Received interrupt signal, initiating shutdown")
+        except Exception:
+            logger.exception("Error during application run")
+            raise
+        finally:
+            asyncio.run(self.shutdown())
 
     async def shutdown(self) -> None:
         if not self._server:

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 logger = logging.getLogger("asgi")
 
-fastapi_app = FastAPI(docs_url="/doc")
+fastapi_app = FastAPI(docs_url=None, openapi_url=None)
 
 
 @fastapi_app.get("/foo")
