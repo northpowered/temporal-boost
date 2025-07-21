@@ -1,59 +1,52 @@
 # Running application
 
-Here the example of our app:
+Here is an example of a minimal app:
 
 ```python
 # main.py
+import logging
 from temporal_boost import BoostApp
 
-app: BoostApp = BoostApp()
+logging.basicConfig(level=logging.INFO)
+app = BoostApp()
 
-# Some workflows or activities
-# ...
-# Some FastAPI app
+# Define your workflows and activities here
 # ...
 
-# Temporal workers
+# Register workers
 app.add_worker(
     "worker_1", "task_q_1", activities=[test_boost_activity_1, test_boost_activity_3],
 )
 app.add_worker("worker_2", "task_q_2", activities=[test_boost_activity_2])
-
 app.add_worker("worker_3", "task_q_3", workflows=[MyWorkflow])
 
-# Cron worker
-app.add_worker("worker_4", "task_q_4", workflows=[MyWorkflow], cron_runner=MyWorkflow.run, cron_schedule="* * * * *")
+# Add ASGI worker (optional)
+# app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
 
-# FastAPI worker
-app.add_asgi_worker("asgi_worker", fastapi_app, "0.0.0.0", 8000)
-
-# Internal worker
-app.add_internal_worker("0.0.0.0", 8888, doc_endpoint="/doc")
-
-app.run()
+if __name__ == "__main__":
+    app.run()
 ```
 
-## Running in dev mode
+## Running in development
 
-In `dev` mode all workers (except crons) can be started with one command in multiprocess mode:
+All workers will be started in separate processes by default:
 
 ```bash
 python3 main.py run all
 ```
-!!! warning annotate "Never use this way in production!"
 
-## Running workers one-by-one
+All configuration (Temporal endpoint, namespace, etc.) is handled via environment variables (see documentation).
 
-Also, you can run each worker by name:
+## Running a specific worker
+
+If you want to run a specific worker only, you can do so by providing its name as a command-line argument (if your app supports it):
 
 ```bash
 python3 main.py run worker_1
-
-python3 main.py run asgi_worker
 ```
 
-To run cron worker, use this command:
+Or for an ASGI worker:
 
 ```bash
-python3 main.py cron worker_4
+python3 main.py run asgi_worker
 ```
