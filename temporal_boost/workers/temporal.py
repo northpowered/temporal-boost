@@ -128,7 +128,7 @@ class TemporalBoostWorker(BaseBoostWorker):
             self._client_builder.set_identity(identity)
 
         if tls is not None:
-            self._client_builder.set_tls_connent(tls)
+            self._client_builder.set_tls(tls)
 
         if use_pydantic_data_converter is not None:
             self._client_builder.set_pydantic_data_converter()

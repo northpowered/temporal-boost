@@ -132,7 +132,7 @@ class BoostApp:
 
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
-                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
+                raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
 
         AsgiWorkerClass = get_asgi_worker_class(asgi_worker_type)  # noqa: N806
         worker = AsgiWorkerClass(
@@ -162,7 +162,7 @@ class BoostApp:
 
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
-                raise RuntimeError(f"{worker_name} name for worker's already reserved")
+                raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
 
         worker = FastStreamBoostWorker(
             app=faststream_app,
@@ -185,7 +185,7 @@ class BoostApp:
 
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
-                raise RuntimeError(f"{worker_name} name for worker`s already reserved")
+                raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
 
         self._run_typer.command(name=worker_name)(boost_worker.run)
         self._registered_workers.append(boost_worker)

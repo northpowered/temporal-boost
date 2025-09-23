@@ -11,7 +11,7 @@ Temporal-boost is a lightweight framework for fast and comfortable development o
 - [x] [Temporal SDK (python)](https://github.com/temporalio/sdk-python)
 - [x] [Pydantic - for serialization](https://github.com/pydantic/pydantic)
 - [x] [Typer - for CLI interface](https://github.com/fastapi/typer)
-- [x] [Loguru - for extended logging](https://github.com/Delgan/loguru)
+- [x] [Python logging - built-in logging configuration]
 - [x] [Hypercorn, Uvicorn, Granian - for running ASGI applications](https://github.com/pgjones/hypercorn)
 
 ### Main features
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
 ### Configuration
 
-All configuration (Temporal endpoint, namespace, TLS, metrics, etc.) is now handled via environment variables. See the documentation for `temporal_boost/temporal/config.py` for all available options.
+All configuration (Temporal endpoint, namespace, TLS, metrics, etc.) is handled via environment variables. See `temporal_boost/temporal/config.py` for available options.
 
 ### Start example application
 

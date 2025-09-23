@@ -49,7 +49,7 @@ class TemporalClientBuilder:
     def set_api_key(self, api_key: str) -> None:
         self._api_key = api_key
 
-    def set_tls_connent(self, tls: bool) -> None:
+    def set_tls(self, tls: bool) -> None:
         self._tls = tls
 
     def set_identity(self, identity: str) -> None:
