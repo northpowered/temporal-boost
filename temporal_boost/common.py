@@ -11,7 +11,7 @@ DEFAULT_LOGGING_CONFIG = {
         "default": {
             "class": "logging.StreamHandler",
             "formatter": "default",
-            "stream": "ext://sys.stderr",
+            "stream": "ext://sys.stdout",
         },
     },
     "root": {
@@ -19,9 +19,13 @@ DEFAULT_LOGGING_CONFIG = {
         "handlers": ["default"],
     },
     "loggers": {
+        "": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
         "uvicorn": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
         "hypercorn": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
         "_granian": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "faststream": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "faststream.access": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
+        "faststream.access.redis": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
         "asyncio": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
         "temporalio": {"handlers": ["default"], "level": "DEBUG", "propagate": False},
     },

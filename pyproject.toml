@@ -31,11 +31,14 @@ temporalio = "*"
 hypercorn = {version = "*", optional = true}
 granian = {version = "*", optional = true}
 uvicorn = {version = "*", optional = true}
+faststream = {version = "*", optional = true}
+anyio = {version = "*", optional = true}
 
 [tool.poetry.extras]
 granian = ["granian"]
 hypercorn = ["hypercorn"]
 uvicorn = ["uvicorn"]
+faststream = ["faststream", "anyio"]
 
 [tool.poetry.scripts]
 temporal-boost = "temporal_boost.cli.runner:cli_app"
@@ -44,6 +47,7 @@ temporal-boost = "temporal_boost.cli.runner:cli_app"
 fastapi = "^0.110.0"
 pre-commit = "^3.8.0"
 pre-commit-hooks = "^4.6.0"
+redis = "^6.4.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.3.0"

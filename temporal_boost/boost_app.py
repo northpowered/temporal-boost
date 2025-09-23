@@ -20,6 +20,7 @@ from temporal_boost.workers import (
     ASGIWorkerType,
     BaseAsgiWorker,
     BaseBoostWorker,
+    FastStreamBoostWorker,
     TemporalBoostWorker,
     get_asgi_worker_class,
 )
@@ -147,7 +148,33 @@ class BoostApp:
 
         self._run_typer.command(name=worker_name)(worker.run)
         self._registered_workers.append(worker)
-        self._registered_asgi_workers.append(worker)
+
+    def add_faststream_worker(
+        self,
+        worker_name: str,
+        faststream_app: Any,
+        *,
+        log_level: str | int | None = None,
+        **faststream_kwargs: Any,
+    ) -> FastStreamBoostWorker:
+        if worker_name in self._RESERVED_NAMES:
+            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
+
+        for registered_worker in self._registered_workers:
+            if worker_name == registered_worker.name:
+                raise RuntimeError(f"{worker_name} name for worker's already reserved")
+
+        worker = FastStreamBoostWorker(
+            app=faststream_app,
+            log_level=log_level,
+            **faststream_kwargs,
+        )
+
+        worker.name = worker_name
+
+        self._run_typer.command(name=worker_name)(worker.run)
+        self._registered_workers.append(worker)
+        return worker
 
     def add_exec_method_sync(self, name: str, callback: Callable[..., Any]) -> None:
         self._exec_typer.command(name=name)(callback)
