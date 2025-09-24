@@ -47,7 +47,7 @@ async def test_boost_activity_2(payload: TestModel) -> TestModel:  # noqa: RUF02
 
 @activity.defn(name="custom_test_boost_activity_3")
 async def test_boost_activity_3(payload: TestModel, foo: str, bar: int) -> TestModel:  # noqa: RUF029
-    payload.foo = f"{payload.foo}+activity2"
+    payload.foo = f"{payload.foo}+activity3"
     payload.bar += 1
     return payload
 
@@ -56,7 +56,7 @@ async def test_boost_activity_3(payload: TestModel, foo: str, bar: int) -> TestM
 class MyWorkflow:
     @workflow.run
     async def run(self, foo: str) -> TestModel:  # noqa: ARG002
-        logger.info("Sync logger")
+        logger.info("Sync logger: starting workflow")
 
         start_payload: TestModel = TestModel(foo="hello", bar=0)
         result_1 = await workflow.execute_activity(

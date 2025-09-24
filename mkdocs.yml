@@ -1,5 +1,5 @@
 site_name: Temporal-boost
-site_description: Extemely fast development for Temporal-based microservices
+site_description: Extremely fast development for Temporal-based microservices
 repo_url: https://github.com/northpowered/temporal-boost
 repo_name: northpowered/temporal-boost
 
@@ -11,6 +11,8 @@ theme:
   features:
   - navigation.tracking
   - content.code.copy
+  - navigation.instant
+  - content.tabs.link
   icon:
     annotation: material/arrow-right-circle
 
@@ -38,4 +40,4 @@ markdown_extensions:
 nav:
   - Getting started: index.md
   - Creating application: creating_application.md
-  - Running application: runnig_application.md
+  - Running application: running_application.md
