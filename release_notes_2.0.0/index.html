@@ -1,0 +1,527 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Extremely fast development for Temporal-based microservices">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.20">
+    
+    
+      
+        <title>Release Notes — Temporal Boost 2.0.0 - Temporal-boost</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.e53b48f4.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012a10%2010%200%200%201-10%2010A10%2010%200%200%201%202%2012%2010%2010%200%200%201%2012%202a10%2010%200%200%201%2010%2010M6%2013h8l-3.5%203.5%201.42%201.42L17.84%2012l-5.92-5.92L10.5%207.5%2014%2011H6z%22/%3E%3C/svg%3E');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#release-notes-temporal-boost-200" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Temporal-boost" class="md-header__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Temporal-boost
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Release Notes — Temporal Boost 2.0.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    northpowered/temporal-boost
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Temporal-boost" class="md-nav__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg" alt="logo">
+
+    </a>
+    Temporal-boost
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    northpowered/temporal-boost
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Creating application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#major-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 Major Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 Major Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-restructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Project Restructure
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-via-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration via Environment Variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-builders-and-extensibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Builders and Extensibility
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asgi-worker-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      ASGI Worker Registry
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devops-and-tooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      DevOps and Tooling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests-removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tests Removed
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      ⚠️ Breaking Changes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migration-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠 Migration Guide
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      🆕 New Features
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="release-notes-temporal-boost-200">Release Notes — Temporal Boost 2.0.0</h1>
+<h2 id="major-changes">🚀 Major Changes</h2>
+<h3 id="project-restructure">Project Restructure</h3>
+<ul>
+<li>All Temporal-related logic is now under <code>temporal_boost/temporal/</code> (client, config, runtime, worker).</li>
+<li>New <code>workers/</code> package with dedicated ASGI workers (uvicorn, hypercorn, granian) and Temporal worker.</li>
+<li>Deprecated and internal modules removed (<code>connect.py</code>, <code>core.py</code>, <code>logger.py</code>, <code>schemas.py</code>, <code>tracing.py</code>, old <code>worker.py</code>).</li>
+<li>Examples updated to reflect the new structure.</li>
+</ul>
+<h3 id="configuration-via-environment-variables">Configuration via Environment Variables</h3>
+<ul>
+<li>All client and worker configuration is now handled via environment variables (see <code>temporal_boost/temporal/config.py</code>).</li>
+<li>No more direct passing of endpoint, namespace, or logger config to <code>BoostApp</code> — use env vars instead.</li>
+</ul>
+<h3 id="new-builders-and-extensibility">New Builders and Extensibility</h3>
+<ul>
+<li><code>TemporalClientBuilder</code>, <code>TemporalWorkerBuilder</code>, and runtime creation helpers for advanced customization.</li>
+<li>Flexible runtime and client configuration for advanced use cases.</li>
+</ul>
+<h3 id="asgi-worker-registry">ASGI Worker Registry</h3>
+<ul>
+<li>Support for multiple ASGI worker types (uvicorn, hypercorn, granian) with auto-detection.</li>
+<li>Easy integration of FastAPI or any ASGI app as a worker.</li>
+</ul>
+<h3 id="devops-and-tooling">DevOps and Tooling</h3>
+<ul>
+<li>Updated dependencies, new pre-commit hooks, VSCode tasks, and improved development workflow.</li>
+<li>Poetry 2.x support.</li>
+</ul>
+<h3 id="tests-removed">Tests Removed</h3>
+<ul>
+<li>All test files and fixtures have been removed for this release. (Tests will be reworked in future versions.)</li>
+</ul>
+<hr />
+<h2 id="breaking-changes">⚠️ Breaking Changes</h2>
+<ul>
+<li>Old API for <code>BoostApp</code> initialization and worker registration is no longer supported.</li>
+<li>All configuration must now be provided via environment variables or new builder classes.</li>
+<li>Internal worker for documentation is deprecated/removed.</li>
+<li>All test-related files and fixtures are removed from the repository.</li>
+</ul>
+<hr />
+<h2 id="migration-guide">🛠 Migration Guide</h2>
+<ol>
+<li><strong>Update Imports</strong></li>
+<li>
+<p>Use new modules: <code>temporal_boost.temporal</code> and <code>temporal_boost.workers</code>.</p>
+</li>
+<li>
+<p><strong>Configuration</strong></p>
+</li>
+<li>Move all configuration (endpoint, namespace, TLS, metrics, etc.) to environment variables.</li>
+<li>
+<p>See <code>temporal_boost/temporal/config.py</code> for all available options.</p>
+</li>
+<li>
+<p><strong>Worker Registration</strong></p>
+</li>
+<li>
+<p>Replace old worker registration with the new builder-based approach:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">&quot;worker_1&quot;</span><span class="p">,</span> <span class="s2">&quot;queue_1&quot;</span><span class="p">,</span> <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">workflows</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">])</span>
+</span></code></pre></div>
+</li>
+<li>
+<p>For ASGI apps, use:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">app</span><span class="o">.</span><span class="n">add_asgi_worker</span><span class="p">(</span><span class="s2">&quot;asgi_worker&quot;</span><span class="p">,</span> <span class="n">fastapi_app</span><span class="p">,</span> <span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">,</span> <span class="n">worker_type</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+</li>
+<li>
+<p><strong>Remove Internal Worker Usage</strong></p>
+</li>
+<li>
+<p>The internal documentation worker is no longer available.</p>
+</li>
+<li>
+<p><strong>Update Examples</strong></p>
+</li>
+<li>See the updated <code>examples/</code> directory and documentation for new usage patterns.</li>
+</ol>
+<hr />
+<h2 id="new-features">🆕 New Features</h2>
+<ul>
+<li>Environment-based configuration for all core settings.</li>
+<li>Pluggable ASGI worker types (uvicorn, hypercorn, granian) with auto-detection.</li>
+<li>Improved modularity and extensibility for advanced users.</li>
+<li>Cleaner, more maintainable codebase.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "content.code.copy", "navigation.instant", "content.tabs.link"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
