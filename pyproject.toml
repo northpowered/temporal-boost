@@ -10,7 +10,7 @@ name = "temporal-boost"
 packages = [{include = "temporal_boost"}]
 readme = "README.md"
 repository = "https://github.com/northpowered/temporal-boost"
-version = "2.0.1"
+version = "2.0.2"
 
 classifiers = [
   "Programming Language :: Python :: 3",
