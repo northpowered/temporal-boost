@@ -8,8 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
       - name: Build and publish to PyPI
-        uses: JRubics/poetry-publish@v1.17
+        uses: JRubics/poetry-publish@b71e946be561eaf8bfb7562ecc97c26fb8583070 # v1.17
         with:
           pypi_token: ${{ secrets.PYPI_TOKEN }}
