@@ -27,7 +27,9 @@ jobs:
           installer-parallel: true
 
       - name: Add Poetry to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Load cached Poetry dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -74,7 +76,9 @@ jobs:
           installer-parallel: true
 
       - name: Add Poetry to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Load cached Poetry dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -118,13 +122,20 @@ jobs:
 
       - name: Install Poetry
         uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # v1
+        id: poetry
         with:
           version: latest
           virtualenvs-create: true
           installer-parallel: true
 
       - name: Add Poetry to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Verify Poetry installation
+        run: |
+          poetry --version || $HOME/.local/bin/poetry --version || $HOME/.poetry/bin/poetry --version
 
       - name: Load cached Poetry dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -137,16 +148,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --with test --no-root --no-interaction
+          POETRY_BIN="$HOME/.local/bin/poetry"
+          if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="poetry"
+          fi
+          "$POETRY_BIN" install --with test --no-root --no-interaction
+        shell: bash
+        env:
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
 
       - name: Run tests with coverage
         run: |
-          poetry run pytest tests/ \
-            --cov=temporal_boost \
-            --cov-report=xml \
-            --cov-report=term \
-            --cov-report=html \
-            -v
+          POETRY_BIN="$HOME/.local/bin/poetry"
+          if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="poetry"
+          fi
+          "$POETRY_BIN" run pytest tests/ --cov=temporal_boost --cov-report=xml --cov-report=term --cov-report=html -v
+        shell: bash
+        env:
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
@@ -185,7 +205,9 @@ jobs:
           installer-parallel: true
 
       - name: Add Poetry to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: |
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Load cached Poetry dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
