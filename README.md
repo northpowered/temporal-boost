@@ -6,25 +6,26 @@
 [![PyPI](https://img.shields.io/pypi/v/temporal-boost.svg?style=for-the-badge)](https://pypi.org/project/temporal-boost)
 [![MIT](https://img.shields.io/pypi/l/temporalio.svg?style=for-the-badge)](LICENSE)
 
-Documentation is available on [GitHub Pages](https://northpowered.github.io/temporal-boost/)
+**Temporal-boost** is a lightweight, high-level framework for rapid development of Temporal-based microservices in Python. Built on top of the official [Temporal Python SDK](https://github.com/temporalio/sdk-python), it provides a FastAPI-inspired developer experience.
 
-Small framework based on [temporalio/sdk-python](https://github.com/temporalio/sdk-python) - create [Temporal](https://temporal.io/) microservices as fast as you can
+📖 **[Full Documentation](https://northpowered.github.io/temporal-boost/)** | 🐛 [Issues](https://github.com/northpowered/temporal-boost/issues) | 💬 [Discussions](https://github.com/northpowered/temporal-boost/discussions)
+
+## Features
+
+- ✅ **FastAPI-style API** - Organize workers like FastAPI routes
+- ✅ **Zero boilerplate** - Focus on business logic, not infrastructure
+- ✅ **CRON workers** - Scheduled workflows with one line of code
+- ✅ **ASGI integration** - Run FastAPI alongside Temporal workers
+- ✅ **FastStream support** - Event-driven architectures
+- ✅ **Production-ready** - Built-in logging, metrics, and graceful shutdown
+- ✅ **Type-safe** - Full type hints and Pydantic integration
 
 ## Requirements
 
 - Python >= 3.10
-
-## Features
-
-- Create Temporal workers with FastAPI-style
-- Add CRON workers with one code line
-- Append ASGI (ex. FastAPI) workers like Temporal
-- Auto documentation with web UI (like SwaggerUI in FastAPI)
-- Build-in logger and OTLP tracer
+- Access to a Temporal server (local or remote)
 
 ## Installation
-
-Install core:
 
 ```bash
 pip install temporal-boost
@@ -32,148 +33,134 @@ pip install temporal-boost
 poetry add temporal-boost
 ```
 
-Optional extras:
+### Optional Extras
 
-- faststream integration: `pip install "temporal-boost[faststream]"` or `poetry add temporal-boost -E faststream`
-- uvicorn ASGI: `pip install "temporal-boost[uvicorn]"` or `poetry add temporal-boost -E uvicorn`
-- hypercorn ASGI: `pip install "temporal-boost[hypercorn]"` or `poetry add temporal-boost -E hypercorn`
-- granian ASGI: `pip install "temporal-boost[granian]"` or `poetry add temporal-boost -E granian`
+```bash
+# FastStream integration
+pip install "temporal-boost[faststream]"
 
-## Quick start
+# ASGI server support (choose one or more)
+pip install "temporal-boost[uvicorn]"
+pip install "temporal-boost[hypercorn]"
+pip install "temporal-boost[granian]"
+```
+
+## Quick Start
 
 ```python
+import logging
+from datetime import timedelta
+from temporalio import activity, workflow
 from temporal_boost import BoostApp
-from temporalio import activity
-from temporalio import workflow
 
-# Create `BoostApp` object
-app = BoostApp()
+logging.basicConfig(level=logging.INFO)
 
+app = BoostApp(name="my-service")
 
-# Describe your activities/workflows
-@activity.defn(name="test_boost_activity_1")
-async def test_boost_activity_1(foo: str, bar: str) -> str:
-    app.logger.info("This is built-in logger")
-    return f"1_{foo}{bar}"
+@activity.defn(name="greet_activity")
+async def greet_activity(name: str) -> str:
+    return f"Hello, {name}!"
 
-
-@activity.defn(name="test_boost_activity_2")
-async def test_boost_activity_2(foo: str, bar: str) -> str:
-    return f"2_{foo}{bar}"
-
-
-@workflow.defn(name="TestCronWorkflow", sandboxed=False)
-class TestCronWorkflow:
+@workflow.defn(sandboxed=False, name="GreetingWorkflow")
+class GreetingWorkflow:
     @workflow.run
-    async def run(self) -> None:
-        app.logger.warning("With is cron workflow")
-        return None
-
-
-# Add async workers to your app (FastAPI style)
-
-app.add_worker(
-    "worker_1",
-    "task_q_1",
-    activities=[test_boost_activity_1],
-    metrics_endpoint="0.0.0.0:9000"
-)
+    async def run(self, name: str) -> str:
+        return await workflow.execute_activity(
+            greet_activity,
+            name,
+            task_queue="greeting_queue",
+            start_to_close_timeout=timedelta(minutes=1),
+        )
 
 app.add_worker(
-    "worker_2",
-    "task_q_2",
-    activities=[test_boost_activity_2]
+    "greeting_worker",
+    "greeting_queue",
+    activities=[greet_activity],
+    workflows=[GreetingWorkflow],
 )
 
-# Example of CRON worker
-app.add_worker(
-    "test_cron",
-    "task_q_3",
-    workflows=[TestCronWorkflow],
-    cron_schedule="* * * * *",
-    cron_runner=TestCronWorkflow.run
-)
-
-# Run your app and start workers with CLI
-app.run()
+if __name__ == "__main__":
+    app.run()
 ```
 
+Run your application:
+
 ```bash
-python3 main.py
+# Start all workers
+python3 main.py run all
 
-Usage: main.py [OPTIONS] COMMAND [ARGS]...
-
-# Options:
-#   --install-completion [bash|zsh|fish|powershell|pwsh]
-#                                   Install completion for the specified shell.
-#   --show-completion [bash|zsh|fish|powershell|pwsh]
-#                                   Show completion for the specified shell, to
-#                                   copy it or customize the installation.
-#   --help                          Show this message and exit.
-
-Commands:
-  cron
-  run
-
+# Or run a specific worker
+python3 main.py run greeting_worker
 ```
 
-```bash
-python3 main.py run
+## Configuration
 
-Usage: main.py run [OPTIONS] COMMAND [ARGS]...
+All configuration is handled via environment variables. See the [Configuration Guide](https://northpowered.github.io/temporal-boost/configuration/) for complete details.
 
-# Options:
-#   --help  Show this message and exit.
-
-Commands:
-  all
-  test_cron
-  worker_1
-  worker_2
-```
+**Common settings:**
 
 ```bash
-python3 main.py run worker_1
-
-# 2023-09-20T21:25:12 | INFO     | Worker worker_1 was registered in CLI
-# 2023-09-20T21:25:12 | INFO     | Worker worker_2 was registered in CLI
-# 2023-09-20T21:25:12 | INFO     | Worker test_cron was registered in CLI
-# 2023-09-20T21:25:12 | INFO     | Worker worker_1 started on task_q_1 queue
-
-```
-
-## Environment variables
-
-Core configuration is managed via environment variables (see `temporal_boost/temporal/config.py`):
-
-- `TEMPORAL_TARGET_HOST` (default: `localhost:7233`)
-- `TEMPORAL_NAMESPACE` (default: `default`)
-- `TEMPORAL_TLS` (default: `false`)
-- `TEMPORAL_API_KEY` (optional)
-- `TEMPORAL_IDENTITY` (optional)
-- `TEMPORAL_USE_PYDANTIC_DATA_CONVERTER` (default: `false`)
-
-Worker tuning:
-
-- `TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS` (default: `300`)
-- `TEMPORAL_MAX_CONCURRENT_ACTIVITIES` (default: `300`)
-- `TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES` (default: `100`)
-- `TEMPORAL_MAX_WORKFLOW_TASK_POLLS` (default: `10`)
-- `TEMPORAL_MAX_ACTIVITY_TASK_POLLS` (default: `10`)
-- `TEMPORAL_NONSTICKY_TO_STICKY_RATIO` (default: `0.2`)
-- `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` (seconds, default: `30`)
-
-Telemetry (Prometheus runtime):
-
-- `TEMPORAL_PROMETHEUS_BIND_ADDRESS` (e.g. `0.0.0.0:8801`)
-- `TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX` (default: `false`)
-- `TEMPORAL_PROMETHEUS_UNIT_SUFFIX` (default: `false`)
-- `TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS` (default: `false`)
-
-Example:
-
-```bash
-export TEMPORAL_TARGET_HOST=temporal.example.com:7233
-export TEMPORAL_NAMESPACE=production
+export TEMPORAL_TARGET_HOST=localhost:7233
+export TEMPORAL_NAMESPACE=default
 export TEMPORAL_USE_PYDANTIC_DATA_CONVERTER=true
 ```
+
+**Worker tuning:**
+
+```bash
+export TEMPORAL_MAX_CONCURRENT_ACTIVITIES=300
+export TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS=300
+export TEMPORAL_PROMETHEUS_BIND_ADDRESS=0.0.0.0:9090
+```
+
+## Documentation
+
+- 📖 [Getting Started](https://northpowered.github.io/temporal-boost/) - Overview and installation
+- 🏗️ [Creating Applications](https://northpowered.github.io/temporal-boost/creating_application/) - Activities, workflows, and workers
+- 🚀 [Running Applications](https://northpowered.github.io/temporal-boost/running_application/) - Deployment and production
+- 🔧 [Configuration](https://northpowered.github.io/temporal-boost/configuration/) - Complete configuration reference
+- 💡 [Examples](https://northpowered.github.io/temporal-boost/examples/) - Comprehensive examples and patterns
+- 🎯 [Advanced Usage](https://northpowered.github.io/temporal-boost/advanced_usage/) - Customization and advanced features
+- 📚 [API Reference](https://northpowered.github.io/temporal-boost/api_reference/) - Complete API documentation
+- 🔍 [Troubleshooting](https://northpowered.github.io/temporal-boost/troubleshooting/) - Common issues and solutions
+
+## Examples
+
+```python
+# CRON worker
+app.add_worker(
+    "daily_report",
+    "report_queue",
+    workflows=[DailyReportWorkflow],
+    cron_schedule="0 0 * * *",
+    cron_runner=DailyReportWorkflow.run,
+)
+
+# ASGI worker (FastAPI)
+from fastapi import FastAPI
+fastapi_app = FastAPI()
+app.add_asgi_worker("api_worker", fastapi_app, "0.0.0.0", 8000)
+
+# FastStream worker
+from faststream import FastStream
+faststream_app = FastStream(broker)
+app.add_faststream_worker("message_worker", faststream_app)
+```
+
+See [Examples](https://northpowered.github.io/temporal-boost/examples/) for more patterns.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Links
+
+- [Documentation](https://northpowered.github.io/temporal-boost/)
+- [PyPI Package](https://pypi.org/project/temporal-boost/)
+- [GitHub Repository](https://github.com/northpowered/temporal-boost)
+- [Temporal Documentation](https://docs.temporal.io)
+- [Temporal Python SDK](https://github.com/temporalio/sdk-python)

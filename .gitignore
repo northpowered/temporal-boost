@@ -166,3 +166,6 @@ cython_debug/
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/*.code-snippets
+
+# Cursor
+.cursor/
