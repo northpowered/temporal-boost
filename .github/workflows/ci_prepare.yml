@@ -223,7 +223,7 @@ jobs:
           if [ ! -f "$POETRY_BIN" ]; then
             POETRY_BIN="poetry"
           fi
-          "$POETRY_BIN" install --no-root --no-interaction
+          "$POETRY_BIN" install --no-root --no-interaction --all-extras
         shell: bash
         env:
           PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
