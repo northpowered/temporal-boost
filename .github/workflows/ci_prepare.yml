@@ -128,15 +128,25 @@ jobs:
           virtualenvs-create: true
           installer-parallel: true
 
-      - name: Add Poetry to PATH
+      - name: Ensure Poetry is available
         run: |
+          # Add Poetry to PATH
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
           echo "${{ github.workspace }}" >> $GITHUB_PATH
-
-      - name: Verify Poetry installation
-        run: |
-          poetry --version || $HOME/.local/bin/poetry --version || $HOME/.poetry/bin/poetry --version || ${{ github.workspace }}/poetry --version
+          
+          # Check if Poetry is available
+          if ! command -v poetry >/dev/null 2>&1 && [ ! -f "$HOME/.local/bin/poetry" ] && [ ! -f "$HOME/.poetry/bin/poetry" ]; then
+            echo "Poetry not found, installing via official installer..."
+            curl -sSL https://install.python-poetry.org | python3 -
+            export PATH="$HOME/.local/bin:$PATH"
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+          fi
+          
+          # Verify Poetry is available
+          poetry --version || $HOME/.local/bin/poetry --version || $HOME/.poetry/bin/poetry --version || exit 1
+          echo "Poetry installation verified"
+        shell: bash
 
       - name: Load cached Poetry dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -149,31 +159,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          POETRY_BIN="$HOME/.local/bin/poetry"
-          if [ ! -f "$POETRY_BIN" ]; then
-            POETRY_BIN="${{ github.workspace }}/poetry"
-          fi
-          if [ ! -f "$POETRY_BIN" ]; then
-            POETRY_BIN="poetry"
-          fi
-          "$POETRY_BIN" install --with test --no-root --no-interaction
-        shell: bash
+          poetry install --with test --no-root --no-interaction
         env:
-          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin:${{ github.workspace }}
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin:${{ github.workspace }}:$PATH
 
       - name: Run tests with coverage
         run: |
-          POETRY_BIN="$HOME/.local/bin/poetry"
-          if [ ! -f "$POETRY_BIN" ]; then
-            POETRY_BIN="${{ github.workspace }}/poetry"
-          fi
-          if [ ! -f "$POETRY_BIN" ]; then
-            POETRY_BIN="poetry"
-          fi
-          "$POETRY_BIN" run pytest tests/ --cov=temporal_boost --cov-report=xml --cov-report=term --cov-report=html -v
-        shell: bash
+          poetry run pytest tests/ --cov=temporal_boost --cov-report=xml --cov-report=term --cov-report=html -v
         env:
-          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin:${{ github.workspace }}
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin:${{ github.workspace }}:$PATH
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
