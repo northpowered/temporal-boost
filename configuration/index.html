@@ -1,0 +1,1701 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Extremely fast development for Temporal-based microservices">
+      
+      
+      
+      
+        <link rel="prev" href="../running_application/">
+      
+      
+        <link rel="next" href="../advanced_usage/">
+      
+      
+      <link rel="icon" href="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Configuration - Temporal-boost</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012a10%2010%200%200%201-10%2010A10%2010%200%200%201%202%2012%2010%2010%200%200%201%2012%202a10%2010%200%200%201%2010%2010M6%2013h8l-3.5%203.5%201.42%201.42L17.84%2012l-5.92-5.92L10.5%207.5%2014%2011H6z%22/%3E%3C/svg%3E');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Temporal-boost" class="md-header__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Temporal-boost
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    northpowered/temporal-boost
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Temporal-boost" class="md-nav__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg" alt="logo">
+
+    </a>
+    Temporal-boost
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    northpowered/temporal-boost
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Creating application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of Contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporal-client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temporal Client Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Temporal Client Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_target_host" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_TARGET_HOST
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_NAMESPACE
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_TLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_api_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_API_KEY
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_IDENTITY
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_use_pydantic_data_converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_USE_PYDANTIC_DATA_CONVERTER
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Worker Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Worker Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_workflow_tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_CONCURRENT_ACTIVITIES
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_local_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_workflow_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_WORKFLOW_TASK_POLLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_activity_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_ACTIVITY_TASK_POLLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_nonsticky_to_sticky_ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_NONSTICKY_TO_STICKY_RATIO
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_graceful_shutdown_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prometheus-metrics-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prometheus Metrics Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prometheus Metrics Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_bind_address" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_BIND_ADDRESS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_counters_total_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_unit_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_UNIT_SUFFIX
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_durations_as_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Priority
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Development Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Production Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-performance-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      High-Performance Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-limited-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource-Limited Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Configuration Files
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Tips
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-configuration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Configuration Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Configuration Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-environment-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 1: Environment-Based
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-configuration-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 2: Configuration Class
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-pydantic-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 3: Pydantic Settings
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Best Practices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-current-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Current Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validate Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Advanced usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faststream_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    FastStream Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release_notes_2.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Release Notes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Table of Contents
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporal-client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Temporal Client Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Temporal Client Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_target_host" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_TARGET_HOST
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_NAMESPACE
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_TLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_api_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_API_KEY
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_IDENTITY
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_use_pydantic_data_converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_USE_PYDANTIC_DATA_CONVERTER
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Worker Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Worker Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_workflow_tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_CONCURRENT_ACTIVITIES
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_local_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_workflow_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_WORKFLOW_TASK_POLLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_activity_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_MAX_ACTIVITY_TASK_POLLS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_nonsticky_to_sticky_ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_NONSTICKY_TO_STICKY_RATIO
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_graceful_shutdown_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prometheus-metrics-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prometheus Metrics Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prometheus Metrics Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_bind_address" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_BIND_ADDRESS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_counters_total_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_unit_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_UNIT_SUFFIX
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_durations_as_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Priority
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Development Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Production Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-performance-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      High-Performance Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-limited-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource-Limited Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Configuration Files
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Validation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dynamic Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration Tips
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-configuration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Configuration Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Configuration Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-environment-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 1: Environment-Based
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-configuration-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 2: Configuration Class
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-pydantic-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pattern 3: Pydantic Settings
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Best Practices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-current-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Current Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Validate Configuration
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="configuration">Configuration</h1>
+<p>Temporal-boost uses environment variables for configuration, providing a flexible and 12-factor app compliant approach. This guide covers all available configuration options.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#temporal-client-configuration">Temporal Client Configuration</a></li>
+<li><a href="#worker-configuration">Worker Configuration</a></li>
+<li><a href="#prometheus-metrics-configuration">Prometheus Metrics Configuration</a></li>
+<li><a href="#runtime-configuration">Runtime Configuration</a></li>
+<li><a href="#configuration-priority">Configuration Priority</a></li>
+<li><a href="#configuration-examples">Configuration Examples</a></li>
+</ul>
+<h2 id="temporal-client-configuration">Temporal Client Configuration</h2>
+<p>These settings control how workers connect to the Temporal server.</p>
+<h3 id="temporal_target_host"><code>TEMPORAL_TARGET_HOST</code></h3>
+<p><strong>Type</strong>: String<br />
+<strong>Default</strong>: <code>localhost:7233</code><br />
+<strong>Description</strong>: Temporal server address (host:port)</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.example.com:7233
+</span></code></pre></div>
+<h3 id="temporal_namespace"><code>TEMPORAL_NAMESPACE</code></h3>
+<p><strong>Type</strong>: String<br />
+<strong>Default</strong>: <code>default</code><br />
+<strong>Description</strong>: Temporal namespace to use</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span></code></pre></div>
+<h3 id="temporal_tls"><code>TEMPORAL_TLS</code></h3>
+<p><strong>Type</strong>: Boolean<br />
+<strong>Default</strong>: <code>false</code><br />
+<strong>Description</strong>: Enable TLS for Temporal connections</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<p>Accepts: <code>true</code>, <code>1</code>, <code>yes</code> (case-insensitive)</p>
+<h3 id="temporal_api_key"><code>TEMPORAL_API_KEY</code></h3>
+<p><strong>Type</strong>: String<br />
+<strong>Default</strong>: <code>None</code><br />
+<strong>Description</strong>: API key for Temporal Cloud or secured clusters</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_API_KEY</span><span class="o">=</span>your-api-key-here
+</span></code></pre></div>
+<p><strong>Security Note</strong>: Never commit API keys to version control. Use secrets management.</p>
+<h3 id="temporal_identity"><code>TEMPORAL_IDENTITY</code></h3>
+<p><strong>Type</strong>: String<br />
+<strong>Default</strong>: <code>None</code><br />
+<strong>Description</strong>: Client identity for Temporal connections</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_IDENTITY</span><span class="o">=</span>worker-1
+</span></code></pre></div>
+<h3 id="temporal_use_pydantic_data_converter"><code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code></h3>
+<p><strong>Type</strong>: Boolean<br />
+<strong>Default</strong>: <code>false</code><br />
+<strong>Description</strong>: Use Pydantic data converter for serialization</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<p>When enabled, Temporal-boost uses Pydantic models for data serialization, providing better type safety and validation.</p>
+<h2 id="worker-configuration">Worker Configuration</h2>
+<p>These settings control worker behavior and resource limits.</p>
+<h3 id="temporal_max_concurrent_workflow_tasks"><code>TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</code></h3>
+<p><strong>Type</strong>: Integer<br />
+<strong>Default</strong>: <code>300</code><br />
+<strong>Description</strong>: Maximum concurrent workflow tasks per worker</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
+</span></code></pre></div>
+<p>Increase for high workflow throughput, decrease to limit resource usage.</p>
+<h3 id="temporal_max_concurrent_activities"><code>TEMPORAL_MAX_CONCURRENT_ACTIVITIES</code></h3>
+<p><strong>Type</strong>: Integer<br />
+<strong>Default</strong>: <code>300</code><br />
+<strong>Description</strong>: Maximum concurrent activity executions per worker</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">200</span>
+</span></code></pre></div>
+<p>Tune based on your activity workload and available resources.</p>
+<h3 id="temporal_max_concurrent_local_activities"><code>TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</code></h3>
+<p><strong>Type</strong>: Integer<br />
+<strong>Default</strong>: <code>100</code><br />
+<strong>Description</strong>: Maximum concurrent local activity executions</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
+</span></code></pre></div>
+<p>Local activities execute in the same process as workflows.</p>
+<h3 id="temporal_max_workflow_task_polls"><code>TEMPORAL_MAX_WORKFLOW_TASK_POLLS</code></h3>
+<p><strong>Type</strong>: Integer<br />
+<strong>Default</strong>: <code>10</code><br />
+<strong>Description</strong>: Maximum concurrent workflow task polls</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
+</span></code></pre></div>
+<p>Controls how many workflow tasks can be polled simultaneously.</p>
+<h3 id="temporal_max_activity_task_polls"><code>TEMPORAL_MAX_ACTIVITY_TASK_POLLS</code></h3>
+<p><strong>Type</strong>: Integer<br />
+<strong>Default</strong>: <code>10</code><br />
+<strong>Description</strong>: Maximum concurrent activity task polls</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
+</span></code></pre></div>
+<p>Controls how many activity tasks can be polled simultaneously.</p>
+<h3 id="temporal_nonsticky_to_sticky_ratio"><code>TEMPORAL_NONSTICKY_TO_STICKY_RATIO</code></h3>
+<p><strong>Type</strong>: Float<br />
+<strong>Default</strong>: <code>0.2</code><br />
+<strong>Description</strong>: Ratio of non-sticky to sticky workflow task polls</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.3
+</span></code></pre></div>
+<p>Sticky workflows improve performance by keeping workflow state in memory.</p>
+<h3 id="temporal_graceful_shutdown_timeout"><code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code></h3>
+<p><strong>Type</strong>: Integer (seconds)<br />
+<strong>Default</strong>: <code>30</code><br />
+<strong>Description</strong>: Timeout for graceful shutdown</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
+</span></code></pre></div>
+<p>Workers will wait this long for running activities to complete before shutting down.</p>
+<h2 id="prometheus-metrics-configuration">Prometheus Metrics Configuration</h2>
+<p>These settings control Prometheus metrics collection and export.</p>
+<h3 id="temporal_prometheus_bind_address"><code>TEMPORAL_PROMETHEUS_BIND_ADDRESS</code></h3>
+<p><strong>Type</strong>: String<br />
+<strong>Default</strong>: <code>None</code><br />
+<strong>Description</strong>: Bind address for Prometheus metrics endpoint</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span></code></pre></div>
+<p>When set, exposes Prometheus metrics at <code>/metrics</code> endpoint.</p>
+<h3 id="temporal_prometheus_counters_total_suffix"><code>TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code></h3>
+<p><strong>Type</strong>: Boolean<br />
+<strong>Default</strong>: <code>false</code><br />
+<strong>Description</strong>: Append <code>_total</code> suffix to counter metrics</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<h3 id="temporal_prometheus_unit_suffix"><code>TEMPORAL_PROMETHEUS_UNIT_SUFFIX</code></h3>
+<p><strong>Type</strong>: Boolean<br />
+<strong>Default</strong>: <code>false</code><br />
+<strong>Description</strong>: Append unit suffix to metric names</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_UNIT_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<h3 id="temporal_prometheus_durations_as_seconds"><code>TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</code></h3>
+<p><strong>Type</strong>: Boolean<br />
+<strong>Default</strong>: <code>false</code><br />
+<strong>Description</strong>: Express durations in seconds instead of milliseconds</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<h2 id="runtime-configuration">Runtime Configuration</h2>
+<p>Runtime configuration is done programmatically. See <a href="../advanced_usage/">Advanced Usage</a> for details.</p>
+<h2 id="configuration-priority">Configuration Priority</h2>
+<p>Configuration is loaded in this order (highest to lowest priority):</p>
+<ol>
+<li><strong>Environment variables</strong> - Highest priority</li>
+<li><strong>BoostApp initialization parameters</strong></li>
+<li><strong>Default values</strong> - Lowest priority</li>
+</ol>
+<p>Example:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Environment variable: TEMPORAL_TARGET_HOST=temporal.prod:7233</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># BoostApp parameter: temporal_endpoint=&quot;temporal.dev:7233&quot;</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="c1"># Result: Uses &quot;temporal.prod:7233&quot; (environment variable wins)</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">&quot;temporal.dev:7233&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="configuration-examples">Configuration Examples</h2>
+<h3 id="development-configuration">Development Configuration</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># .env.development</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>development
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">10</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">10</span>
+</span></code></pre></div>
+<h3 id="production-configuration">Production Configuration</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># .env.production</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.production.example.com:7233
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nv">TEMPORAL_API_KEY</span><span class="o">=</span><span class="si">${</span><span class="nv">TEMPORAL_API_KEY</span><span class="si">}</span><span class="w">  </span><span class="c1"># From secrets manager</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">300</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">300</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
+</span></code></pre></div>
+<h3 id="high-performance-configuration">High-Performance Configuration</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># .env.high-performance</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.cluster.example.com:7233
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">1000</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.1
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span></code></pre></div>
+<h3 id="resource-limited-configuration">Resource-Limited Configuration</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># .env.limited-resources</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>default
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">20</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
+</span></code></pre></div>
+<h3 id="using-configuration-files">Using Configuration Files</h3>
+<p>Load from <code>.env</code> file:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Load .env file</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">load_dotenv</span><span class="p">()</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Access configuration</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="n">host</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost:7233&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="configuration-validation">Configuration Validation</h3>
+<p>Validate configuration at startup:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_config</span><span class="p">():</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate required configuration.&quot;&quot;&quot;</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>        <span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>        <span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">,</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>    <span class="p">]</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">required_vars</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">var</span><span class="p">)]</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required environment variables: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="n">validate_config</span><span class="p">()</span>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="dynamic-configuration">Dynamic Configuration</h3>
+<p>Override configuration programmatically:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="c1"># Override for testing</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;localhost:7233&quot;</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="configuration-tips">Configuration Tips</h3>
+<ol>
+<li><strong>Use environment-specific files</strong>: <code>.env.development</code>, <code>.env.production</code></li>
+<li><strong>Never commit secrets</strong>: Use secrets management for API keys</li>
+<li><strong>Document defaults</strong>: Make configuration defaults clear in documentation</li>
+<li><strong>Validate early</strong>: Check configuration at application startup</li>
+<li><strong>Use types</strong>: Convert string environment variables to appropriate types</li>
+<li><strong>Monitor configuration</strong>: Log configuration values (without secrets) at startup</li>
+</ol>
+<h3 id="common-configuration-patterns">Common Configuration Patterns</h3>
+<h4 id="pattern-1-environment-based">Pattern 1: Environment-Based</h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;ENVIRONMENT&quot;</span><span class="p">,</span> <span class="s2">&quot;development&quot;</span><span class="p">)</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="k">if</span> <span class="n">env</span> <span class="o">==</span> <span class="s2">&quot;production&quot;</span><span class="p">:</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TLS&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_PROMETHEUS_BIND_ADDRESS&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0.0.0:9090&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="pattern-2-configuration-class">Pattern 2: Configuration Class</h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="nd">@dataclass</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalConfig</span><span class="p">:</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>    <span class="n">tls</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>    <span class="nd">@classmethod</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>            <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost:7233&quot;</span><span class="p">),</span>
+</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>            <span class="n">namespace</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">),</span>
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a>            <span class="n">tls</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TLS&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a>            <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_API_KEY&quot;</span><span class="p">),</span>
+</span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18" href="#__codelineno-26-18"></a>        <span class="p">)</span>
+</span><span id="__span-26-19"><a id="__codelineno-26-19" name="__codelineno-26-19" href="#__codelineno-26-19"></a>
+</span><span id="__span-26-20"><a id="__codelineno-26-20" name="__codelineno-26-20" href="#__codelineno-26-20"></a><span class="n">config</span> <span class="o">=</span> <span class="n">TemporalConfig</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+</span></code></pre></div>
+<h4 id="pattern-3-pydantic-settings">Pattern 3: Pydantic Settings</h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>    <span class="n">temporal_target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost:7233&quot;</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>    <span class="n">temporal_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">temporal_tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>    <span class="n">temporal_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">&quot;TEMPORAL_&quot;</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>        <span class="n">case_sensitive</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="n">settings</span> <span class="o">=</span> <span class="n">TemporalSettings</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="security-best-practices">Security Best Practices</h3>
+<ol>
+<li><strong>Never log secrets</strong>: Filter out API keys from logs</li>
+<li><strong>Use secrets management</strong>: AWS Secrets Manager, HashiCorp Vault, etc.</li>
+<li><strong>Rotate credentials</strong>: Regularly rotate API keys</li>
+<li><strong>Use TLS in production</strong>: Always enable TLS for production</li>
+<li><strong>Restrict access</strong>: Use network policies to restrict Temporal access</li>
+<li><strong>Audit configuration</strong>: Log configuration changes in production</li>
+</ol>
+<h3 id="troubleshooting-configuration">Troubleshooting Configuration</h3>
+<h4 id="check-current-configuration">Check Current Configuration</h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Host: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Namespace: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TLS: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max Activities: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">MAX_CONCURRENT_ACTIVITIES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="validate-configuration">Validate Configuration</h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">():</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="p">,</span> <span class="s2">&quot;TEMPORAL_TARGET_HOST not set&quot;</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="p">,</span> <span class="s2">&quot;TEMPORAL_NAMESPACE not set&quot;</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_API_KEY</span><span class="p">:</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: TLS enabled but no API key provided&quot;</span><span class="p">)</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="n">validate</span><span class="p">()</span>
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "content.code.copy", "navigation.instant", "content.tabs.link"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+    
+  </body>
+</html>
