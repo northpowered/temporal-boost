@@ -39,5 +39,13 @@ markdown_extensions:
 
 nav:
   - Getting started: index.md
-  - Creating application: creating_application.md
-  - Running application: running_application.md
+  - Guides:
+    - Creating application: creating_application.md
+    - Running application: running_application.md
+    - Configuration: configuration.md
+    - Advanced usage: advanced_usage.md
+    - FastStream Integration: faststream_integration.md
+  - Examples: examples.md
+  - API Reference: api_reference.md
+  - Troubleshooting: troubleshooting.md
+  - Release Notes: release_notes_2.0.0.md
