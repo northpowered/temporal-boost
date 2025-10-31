@@ -22,6 +22,7 @@ from temporalio import activity, workflow
 
 from temporal_boost import ASGIWorkerType, BaseBoostWorker, BoostApp
 
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ app = BoostApp(
     use_pydantic=True,
 )
 
+
 # Data model
 @dataclass
 class TestModel:
@@ -42,42 +44,47 @@ class TestModel:
     spam: int = 3
     eggs: bool | None = None
 
+
 # Custom exec method
 def fake_db_migration() -> None:
     """Fake database migration function."""
     logger.info("Running database migration...")
 
+
 # Activities
 @activity.defn(name="test_boost_activity_1")
-async def test_boost_activity_1(payload: TestModel) -> TestModel:  # noqa: RUF029
+async def test_boost_activity_1(payload: TestModel) -> TestModel:
     """First activity that processes payload."""
     logger.info(f"Activity 1 processing: {payload.foo}")
     payload.foo = f"{payload.foo}+activity1"
     payload.bar += 1
     return payload
 
+
 @activity.defn(name="test_boost_activity_2")
-async def test_boost_activity_2(payload: TestModel) -> TestModel:  # noqa: RUF029
+async def test_boost_activity_2(payload: TestModel) -> TestModel:
     """Second activity that processes payload."""
     logger.info(f"Activity 2 processing: {payload.foo}")
     payload.foo = f"{payload.foo}+activity2"
     payload.bar += 1
     return payload
 
+
 @activity.defn(name="custom_test_boost_activity_3")
-async def test_boost_activity_3(payload: TestModel, foo: str, bar: int) -> TestModel:  # noqa: RUF029
+async def test_boost_activity_3(payload: TestModel, foo: str, bar: int) -> TestModel:
     """Third activity with additional parameters."""
     logger.info(f"Activity 3 processing: {payload.foo} with {foo} and {bar}")
     payload.foo = f"{payload.foo}+activity3"
     payload.bar += 1
     return payload
 
+
 # Workflow
 @workflow.defn(sandboxed=False, name="MyCustomFlowName")
 class MyWorkflow:
     """Example workflow with signals."""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.signal_data: TestModel | None = None
 
     @workflow.run
@@ -86,7 +93,7 @@ class MyWorkflow:
         logger.info("Starting workflow")
 
         start_payload: TestModel = TestModel(foo="hello", bar=0)
-        
+
         # Execute first activity
         result_1 = await workflow.execute_activity(
             test_boost_activity_1,
@@ -94,16 +101,14 @@ class MyWorkflow:
             task_queue="task_q_1",
             start_to_close_timeout=timedelta(minutes=1),
         )
-        
+
         # Execute second activity
-        result_2 = await workflow.execute_activity(
+        return await workflow.execute_activity(
             test_boost_activity_2,
             result_1,
             task_queue="task_q_2",
             start_to_close_timeout=timedelta(minutes=1),
         )
-        
-        return result_2
 
     @workflow.signal(name="my_custom_signal_name")
     async def my_signal(self, signal_arg: TestModel) -> None:
@@ -111,19 +116,21 @@ class MyWorkflow:
         logger.info(f"Received signal: {signal_arg}")
         self.signal_data = signal_arg
 
+
 # Custom async runtime worker
 class TestAsyncRuntime(BaseBoostWorker):
     """Custom worker with async runtime."""
-    
+
     async def _test_async_runtime(self) -> None:
         """Async runtime loop."""
-        while True:  # noqa: ASYNC110
+        while True:
             await asyncio.sleep(1)
             logger.debug("Async runtime tick")
 
     def run(self) -> None:
         """Run async runtime."""
         asyncio.run(self._test_async_runtime())
+
 
 # Register workers
 app.add_worker(

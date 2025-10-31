@@ -110,12 +110,14 @@ ignore = [
   "G004", # Ignore a specific Pylint rule (possibly related to global variables)
   "COM812", # Require a trailing comma to reduce diff size when modifying lists, dicts, etc.
   "TRY301", # Check for `raise` within try block for proper exception handling of caught exceptions
+  "RUF029", # Ignore mutable default argument rule (functions with mutable defaults)
+  "DOC201", # Ignore docstring presence check (allow functions without docstrings)
 ]
 select = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
-"examples/*" = ["S101", "S311", "S104", "ARG001", "RUF001"]
-"tests/*" = ["S101", "S311", "S106", "RUF029", "SLF001", "PLR2004", "SIM117"]
+"examples/*" = ["S101", "S311", "S104", "ARG001", "RUF001", "RUF029", "DOC201"]
+"tests/*" = ["S101", "S311", "S106", "RUF029", "SLF001", "PLR2004", "SIM117", "DOC201"]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
