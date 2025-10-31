@@ -219,12 +219,33 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --no-root --no-interaction
+          POETRY_BIN="$HOME/.local/bin/poetry"
+          if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="poetry"
+          fi
+          "$POETRY_BIN" install --no-root --no-interaction
+        shell: bash
+        env:
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
 
       - name: Check example imports
         run: |
-          python -c "import examples.example_starter; import examples.example_app" || true
+          POETRY_BIN="$HOME/.local/bin/poetry"
+          if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="poetry"
+          fi
+          "$POETRY_BIN" run python -c "import examples.example_starter; import examples.example_app" || true
+        shell: bash
+        env:
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
 
       - name: Verify example syntax
         run: |
-          python -m py_compile examples/*.py || true
+          POETRY_BIN="$HOME/.local/bin/poetry"
+          if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="poetry"
+          fi
+          "$POETRY_BIN" run python -m py_compile examples/*.py || true
+        shell: bash
+        env:
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
