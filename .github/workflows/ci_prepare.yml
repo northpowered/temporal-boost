@@ -132,10 +132,11 @@ jobs:
         run: |
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}" >> $GITHUB_PATH
 
       - name: Verify Poetry installation
         run: |
-          poetry --version || $HOME/.local/bin/poetry --version || $HOME/.poetry/bin/poetry --version
+          poetry --version || $HOME/.local/bin/poetry --version || $HOME/.poetry/bin/poetry --version || ${{ github.workspace }}/poetry --version
 
       - name: Load cached Poetry dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -150,23 +151,29 @@ jobs:
         run: |
           POETRY_BIN="$HOME/.local/bin/poetry"
           if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="${{ github.workspace }}/poetry"
+          fi
+          if [ ! -f "$POETRY_BIN" ]; then
             POETRY_BIN="poetry"
           fi
           "$POETRY_BIN" install --with test --no-root --no-interaction
         shell: bash
         env:
-          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin:${{ github.workspace }}
 
       - name: Run tests with coverage
         run: |
           POETRY_BIN="$HOME/.local/bin/poetry"
+          if [ ! -f "$POETRY_BIN" ]; then
+            POETRY_BIN="${{ github.workspace }}/poetry"
+          fi
           if [ ! -f "$POETRY_BIN" ]; then
             POETRY_BIN="poetry"
           fi
           "$POETRY_BIN" run pytest tests/ --cov=temporal_boost --cov-report=xml --cov-report=term --cov-report=html -v
         shell: bash
         env:
-          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin
+          PATH: /usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$HOME/.poetry/bin:${{ github.workspace }}
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'
