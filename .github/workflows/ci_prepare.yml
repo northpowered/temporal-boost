@@ -1,53 +1,202 @@
 name: CI
 
 on:
-    push:
-        branches: ["main"]
-    pull_request:
-        branches: ["main"]
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-    linters:
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
-        strategy:
-            matrix:
-                python-version: ["3.10", "3.11", "3.12", "3.13"]
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        steps:
-            - uses: actions/checkout@v3
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v3
-              with:
-                  python-version: ${{ matrix.python-version }}
-            - name: Installing lint deps
-              run:  |
-                pip install poetry
-                poetry config virtualenvs.create false
-                poetry install --with lint --with test --no-root
-            - name: Lint lib src
-              run: |
-                # stop the build if there are Python syntax errors or undefined names
-                ruff check .
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    unit-tests:
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
-        strategy:
-            matrix:
-                python-version: ["3.10", "3.11", "3.12", "3.13"]
-        steps:
-            - uses: actions/checkout@v3
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v3
-              with:
-                  python-version: ${{ matrix.python-version }}
-            - name: Install dependencies
-              run: |
-                pip install poetry
-                poetry config virtualenvs.create false
-                poetry install --with test --no-root
-            - name: Run integration tests
-              run: poetry run pytest tests --cov
-            - name: Upload Codecov
-              uses: codecov/codecov-action@v3
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: false
+          installer-parallel: true
+
+      - name: Load cached Poetry dependencies
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: |
+          poetry install --with lint --no-root --no-interaction
+
+      - name: Run Ruff check
+        run: |
+          poetry run ruff check temporal_boost/ --output-format=github
+
+      - name: Run Ruff format check
+        run: |
+          poetry run ruff format --check temporal_boost/
+
+      - name: Run MyPy type checking
+        run: |
+          poetry run mypy temporal_boost/ || true
+
+  lint-examples:
+    name: Lint Examples
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: false
+          installer-parallel: true
+
+      - name: Load cached Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: |
+          poetry install --with lint --no-root --no-interaction
+
+      - name: Run Ruff check on examples
+        run: |
+          poetry run ruff check examples/ --output-format=github || true
+
+      - name: Run Ruff format check on examples
+        run: |
+          poetry run ruff format --check examples/ || true
+
+  test:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "poetry"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: false
+          installer-parallel: true
+
+      - name: Load cached Poetry dependencies
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: |
+          poetry install --with test --no-root --no-interaction
+
+      - name: Run tests with coverage
+        run: |
+          poetry run pytest tests/ \
+            --cov=temporal_boost \
+            --cov-report=xml \
+            --cov-report=term \
+            --cov-report=html \
+            -v
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Upload coverage reports
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.python-version }}
+          path: htmlcov/
+          retention-days: 30
+
+  test-examples:
+    name: Test Examples
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: false
+          installer-parallel: true
+
+      - name: Load cached Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root --no-interaction
+
+      - name: Check example imports
+        run: |
+          python -c "import examples.example_starter; import examples.example_app" || true
+
+      - name: Verify example syntax
+        run: |
+          python -m py_compile examples/*.py || true

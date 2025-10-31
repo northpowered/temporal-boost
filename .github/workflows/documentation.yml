@@ -1,16 +1,57 @@
-name: Documentation deployment
+name: Documentation Deployment
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/documentation.yml"
+
 jobs:
   deploy:
+    name: Build and Deploy Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-      - run: pip install mkdocs-material
-      - run: mkdocs gh-deploy --force
+          python-version: "3.11"
+          cache: "poetry"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: false
+          installer-parallel: true
+
+      - name: Load cached Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install documentation dependencies
+        run: |
+          poetry install --with docs --no-root --no-interaction
+
+      - name: Build documentation
+        run: |
+          poetry run mkdocs build --strict
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          cname: northpowered.github.io
+          keep_files: false
