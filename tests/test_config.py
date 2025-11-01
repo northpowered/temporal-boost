@@ -1,3 +1,4 @@
+import math
 import os
 from datetime import timedelta
 from unittest.mock import patch
@@ -39,15 +40,15 @@ class TestConfigUtilityFunctions:
 
     def test_get_env_float_valid(self):
         with patch.dict(os.environ, {"TEST_VAR": "123.45"}, clear=False):
-            assert config.get_env_float("TEST_VAR", default=0.0) == 123.45
+            assert math.isclose(config.get_env_float("TEST_VAR", default=0.0), 123.45)
 
     def test_get_env_float_invalid(self):
         with patch.dict(os.environ, {"TEST_VAR": "not_a_number"}, clear=False):
-            assert config.get_env_float("TEST_VAR", default=3.14) == 3.14
+            assert math.isclose(config.get_env_float("TEST_VAR", default=3.14), 3.14)
 
     def test_get_env_float_missing(self):
         with patch.dict(os.environ, {}, clear=True):
-            assert config.get_env_float("NONEXISTENT", default=2.71) == 2.71
+            assert math.isclose(config.get_env_float("NONEXISTENT", default=2.71), 2.71)
 
     def test_config_constants_exist(self):
         assert hasattr(config, "TARGET_HOST")
@@ -77,7 +78,7 @@ class TestConfigUtilityFunctions:
         assert config.MAX_CONCURRENT_LOCAL_ACTIVITIES == 100
         assert config.MAX_WORKFLOW_TASK_POLLS == 10
         assert config.MAX_ACTIVITY_TASK_POLLS == 10
-        assert config.NONSTICKY_STICKY_RATIO == 0.2
+        assert math.isclose(config.NONSTICKY_STICKY_RATIO, 0.2)
         assert config.GRACEFUL_SHUTDOWN_TIMEOUT == timedelta(seconds=30)
         assert config.PROMETHEUS_COUNTERS_TOTAL_SUFFIX is False
         assert config.PROMETHEUS_UNIT_SUFFIX is False
