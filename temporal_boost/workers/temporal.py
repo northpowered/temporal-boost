@@ -1,10 +1,11 @@
 import asyncio
 import logging
-import uuid
 from collections.abc import Callable, Mapping
 from typing import Any, cast
+from urllib.parse import quote
 
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowHandle
+from temporalio.common import WorkflowIDConflictPolicy, WorkflowIDReusePolicy
 from temporalio.runtime import LoggingConfig, MetricBuffer, OpenTelemetryConfig, PrometheusConfig, Runtime
 from temporalio.types import MethodAsyncNoParam
 from temporalio.worker import Worker
@@ -31,10 +32,18 @@ class TemporalBoostWorker(BaseBoostWorker):
         interceptors: list[Interceptor] | None = None,
         cron_schedule: str | None = None,
         cron_runner: MethodAsyncNoParam[Any, Any] | None = None,
+        cron_workflow_id: str | None = None,
         debug_mode: bool = False,
         **worker_kwargs: Any,
     ) -> None:
         self.name = worker_name
+        if cron_workflow_id is not None and not cron_workflow_id.strip():
+            raise ValueError("cron_workflow_id must not be empty or whitespace-only")
+        self._cron_workflow_id = (
+            cron_workflow_id
+            if cron_workflow_id is not None
+            else f"temporal-boost/cron/{quote(task_queue, safe='')}/{quote(worker_name, safe='')}"
+        )
         activities = activities or []
         workflows = workflows or []
         interceptors = interceptors or []
@@ -62,6 +71,11 @@ class TemporalBoostWorker(BaseBoostWorker):
         self._runtime: Runtime | None = None
 
         self._cron_future: asyncio.Future[Any] | None = None
+
+    @property
+    def cron_workflow_id(self) -> str:
+        """Stable CRON workflow identity within the configured Temporal namespace."""
+        return self._cron_workflow_id
 
     @property
     def temporal_client(self) -> Client:
@@ -185,16 +199,29 @@ class TemporalBoostWorker(BaseBoostWorker):
         finally:
             await self.shutdown()
 
+    async def _register_cron(self) -> WorkflowHandle[Any, Any]:
+        """Atomically start or reuse an active CRON chain; reject a closed ID."""
+        handle = await self.temporal_client.start_workflow(
+            self.temporal_cron_runner,
+            id=self.cron_workflow_id,
+            task_queue=self._worker_builder.task_queue,
+            cron_schedule=self._cron_schedule,
+            id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
+            id_reuse_policy=WorkflowIDReusePolicy.REJECT_DUPLICATE,
+        )
+        logger.info(
+            "CRON workflow registered or already running: worker=%s namespace=%s workflow_id=%s run_id=%s",
+            self.name,
+            self.temporal_client.namespace,
+            handle.id,
+            handle.result_run_id,
+        )
+        return handle
+
     async def _run_with_cron(self) -> None:
         await self._build_worker()
         async with self.temporal_worker:
-            workflow_id = str(uuid.uuid4())
-            await self.temporal_client.start_workflow(
-                self.temporal_cron_runner,
-                id=workflow_id,
-                task_queue=self._worker_builder.task_queue,
-                cron_schedule=self._cron_schedule,
-            )
+            await self._register_cron()
 
             self._cron_future = asyncio.Future()
             try:

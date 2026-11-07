@@ -55,6 +55,45 @@ Example:
 python3 main.py cron daily_report_cron
 ```
 
+The command registers or reuses one server-side CRON chain and consumes its task queue. Keep the
+same `cron_workflow_id` on every replica. The registration log contains the namespace, workflow ID,
+and returned run ID. Repeated and concurrent starts reuse a running ID; a closed ID is rejected.
+`run <name>` and `run all` consume queues without registering a CRON chain.
+
+Stopping the local process does not cancel, terminate, or delete the server-side CRON workflow.
+It can continue executing through other consumers; without consumers, work waits on its queue.
+Use Temporal Web or the Temporal client to cancel or terminate an identified chain when appropriate.
+To permanently stop one, also disable its registrars; history retention eventually expires closed-ID
+protection. Changing the ID creates a separate job. Changing the expression, type, or queue while
+reusing an active ID does not change the existing chain.
+
+### Migrating Existing UUID CRON Workflows
+
+Earlier releases generated a fresh UUID on every `cron` start. The new stable default cannot discover
+which old UUID belongs to a logical job, and deployment alone leaves those chains active. No workflow
+is automatically cancelled or deleted.
+
+1. Stop all old CRON registration processes and prevent the old deployment from restarting while
+   migrating. Record the Temporal endpoint, namespace, workflow type, queue, and expected expression.
+2. In Temporal Web, filter the namespace with, for example,
+   `WorkflowType = 'DailyReportWorkflow' AND ExecutionStatus = 'Running'`.
+   Inspect **all pages** of matching executions. Check each execution's task queue and its first
+   `WorkflowExecutionStarted` history event's `cronSchedule`, together with business ownership.
+   A UUID-shaped ID alone does not prove that a workflow is a duplicate. Inventory workflow IDs
+   and current run IDs, and review closed history as well if a proposed ID may already exist.
+3. To retain a known active chain, set `cron_workflow_id` to its existing UUID on every new replica.
+   Cancel or terminate only the reviewed duplicate chains through Temporal Web or
+   `client.get_workflow_handle(workflow_id).cancel()` / `.terminate(reason=...)`. Cancellation is
+   cooperative: confirm each unwanted chain is closed and reconcile any in-flight business work.
+4. Alternatively, move to a new explicit stable ID (or the documented default): stop and verify closure
+   of **all** old chains for that job before registering the new ID. Coordinate in-flight work to
+   prevent overlapping business effects. Never delete unrelated workflows based on a broad query.
+5. Start the new deployment, compare its logged workflow ID with the inventory, and verify one
+   active chain for the logical job. Repeat registration to confirm the same chain is reused.
+
+Use the same deliberate procedure for schedule/type/queue changes. A closed ID is rejected while
+its history is retained; use a reviewed new versioned ID when intentionally creating a replacement.
+
 ### Development Best Practices
 
 1. **Use separate terminals**: Run each worker type in a separate terminal for easier debugging

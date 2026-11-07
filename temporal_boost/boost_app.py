@@ -86,6 +86,7 @@ class BoostApp:
         interceptors: list[Interceptor] | None = None,
         cron_schedule: str | None = None,
         cron_runner: MethodAsyncNoParam[Any, Any] | None = None,
+        cron_workflow_id: str | None = None,
         **worker_kwargs: Any,
     ) -> TemporalBoostWorker:
         if worker_name in self._RESERVED_NAMES:
@@ -103,6 +104,7 @@ class BoostApp:
             interceptors=interceptors,
             cron_schedule=cron_schedule,
             cron_runner=cron_runner,
+            cron_workflow_id=cron_workflow_id,
             debug_mode=self._debug_mode,
             **worker_kwargs,
         )

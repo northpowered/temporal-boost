@@ -145,14 +145,22 @@ flowchart TD
 
 1. Собираются runtime, client и worker по обычной цепочке.
 2. SDK worker запускается через `async with self.temporal_worker`.
-3. Через `client.start_workflow()` запускается `cron_runner` с новым UUID в качестве workflow ID,
-   очередью этого worker и строкой `cron_schedule`.
+3. `_register_cron()` вызывает `client.start_workflow()` со стабильным `cron_workflow_id`,
+   очередью этого worker и строкой `cron_schedule`. Default:
+   `temporal-boost/cron/<percent-encoded task_queue>/<percent-encoded worker_name>`;
+   явный ID сохраняется без изменений, пустой/пробельный запрещён.
+   `WorkflowIDConflictPolicy.USE_EXISTING` атомарно возвращает активную цепочку при повторном старте
+   и гонке процессов. `WorkflowIDReusePolicy.REJECT_DUPLICATE` отклоняет закрытый ID через
+   `WorkflowAlreadyStartedError`, пока сервер хранит историю. Лог содержит namespace, ID и run ID ответа.
 4. Метод ждёт незавершённый `_cron_future`; при отмене выходит из контекстного менеджера SDK worker.
 
 Это SDK `cron_schedule`, а не отдельный ресурс Temporal Schedule и не локальный планировщик.
 Аргументы workflow этим API не передаются; `cron_runner` типизирован как метод без параметров workflow.
-Повторный запуск создаёт другой workflow ID: дедупликации по имени worker нет. Закрытие локального worker
-не сопровождается вызовом отмены или удаления запущенного на сервере workflow.
+Повторный запуск с тем же ID не меняет параметры существующей активной цепочки. Переименование worker
+или смена очереди меняет default ID; явный ID позволяет сохранить идентичность. Закрытие локального worker
+не сопровождается вызовом отмены или удаления запущенного на сервере workflow. Старые UUID-цепочки
+автоматически не удаляются; порядок инвентаризации, выбора сохраняемого UUID или перехода на новый ID
+описан в [migration guide](docs/running_application.md#migrating-existing-uuid-cron-workflows).
 
 **`run <name>` и `run all` всегда вызывают `run()`, даже для CRON-регистраций. Они обслуживают очередь,
 но не вызывают `start_workflow()` для расписания. Для этого нужен отдельный `cron <name>`.**
@@ -422,7 +430,11 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 
 Покрыты регистрация, env parsers, builders, часть свойств и настройки lifecycle, ASGI registry и logging.
 Отдельных тестов внешнего CLI, процессов, FastStream и реального запуска ASGI-адаптеров нет.
-CRON и длительно работающие циклы адаптеров также не проверены полноценно. Coordinator покрыт
+CRON-регистрация покрыта unit-тестами аргументов, ошибок и локальной отмены. Opt-in
+`TEMPORAL_BOOST_INTEGRATION=1 uv run pytest tests/test_cron_integration.py` запускает настоящий
+Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позволяет указать готовый бинарник),
+проверяет гонку отдельных Python-процессов, повторный старт и отказ для terminated/completed ID.
+Длительно работающие циклы адаптеров не проверены полноценно. Coordinator покрыт
 управляемыми worker: cleanup в собственном loop, повторный stop, общий timeout, повторный запуск,
 отказ запуска потока. SIGINT/SIGTERM и восстановление обработчиков проверяются отдельными subprocess
 в `tests/test_worker_coordinator.py`. TB-003 добавляет наблюдаемую ошибку при работающем peer,
