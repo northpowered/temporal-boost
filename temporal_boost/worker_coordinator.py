@@ -1,7 +1,10 @@
+import asyncio
 import logging
 import signal
 import threading
 import time
+from concurrent.futures import CancelledError as FutureCancelledError
+from queue import Empty, SimpleQueue
 from types import FrameType
 from typing import Any
 
@@ -12,13 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class WorkerCoordinator:
-    """Own worker threads and bound their cooperative shutdown by one deadline."""
+    """Run services until stop/failure and re-raise the first error after bounded cleanup."""
 
     def __init__(self, workers: list[BaseBoostWorker], shutdown_timeout: float) -> None:
         self._workers = workers
         self._shutdown_timeout = shutdown_timeout
         self._threads: list[tuple[BaseBoostWorker, threading.Thread]] = []
         self._stop_requested = False
+        self._failures: SimpleQueue[tuple[str, BaseException]] = SimpleQueue()
 
     def request_stop(self) -> None:
         # A plain assignment also makes this safe to call from a signal handler:
@@ -39,8 +43,14 @@ class WorkerCoordinator:
                 self._start_workers()
                 while self.is_alive() and not self._stop_requested:
                     time.sleep(0.05)
+            except BaseException as exc:
+                self._record_failure("Worker startup or coordination", exc)
             finally:
-                self._stop_and_join()
+                try:
+                    self._stop_and_join()
+                except BaseException as exc:
+                    self._record_failure("Worker shutdown", exc)
+            self._raise_first_failure()
         finally:
             for previous_signum, handler in previous_handlers.items():
                 signal.signal(previous_signum, handler)
@@ -52,10 +62,43 @@ class WorkerCoordinator:
         for worker in self._workers:
             if self._stop_requested:
                 break
-            thread = threading.Thread(target=worker.run, name=f"worker-{worker.name}", daemon=True)
+            thread = threading.Thread(
+                target=self._run_worker, args=(worker,), name=f"worker-{worker.name}", daemon=True
+            )
             thread.start()
             self._threads.append((worker, thread))
             logger.info("Started worker thread: %s", worker.name)
+
+    def _run_worker(self, worker: BaseBoostWorker) -> None:
+        try:
+            worker.run()
+        except BaseException as exc:
+            if isinstance(exc, (asyncio.CancelledError, FutureCancelledError)) and self._stop_requested:
+                return
+            self._record_failure(f"Worker '{worker.name}'", exc)
+        else:
+            if not self._stop_requested:
+                self._record_failure(
+                    f"Worker '{worker.name}'",
+                    RuntimeError(f"Worker '{worker.name}' returned before shutdown was requested"),
+                )
+
+    def _record_failure(self, source: str, error: BaseException) -> None:
+        self._failures.put((source, error))
+        self.request_stop()
+
+    def _raise_first_failure(self) -> None:
+        first_error: BaseException | None = None
+        while True:
+            try:
+                source, error = self._failures.get_nowait()
+            except Empty:
+                break
+            logger.error("%s failed", source, exc_info=(type(error), error, error.__traceback__))  # noqa: LOG014
+            if first_error is None:
+                first_error = error
+        if first_error is not None:
+            raise first_error
 
     def _stop_and_join(self) -> None:
         self.request_stop()
@@ -66,8 +109,8 @@ class WorkerCoordinator:
             try:
                 if not worker.request_stop():
                     logger.warning("Worker '%s' does not support managed stopping", worker.name)
-            except Exception:
-                logger.exception("Stop request failed for worker '%s'", worker.name)
+            except BaseException as exc:
+                self._record_failure(f"Stop request for worker '{worker.name}'", exc)
 
         for _, thread in self._threads:
             thread.join(timeout=max(0.0, deadline - time.monotonic()))

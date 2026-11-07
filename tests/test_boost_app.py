@@ -1,14 +1,18 @@
+import asyncio
 import json
 import logging
 import os
 import sys
 import tempfile
+import threading
+import traceback
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import yaml
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.converter import DataConverter
+from typer.testing import CliRunner
 
 from temporal_boost.boost_app import BoostApp
 from temporal_boost.temporal import config
@@ -413,10 +417,59 @@ class TestBoostApp:
             activities=[dummy_activity],
         )
 
-        with patch.object(worker, "run") as mock_run:
+        with patch.object(worker, "run", side_effect=app.stop) as mock_run:
             app.run_all_workers()
 
             mock_run.assert_called_once()
+
+    @pytest.mark.parametrize(
+        "failure", [RuntimeError("worker failed"), KeyboardInterrupt(), SystemExit(7), asyncio.CancelledError()]
+    )
+    def test_worker_failure_stops_peer_and_reaches_caller(self, failure: BaseException) -> None:
+        app = BoostApp(logger_config=None, shutdown_timeout=1.0)
+        first = app.add_worker("failing", "queue", activities=[MagicMock()])
+        peer = app.add_worker("peer", "queue", activities=[MagicMock()])
+        ready, stopped, returned = threading.Event(), threading.Event(), threading.Event()
+
+        def fail() -> None:
+            assert ready.wait(3.0)
+            raise failure
+
+        def serve() -> None:
+            ready.set()
+            assert stopped.wait(3.0)
+            returned.set()
+
+        def request_stop() -> bool:
+            stopped.set()
+            return True
+
+        with (
+            patch.object(first, "run", side_effect=fail),
+            patch.object(peer, "run", side_effect=serve),
+            patch.object(peer, "request_stop", side_effect=request_stop) as stop,
+        ):
+            try:
+                with pytest.raises(type(failure)) as raised:
+                    app.run_all_workers()
+            finally:
+                stopped.set()
+
+        assert raised.value is failure
+        assert "fail" in [frame.name for frame in traceback.extract_tb(raised.value.__traceback__)]
+        stop.assert_called_once()
+        assert returned.is_set()
+
+    def test_run_all_cli_observes_worker_failure(self) -> None:
+        app = BoostApp(logger_config=None)
+        worker = app.add_worker("failing", "queue", activities=[MagicMock()])
+        failure = RuntimeError("worker failed")
+        with patch.object(worker, "run", side_effect=failure) as run:
+            result = CliRunner().invoke(app._root_typer, ["run", "all"])
+
+        run.assert_called_once()
+        assert result.exit_code == 1
+        assert result.exception is failure
 
     def test_run_with_args(self):
         app = BoostApp()
