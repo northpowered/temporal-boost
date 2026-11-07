@@ -192,15 +192,42 @@ Sticky workflows improve performance by keeping workflow state in memory.
 
 **Type**: Integer (seconds)  
 **Default**: `30`  
-**Description**: Intended Temporal SDK activity grace period; currently read but not passed to the SDK worker (TB-004)
+**Description**: Activity grace period passed to the Temporal SDK worker as `graceful_shutdown_timeout`
 
 ```bash
 export TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT=60
 ```
 
-This setting currently does not affect worker shutdown. The application coordinator has a separate
-budget, `BoostApp(shutdown_timeout=30.0)`, for joining all worker threads. See
-[Graceful Shutdown](running_application.md#graceful-shutdown) for the managed stop contract and adapter limitations.
+When SDK worker shutdown begins, activities get this grace period to finish before the SDK requests
+cancellation. Zero requests cancellation without a grace period. SDK shutdown still waits for activities
+to finish; an activity that ignores cancellation can keep shutdown waiting beyond this duration.
+
+Override the environment per worker with a `datetime.timedelta`:
+
+```python
+from datetime import timedelta
+
+worker = app.add_worker(
+    "payments",
+    "payments_queue",
+    activities=[process_payment],
+    graceful_shutdown_timeout=timedelta(seconds=45),
+)
+```
+
+An explicit value, including `timedelta(0)`, takes priority. Omission or `None` uses the environment
+constant, read when configuration is imported; the fallback is 30 seconds. Invalid integer text uses
+the same fallback. A selected negative duration raises `ValueError` when the worker builder is created.
+An explicit non-negative value can override a negative environment value.
+
+**Behavior change:** workers omitting this option now receive the framework's environment/default
+grace period (30 seconds by default). Previously this setting was ignored and the SDK defaulted to
+zero unless a value was passed explicitly through worker kwargs.
+
+The application coordinator has a separate budget, `BoostApp(shutdown_timeout=30.0)`, for joining all
+worker threads; external process supervisors have their own deadlines. This setting changes neither
+budget and does not initiate shutdown. The Temporal adapter's managed stop integration is still pending.
+See [Graceful Shutdown](running_application.md#graceful-shutdown) for current guarantees and limitations.
 
 ## Prometheus Metrics Configuration
 

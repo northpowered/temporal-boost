@@ -464,10 +464,18 @@ graceful shutdown; a stop may reach the coordinator's timeout. Adapter integrati
 in TB-005, TB-013, and TB-014. Individual `run <name>` and `cron <name>` commands use adapter lifecycle
 directly, and the external CLI's multiple-process supervisor has its own shutdown behavior (TB-009).
 
-The application budget is independent of the SDK's activity grace period.
-`TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` is currently read into configuration but is not wired to the
-Temporal SDK worker (TB-004); it does not configure `BoostApp.shutdown_timeout` or guarantee completion
-of activities or connection cleanup.
+The application budget is independent of the SDK's activity grace period. The worker builder now passes
+`TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` (integer seconds, default 30) to the SDK as `graceful_shutdown_timeout`.
+An explicit `datetime.timedelta` passed to `app.add_worker(..., graceful_shutdown_timeout=...)` overrides
+the environment, including zero; omission or `None` inherits it. Negative durations are rejected.
+
+Once SDK shutdown starts, activities have that grace period before the SDK requests cancellation.
+Zero skips the grace period. This is not a deadline for the whole SDK shutdown: it still waits for
+activities, which may ignore cancellation. The option does not initiate shutdown or connect the Temporal
+adapter to the application's managed stop contract. It does not configure `BoostApp.shutdown_timeout`
+or a process supervisor's deadline. Allow time for the SDK grace period plus cancellation and resource
+cleanup within those budgets when using a managed adapter. See the
+[configuration guide](configuration.md#temporal_graceful_shutdown_timeout) for an override example and migration details.
 
 ## Monitoring and Observability
 

@@ -1,16 +1,76 @@
+import importlib.util
 import logging
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.converter import DataConverter
 
+from temporal_boost import BoostApp
 from temporal_boost.temporal import config
 from temporal_boost.temporal.worker import TemporalWorkerBuilder
 from temporal_boost.workers.temporal import TemporalBoostWorker
 
 
 class TestTemporalWorkerBuilder:
+    @pytest.mark.parametrize(
+        ("env_value", "expected"),
+        [(None, 30), ("65", 65), ("0", 0), ("invalid", 30), ("-1", None)],
+    )
+    def test_graceful_shutdown_timeout_from_environment(
+        self, monkeypatch: pytest.MonkeyPatch, env_value: str | None, expected: int | None
+    ) -> None:
+        if env_value is None:
+            monkeypatch.delenv("TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT", raising=False)
+        else:
+            monkeypatch.setenv("TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT", env_value)
+        # Execute config in a separate module without reloading shared imports.
+        spec = importlib.util.spec_from_file_location("isolated_worker_config", config.__file__)
+        assert spec is not None
+        assert spec.loader is not None
+        isolated_config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(isolated_config)
+        monkeypatch.setattr("temporal_boost.temporal.worker.config", isolated_config)
+
+        if expected is None:
+            with pytest.raises(ValueError, match="graceful_shutdown_timeout.*non-negative"):
+                TemporalWorkerBuilder("queue")
+            return
+
+        builder = TemporalWorkerBuilder("queue")
+        builder.set_client(MagicMock())
+        with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+            builder.build()
+
+        assert sdk_worker.call_args.kwargs["graceful_shutdown_timeout"] == timedelta(seconds=expected)
+
+    @pytest.mark.parametrize(
+        ("env_seconds", "explicit", "expected"),
+        [
+            (70, None, timedelta(seconds=70)),
+            (0, None, timedelta()),
+            (70, timedelta(), timedelta()),
+            (70, timedelta(seconds=2.5), timedelta(seconds=2.5)),
+            (-1, timedelta(), timedelta()),
+        ],
+    )
+    def test_graceful_shutdown_timeout_override(
+        self, monkeypatch: pytest.MonkeyPatch, env_seconds: int, explicit: timedelta | None, expected: timedelta
+    ) -> None:
+        monkeypatch.setattr(config, "GRACEFUL_SHUTDOWN_TIMEOUT", timedelta(seconds=env_seconds))
+        builder = TemporalWorkerBuilder("queue", graceful_shutdown_timeout=explicit)
+        builder.set_client(MagicMock())
+        with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+            builder.build()
+
+        assert sdk_worker.call_args.kwargs["graceful_shutdown_timeout"] == expected
+
+    @pytest.mark.parametrize("timeout", [timedelta(seconds=-1), timedelta(microseconds=-1)])
+    def test_negative_graceful_shutdown_timeout_is_rejected(self, timeout: timedelta) -> None:
+        with pytest.raises(ValueError, match="graceful_shutdown_timeout.*non-negative"):
+            TemporalWorkerBuilder("queue", graceful_shutdown_timeout=timeout)
+
     def test_init_with_defaults(self):
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         assert builder.task_queue == "test_queue"
@@ -115,6 +175,35 @@ class TestTemporalWorkerBuilder:
 
 
 class TestTemporalBoostWorker:
+    @pytest.mark.parametrize("timeout", [None, timedelta(), timedelta(seconds=90)])
+    def test_app_forwards_graceful_shutdown_timeout(
+        self, monkeypatch: pytest.MonkeyPatch, timeout: timedelta | None
+    ) -> None:
+        monkeypatch.setattr(config, "GRACEFUL_SHUTDOWN_TIMEOUT", timedelta(seconds=55))
+        app = BoostApp(logger_config=None)
+        worker = app.add_worker(
+            "worker",
+            "queue",
+            activities=[MagicMock()],
+            graceful_shutdown_timeout=timeout,
+            max_cached_workflows=123,
+        )
+        worker._worker_builder.set_client(MagicMock())
+        with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+            result = worker._worker_builder.build()
+
+        sdk_worker.assert_called_once()
+        assert result is sdk_worker.return_value
+        assert sdk_worker.call_args.kwargs["graceful_shutdown_timeout"] == (
+            timedelta(seconds=55) if timeout is None else timeout
+        )
+        assert sdk_worker.call_args.kwargs["max_cached_workflows"] == 123
+
+    def test_app_rejects_negative_graceful_shutdown_timeout(self) -> None:
+        app = BoostApp(logger_config=None)
+        with pytest.raises(ValueError, match="graceful_shutdown_timeout.*non-negative"):
+            app.add_worker("worker", "queue", activities=[MagicMock()], graceful_shutdown_timeout=timedelta(seconds=-1))
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize("env_enabled", [False, True])
     @pytest.mark.parametrize("use_pydantic", [None, False, True])
