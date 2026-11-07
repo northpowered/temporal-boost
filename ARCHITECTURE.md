@@ -118,26 +118,54 @@ flowchart TD
 Обычный запуск проходит следующую цепочку:
 
 1. `TemporalBoostWorker.run()` вызывает `asyncio.run(self._run_worker())`.
-2. `_build_worker()` создаёт client builder, если он ещё не настроен.
+2. Общий `_run_lifecycle()` привязывает текущие task/loop и создаёт stop event; состояние — `building`.
+   `_build_worker()` в отдельной task создаёт client builder, если он ещё не настроен.
 3. Свойство `temporal_client_runtime` лениво создаёт runtime builder и кеширует собранный SDK `Runtime`.
 4. Runtime передаётся в client builder; `await build()` вызывает `Client.connect(...)` и сохраняет client.
 5. Client передаётся в worker builder; синхронный `build()` создаёт SDK `Worker`.
-6. `_run_worker()` логирует состав activities/workflows и ожидает `temporal_worker.run()`.
-7. При выходе из этого ожидания `finally` вызывает `await shutdown()`, который делегирует SDK worker.
+6. Состояние — `running`; adapter владеет отдельной task `temporal_worker.run()` и наблюдает её вместе
+   со stop event (в CRON-режиме — также task регистрации).
+7. Единый `finally` охватывает сборку и исполнение: состояние — `stopping`, startup/CRON tasks отменяются
+   и дожидаются; активный SDK run останавливается через публичный `Worker.shutdown()` в том же loop.
+8. Ссылки adapter и builders на worker/client/runtime снимаются, локальные tasks/future очищаются,
+   loop/owner task отвязываются, состояние — `stopped`. `asyncio.run()` закрывает loop при возврате.
 
-`CancelledError` во время ожидания обычного worker логируется и подавляется; остальные `Exception`
-логируются и пробрасываются. Сама `_build_worker()` расположена до `try/finally`: ошибка подключения
-или сборки не проходит через этот блок cleanup.
+Начальное состояние — `created`; ранняя остановка или ошибка может пропустить `running`.
+Readonly `state` показывает текущее состояние. Последовательные запуски после остановки/ошибки допустимы:
+новый запуск создаёт свежие loop/client/runtime/SDK worker. Одновременные `run()` / `cron()` одного
+adapter запрещены. Поздний stop после остановки не переносится в следующий запуск.
+
+`request_stop()` потокобезопасен и не блокирует: до первого запуска запрос запоминается и предотвращает
+создание ресурсов, при активном запуске доставляется в owning loop через `call_soon_threadsafe()`.
+`shutdown()` до/после запуска безопасен и ничего не делает; на активном owning loop запрашивает stop
+и через `shield()` ждёт lifecycle task. Повторные вызовы разделяют cleanup; отмена одного ожидающего
+не отменяет lifecycle. Из чужого loop вызов отклоняется с указанием использовать `request_stop()`;
+из callback самого worker также следует запрашивать stop без ожидания собственного завершения.
+
+Ошибки runtime/client/worker build и исполнения сохраняют исходный объект и traceback после cleanup;
+вторичный отказ cleanup логируется. Неожиданный `CancelledError` больше не подавляется. Повторная отмена
+owner task не бросает cleanup: он защищён отдельной task и `shield()`. При ошибке cleanup на фоне отмены
+основным становится cleanup error, чтобы coordinator не принял его за штатную отмену.
+
+SDK `shutdown()` вызывается не более одного раза при активном SDK run. Завершившийся SDK run сам
+выполняет cleanup; adapter получает его результат и не вызывает shutdown ещё раз. Если SDK run падает
+на валидации до фактического запуска, его `shutdown()` может ждать бесконечно: adapter наблюдает run task
+одновременно с shutdown task и отменяет лишнее ожидание. Отказ SDK shutdown приводит к отмене/join
+принадлежащей adapter task, а не к переносу cleanup в другой loop.
 
 Свойства `temporal_client` и `temporal_worker` до сборки выбрасывают `RuntimeError`.
 `configure_temporal_client()` создаёт или изменяет builder, а не устанавливает соединение.
 `configure_temporal_runtime()` заменяет builder, но не сбрасывает уже созданный `_runtime`.
 Все настройки следует задавать до запуска и до первого обращения к `temporal_client_runtime`:
-изменение builder не перенастраивает существующие SDK-объекты.
+изменение builder не перенастраивает существующие SDK-объекты активного запуска.
 
 Каждый `TemporalBoostWorker` по умолчанию создаёт свой runtime и client. Автоматического разделения
 одного runtime между воркерами нет. Отдельно используемый `TemporalClientBuilder` при отсутствии
 явного runtime берёт `Runtime.default()`; адаптер worker всегда передаёт собственный runtime.
+У `Client` и `Runtime` SDK 1.14.1 нет публичных `close()` / `shutdown()`; adapter не придумывает такие методы,
+а снимает свои ссылки, в том числе `worker_builder.set_client(None)` и `client_builder.set_runtime(None)`.
+SDK управляет освобождением своих native handles; внешние ссылки могут продлить их жизнь.
+Executors и другие ресурсы, переданные пользователем в kwargs, остаются собственностью вызывающего кода.
 
 ### Режим CRON
 
@@ -245,13 +273,14 @@ stop. Новая база `AsyncBoostWorker` реализует opt-in: подк
 Ошибка `run_async()` сохраняется, если его собственный `shutdown()` тоже выбросил исключение:
 cleanup error логируется. При отмене основной coroutine ошибка cleanup пробрасывается, чтобы штатная
 отмена при stop не скрыла отказ cleanup. Ошибки собственных cleanup путей существующих адаптеров
-остаются ответственностью адаптеров (в частности, TB-005 для Temporal).
+остаются ответственностью адаптеров; Temporal использует специализированный lifecycle из раздела 4.
 
-Существующие Temporal/FastStream/ASGI адаптеры пока не подключены к контракту managed stop
-(TB-005/TB-013/TB-014). Их собственный cleanup не гарантирует общего graceful shutdown; stop может
-завершиться timeout. Отдельные CLI-команды и внешний supervisor процессов остаются вне этого coordinator.
+Temporal adapter подключён к managed stop в TB-005 и проходит unit-проверку через настоящий coordinator
+с SDK double. FastStream/ASGI ещё не подключены (TB-013/TB-014); stop может завершиться timeout.
+SDK activities, игнорирующие отмену, тоже могут превысить бюджет coordinator. Отдельные CLI-команды
+используют lifecycle adapter напрямую, а внешний supervisor процессов остаётся вне этого coordinator.
 Бюджет приложения не связан с `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`: TB-004 подключает эту настройку
-к grace period activities в SDK, но не инициирует stop и не подключает Temporal adapter к coordinator.
+к grace period activities в SDK, но сама не инициирует stop.
 
 ## 6. Конфигурация: фактическая семантика
 
@@ -301,7 +330,7 @@ cleanup error логируется. При отмене основной corouti
 для завершения activities до запроса отмены. SDK продолжает ждать activities и после отмены, поэтому
 данная настройка не ограничивает общую длительность shutdown. Она не запускает остановку автоматически,
 не задаёт `BoostApp.shutdown_timeout` и не меняет deadline внешнего supervisor. При managed stop бюджет
-приложения должен учитывать grace period и последующий cleanup; интеграция Temporal adapter — TB-005.
+приложения должен учитывать grace period и последующий cleanup; Temporal adapter поддерживает managed stop с TB-005.
 
 ### Pydantic converter
 
@@ -387,7 +416,7 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 | --- | --- |
 | Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
-| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает opt-in worker и отдельный `BoostApp.shutdown_timeout`; адаптеры ещё не подключены. `GRACEFUL_SHUTDOWN_TIMEOUT` задаёт отдельный grace period activities в SDK |
+| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal и custom managed workers с отдельным `BoostApp.shutdown_timeout`; FastStream/ASGI ещё не подключены. SDK activity grace period задаётся отдельно |
 | Автоматически общий runtime в [advanced_usage.md](docs/advanced_usage.md) | Каждый `TemporalBoostWorker` создаёт свой runtime |
 | Пример custom runtime в [advanced_usage.md](docs/advanced_usage.md) | Построенный отдельно runtime не влияет на client без `client_builder.set_runtime(runtime)` до `build()` |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |

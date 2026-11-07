@@ -40,7 +40,7 @@ class TemporalClientBuilder:
 
         self._client_kwargs = kwargs
 
-    def set_runtime(self, runtime: Runtime) -> None:
+    def set_runtime(self, runtime: Runtime | None) -> None:
         self._runtime = runtime
 
     def set_target_host(self, target_host: str) -> None:

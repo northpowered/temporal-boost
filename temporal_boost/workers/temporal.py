@@ -19,9 +19,12 @@ from temporal_boost.workers.base import BaseBoostWorker
 
 
 logger = logging.getLogger(__name__)
+_WorkerState = Literal["created", "building", "running", "stopping", "stopped"]
 
 
 class TemporalBoostWorker(BaseBoostWorker):
+    """Own one loop and one SDK worker per run, with a shared startup/stop lifecycle."""
+
     def __init__(  # noqa: PLR0913
         self,
         worker_name: str,
@@ -71,6 +74,28 @@ class TemporalBoostWorker(BaseBoostWorker):
         self._runtime: Runtime | None = None
 
         self._cron_future: asyncio.Future[Any] | None = None
+        self._lifecycle_lock = threading.Lock()
+        self._state: _WorkerState = "created"
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._owner_task: asyncio.Task[Any] | None = None
+        self._stop_event: asyncio.Event | None = None
+        self._stop_requested = False
+        self._build_task: asyncio.Task[None] | None = None
+        self._sdk_task: asyncio.Task[None] | None = None
+        self._cron_task: asyncio.Task[None] | None = None
+
+    @property
+    def state(self) -> _WorkerState:
+        return self._state
+
+    def request_stop(self) -> bool:
+        with self._lifecycle_lock:
+            if self._state == "stopped":
+                return True
+            self._stop_requested = True
+            if self._loop is not None and self._stop_event is not None:
+                self._loop.call_soon_threadsafe(self._stop_event.set)
+        return True
 
     @property
     def cron_workflow_id(self) -> str:
@@ -187,17 +212,7 @@ class TemporalBoostWorker(BaseBoostWorker):
         self._worker = self._worker_builder.build()
 
     async def _run_worker(self) -> None:
-        await self._build_worker()
-        try:
-            self._log_worker_start()
-            await self.temporal_worker.run()
-        except asyncio.CancelledError:
-            logger.info(f"Worker {self.name} cancelled during shutdown")
-        except Exception:
-            logger.exception(f"Worker {self.name} failed")
-            raise
-        finally:
-            await self.shutdown()
+        await self._run_lifecycle(with_cron=False)
 
     async def _register_cron(self) -> WorkflowHandle[Any, Any]:
         """Atomically start or reuse an active CRON chain; reject a closed ID."""
@@ -222,13 +237,166 @@ class TemporalBoostWorker(BaseBoostWorker):
         await self._build_worker()
         async with self.temporal_worker:
             await self._register_cron()
+        await self._run_lifecycle(with_cron=True)
 
-            self._cron_future = asyncio.Future()
+    async def _run_lifecycle(self, *, with_cron: bool) -> None:
+        loop = asyncio.get_running_loop()
+        stop_event = asyncio.Event()
+        with self._lifecycle_lock:
+            if self._owner_task is not None:
+                raise RuntimeError(f"Worker '{self.name}' is already running")
+            self._owner_task = asyncio.current_task()
+            self._loop = loop
+            self._stop_event = stop_event
+            self._state = "building"
+            if self._stop_requested:
+                stop_event.set()
+
+        stop_task = asyncio.create_task(stop_event.wait())
+        error: BaseException | None = None
+        try:
+            if not stop_event.is_set():
+                await self._serve(stop_task, with_cron=with_cron)
+        except BaseException as exc:
+            error = exc
+        finally:
             try:
-                await self._cron_future
-            except asyncio.CancelledError:
-                logger.info(f"Cron worker {self.name} cancelled during shutdown")
-                raise
+                error = await self._finish_cleanup(error)
+            finally:
+                stop_task.cancel()
+                try:
+                    await asyncio.gather(stop_task, return_exceptions=True)
+                finally:
+                    self._release_resources()
+        if error is not None:
+            raise error
+
+    async def _serve(self, stop_task: asyncio.Task[bool], *, with_cron: bool) -> None:
+        self._build_task = asyncio.create_task(self._build_worker())
+        await asyncio.wait((self._build_task, stop_task), return_when=asyncio.FIRST_COMPLETED)
+        if self._build_task.done():
+            await self._build_task
+        if self._stop_requested:
+            return
+
+        self._log_worker_start()
+        self._state = "running"
+        self._sdk_task = asyncio.create_task(self.temporal_worker.run())
+        tasks: list[asyncio.Task[Any]] = [self._sdk_task, stop_task]
+        if with_cron:
+            self._cron_future = asyncio.get_running_loop().create_future()
+            self._cron_task = asyncio.create_task(self._register_cron())
+            tasks.append(self._cron_task)
+        await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for task in (self._sdk_task, self._cron_task):
+            if task is not None and task.done():
+                await task
+
+    async def _register_cron(self) -> None:
+        await self.temporal_client.start_workflow(
+            self.temporal_cron_runner,
+            id=str(uuid.uuid4()),
+            task_queue=self._worker_builder.task_queue,
+            cron_schedule=self._cron_schedule,
+        )
+        if self._cron_future is not None:
+            await self._cron_future
+
+    async def _finish_cleanup(self, error: BaseException | None) -> BaseException | None:
+        self._state = "stopping"
+        cleanup_task = asyncio.create_task(self._cleanup(error))
+        while not cleanup_task.done():
+            try:
+                await asyncio.shield(cleanup_task)
+            except asyncio.CancelledError as exc:  # noqa: PERF203 - repeated cancellation must still wait for cleanup
+                # Cancelling a waiter must not abandon resources on the owning loop.
+                if error is None:
+                    error = exc
+            except BaseException:
+                break
+        try:
+            cleanup_task.result()
+        except BaseException as exc:
+            if error is None or isinstance(error, (asyncio.CancelledError, FutureCancelledError)):
+                error = exc
+            else:
+                logger.exception("Cleanup failed for worker '%s'; preserving lifecycle error", self.name)
+        return error
+
+    async def _cleanup(self, primary: BaseException | None) -> None:
+        errors: list[BaseException] = []
+        if self._cron_future is not None and not self._cron_future.done():
+            self._cron_future.set_result(None)
+        for task in (self._build_task, self._cron_task):
+            if task is None:
+                continue
+            task.cancel()
+            result = (await asyncio.gather(task, return_exceptions=True))[0]
+            if (
+                isinstance(result, BaseException)
+                and not isinstance(result, asyncio.CancelledError)
+                and result is not primary
+            ):
+                errors.append(result)
+        try:
+            await self._stop_sdk_worker()
+        except BaseException as exc:
+            if exc is not primary:
+                errors.append(exc)
+        for error in errors[1:]:
+            logger.error("Additional cleanup failure for worker '%s'", self.name, exc_info=error)
+        if errors:
+            raise errors[0]
+
+    async def _stop_sdk_worker(self) -> None:
+        if self._sdk_task is None:
+            return
+        if self._sdk_task.done():
+            await self._sdk_task
+            return
+        shutdown_task = asyncio.create_task(self.temporal_worker.shutdown())
+        failure: BaseException | None = None
+        try:
+            await asyncio.wait((self._sdk_task, shutdown_task), return_when=asyncio.FIRST_COMPLETED)
+            # run() may fail validation without ever completing SDK shutdown().
+            if self._sdk_task.done():
+                await self._sdk_task
+                if not shutdown_task.done():
+                    return
+            await shutdown_task
+            await self._sdk_task
+        except BaseException as exc:
+            failure = exc
+            raise
+        finally:
+            shutdown_task.cancel()
+            self._sdk_task.cancel()
+            results = await asyncio.gather(shutdown_task, self._sdk_task, return_exceptions=True)
+            for result in results:
+                if (
+                    isinstance(result, BaseException)
+                    and not isinstance(result, asyncio.CancelledError)
+                    and result is not failure
+                ):
+                    logger.error("Additional SDK cleanup failure for worker '%s'", self.name, exc_info=result)
+
+    def _release_resources(self) -> None:
+        self._worker_builder.set_client(None)
+        if self._client_builder is not None:
+            self._client_builder.set_runtime(None)
+        self._worker = None
+        self._client = None
+        self._runtime = None
+        self._cron_future = None
+        self._build_task = None
+        self._sdk_task = None
+        self._cron_task = None
+        with self._lifecycle_lock:
+            self._loop = None
+            self._owner_task = None
+            self._stop_event = None
+            self._stop_requested = False
+            self._state = "stopped"
 
     def run(self) -> None:
         try:
@@ -238,8 +406,17 @@ class TemporalBoostWorker(BaseBoostWorker):
             raise
 
     async def shutdown(self) -> None:
-        await self.temporal_worker.shutdown()
-        logger.info(f"Worker {self.name} shutdown completed")
+        with self._lifecycle_lock:
+            owner = self._owner_task
+            owner_loop = self._loop
+        if owner is None:
+            return
+        if asyncio.get_running_loop() is not owner_loop:
+            raise RuntimeError("Use request_stop() to stop a Temporal worker from another event loop")
+        if asyncio.current_task() in {owner, self._build_task, self._sdk_task, self._cron_task}:
+            raise RuntimeError("Use request_stop() from inside the Temporal worker lifecycle")
+        self.request_stop()
+        await asyncio.shield(owner)
 
     def cron(self) -> None:
         logger.info(
