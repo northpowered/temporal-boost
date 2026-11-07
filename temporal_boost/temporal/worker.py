@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Any
 
 from temporalio.client import Client
@@ -20,8 +21,15 @@ class TemporalWorkerBuilder:
         max_concurrent_workflow_task_polls: int | None = None,
         nonsticky_to_sticky_poll_ratio: float | None = None,
         max_concurrent_activity_task_polls: int | None = None,
+        graceful_shutdown_timeout: timedelta | None = None,
         **kwargs: Any,
     ) -> None:
+        self._graceful_shutdown_timeout = (
+            config.GRACEFUL_SHUTDOWN_TIMEOUT if graceful_shutdown_timeout is None else graceful_shutdown_timeout
+        )
+        if self._graceful_shutdown_timeout < timedelta():
+            raise ValueError("graceful_shutdown_timeout must be non-negative")
+
         self._client: Client | None = None
         self.task_queue = task_queue
 
@@ -72,6 +80,7 @@ class TemporalWorkerBuilder:
             max_concurrent_workflow_task_polls=self._max_concurrent_workflow_task_polls,
             nonsticky_to_sticky_poll_ratio=self._nonsticky_to_sticky_poll_ratio,
             max_concurrent_activity_task_polls=self._max_concurrent_activity_task_polls,
+            graceful_shutdown_timeout=self._graceful_shutdown_timeout,
             debug_mode=self._debug_mode,
             interceptors=self._interceptors,
             **self._worker_kwargs,

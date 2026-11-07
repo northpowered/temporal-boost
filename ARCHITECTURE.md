@@ -242,7 +242,8 @@ cleanup error логируется. При отмене основной corouti
 Существующие Temporal/FastStream/ASGI адаптеры пока не подключены к контракту managed stop
 (TB-005/TB-013/TB-014). Их собственный cleanup не гарантирует общего graceful shutdown; stop может
 завершиться timeout. Отдельные CLI-команды и внешний supervisor процессов остаются вне этого coordinator.
-Бюджет приложения не связан с `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`: подключение grace period SDK — TB-004.
+Бюджет приложения не связан с `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`: TB-004 подключает эту настройку
+к grace period activities в SDK, но не инициирует stop и не подключает Temporal adapter к coordinator.
 
 ## 6. Конфигурация: фактическая семантика
 
@@ -269,7 +270,7 @@ cleanup error логируется. При отмене основной corouti
 | `TEMPORAL_MAX_WORKFLOW_TASK_POLLS` | `10` | Аргумент `max_concurrent_workflow_task_polls` |
 | `TEMPORAL_MAX_ACTIVITY_TASK_POLLS` | `10` | Аргумент `max_concurrent_activity_task_polls` |
 | `TEMPORAL_NONSTICKY_TO_STICKY_RATIO` | `0.2` | Аргумент `nonsticky_to_sticky_poll_ratio` |
-| `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` | `30` секунд, преобразуется в `timedelta` | Константа объявлена, но в SDK worker не передаётся |
+| `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` | `30` секунд, преобразуется в `timedelta` | Передаётся как `Worker(graceful_shutdown_timeout=...)`; явный `timedelta` в worker builder имеет приоритет |
 | `TEMPORAL_PROMETHEUS_BIND_ADDRESS` | `None` | При наличии создаётся `PrometheusConfig` |
 | `TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX` | `False` | Опция `PrometheusConfig` |
 | `TEMPORAL_PROMETHEUS_UNIT_SUFFIX` | `False` | Опция `PrometheusConfig` |
@@ -279,6 +280,20 @@ cleanup error логируется. При отмене основной corouti
 Ошибки преобразования int/float заменяются default. Проверки диапазонов на этом уровне нет.
 Числовые параметры `TemporalWorkerBuilder` используют `value or config.VALUE`: явный `0`, в том числе
 для `nonsticky_to_sticky_poll_ratio`, заменяется конфигурационным значением.
+
+`TemporalWorkerBuilder(graceful_shutdown_timeout: timedelta | None = None)` использует env-константу
+только при `None`. Явный `timedelta(0)` сохраняется; выбранная отрицательная длительность отклоняется
+через `ValueError` при создании builder. Неотрицательное явное значение может перекрыть отрицательный env.
+Параметр передаётся в SDK один раз; путь `add_worker(**worker_kwargs)` → `TemporalBoostWorker` → builder
+сохраняет override и не оставляет его в произвольных kwargs. Чтение env по-прежнему происходит при импорте;
+нецелое текстовое значение заменяется default 30 секунд существующим парсером.
+
+Изменение TB-004: ранее при отсутствии override SDK получал собственный default `timedelta(0)`;
+теперь используется framework default 30 секунд или env. После запроса SDK shutdown это grace period
+для завершения activities до запроса отмены. SDK продолжает ждать activities и после отмены, поэтому
+данная настройка не ограничивает общую длительность shutdown. Она не запускает остановку автоматически,
+не задаёт `BoostApp.shutdown_timeout` и не меняет deadline внешнего supervisor. При managed stop бюджет
+приложения должен учитывать grace period и последующий cleanup; интеграция Temporal adapter — TB-005.
 
 ### Pydantic converter
 
@@ -364,7 +379,7 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 | --- | --- |
 | Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
-| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает opt-in worker и отдельный `BoostApp.shutdown_timeout`; адаптеры ещё не подключены, `GRACEFUL_SHUTDOWN_TIMEOUT` не передаётся SDK |
+| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает opt-in worker и отдельный `BoostApp.shutdown_timeout`; адаптеры ещё не подключены. `GRACEFUL_SHUTDOWN_TIMEOUT` задаёт отдельный grace period activities в SDK |
 | Автоматически общий runtime в [advanced_usage.md](docs/advanced_usage.md) | Каждый `TemporalBoostWorker` создаёт свой runtime |
 | Пример custom runtime в [advanced_usage.md](docs/advanced_usage.md) | Построенный отдельно runtime не влияет на client без `client_builder.set_runtime(runtime)` до `build()` |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |

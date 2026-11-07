@@ -75,6 +75,11 @@ add_worker(
 - `cron_runner` (MethodAsyncNoParam | None): Workflow run method for CRON workers.
 - `**worker_kwargs`: Additional worker configuration options.
 
+`graceful_shutdown_timeout=timedelta(...)` in `worker_kwargs` sets the SDK activity grace period.
+Omission or `None` inherits `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` (default 30 seconds), zero is preserved,
+and negative durations raise `ValueError` at registration. This is independent of `BoostApp.shutdown_timeout`;
+see [configuration](configuration.md#temporal_graceful_shutdown_timeout).
+
 **Returns:**
 
 - `TemporalBoostWorker`: The created worker instance.
@@ -415,6 +420,7 @@ __init__(
     max_concurrent_workflow_task_polls: int | None = None,
     nonsticky_to_sticky_poll_ratio: float | None = None,
     max_concurrent_activity_task_polls: int | None = None,
+    graceful_shutdown_timeout: timedelta | None = None,
     **kwargs: Any,
 ) -> None
 ```
@@ -430,6 +436,17 @@ def build() -> Worker
 **Returns:**
 
 - `Worker`: Temporal worker instance.
+
+The builder passes `graceful_shutdown_timeout` directly to the SDK `Worker`. An explicit non-negative
+`datetime.timedelta`, including zero, overrides the environment; omission or `None` uses
+`config.GRACEFUL_SHUTDOWN_TIMEOUT` (30 seconds by default). A selected negative value raises `ValueError`
+when constructing the builder. `BoostApp.add_worker()` and `TemporalBoostWorker` forward this option
+through their worker kwargs without duplicating it.
+
+This grace period begins when SDK shutdown is requested and controls how long activities may finish
+before cancellation is requested. It does not cap total SDK shutdown time, initiate application stop,
+or change application/process shutdown budgets. Workers omitting this option now receive the framework
+default instead of the SDK's zero grace period.
 
 ## TemporalRuntimeBuilder
 
@@ -491,7 +508,7 @@ All configuration is available in `temporal_boost.temporal.config`:
 - `MAX_WORKFLOW_TASK_POLLS`: Max workflow task polls
 - `MAX_ACTIVITY_TASK_POLLS`: Max activity task polls
 - `NONSTICKY_STICKY_RATIO`: Non-sticky to sticky ratio
-- `GRACEFUL_SHUTDOWN_TIMEOUT`: Graceful shutdown timeout
+- `GRACEFUL_SHUTDOWN_TIMEOUT`: SDK activity grace period (`timedelta`, default 30 seconds), independent of application shutdown budget
 - `PROMETHEUS_BIND_ADDRESS`: Prometheus bind address
 - `PROMETHEUS_COUNTERS_TOTAL_SUFFIX`: Counters total suffix flag
 - `PROMETHEUS_UNIT_SUFFIX`: Unit suffix flag
