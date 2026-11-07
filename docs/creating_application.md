@@ -290,6 +290,7 @@ app.add_worker(
     interceptors: list[Interceptor] | None,  # Optional interceptors
     cron_schedule: str | None,           # CRON schedule (for CRON workers)
     cron_runner: Callable | None,        # CRON runner method
+    cron_workflow_id: str | None,        # Stable workflow ID (optional override)
     **worker_kwargs: Any,                # Additional worker options
 ) -> TemporalBoostWorker
 ```
@@ -368,8 +369,37 @@ app.add_worker(
     workflows=[DailyReportWorkflow],
     cron_schedule="0 0 * * *",  # Run at midnight every day
     cron_runner=DailyReportWorkflow.run,
+    cron_workflow_id="reports/daily-v1",  # Same ID on every replica and restart
 )
 ```
+
+### CRON Workflow Identity
+
+`cron_workflow_id` identifies one logical CRON job within a Temporal namespace. It is also supported
+when constructing `TemporalBoostWorker` directly. If omitted, the ID is
+`temporal-boost/cron/<escaped task_queue>/<escaped worker_name>`; each component is URL percent-encoded
+(including `/` and `%`). For example, queue `report_queue` and worker `daily_report_cron` produce
+`temporal-boost/cron/report_queue/daily_report_cron`. Explicit IDs must contain a non-whitespace character
+and are otherwise preserved exactly.
+
+Keep queue and worker name stable when using the default. Supply an explicit ID to preserve identity
+across renames or queue moves. Independent jobs sharing the same queue and worker name need distinct
+explicit IDs; replicas of one job must use the same ID and namespace.
+
+Registration uses server-side `WorkflowIDConflictPolicy.USE_EXISTING` for a running workflow and
+`WorkflowIDReusePolicy.REJECT_DUPLICATE` for a closed workflow. Concurrent processes and restarts reuse
+the active chain atomically. A completed, failed, cancelled, or terminated ID raises the SDK's
+`WorkflowAlreadyStartedError`; registration does not generate a replacement ID. Closed-ID protection
+lasts only while Temporal retains the execution history. A running workflow with that ID is reused
+even if it was created outside this application, so reserve IDs for their intended jobs.
+
+Reusing an active workflow does not update its workflow type, task queue, or CRON expression. Treat
+configuration changes as an explicit migration. Registration logs include namespace, workflow ID,
+and the run ID returned by the server; "registered or already running" covers both creation and reuse.
+
+This continues to use SDK `cron_schedule`, rather than Temporal Schedules. Local shutdown leaves the
+server-side CRON chain in place. Before upgrading from random UUID IDs, follow the
+[migration procedure](running_application.md#migrating-existing-uuid-cron-workflows).
 
 ### CRON Schedule Format
 

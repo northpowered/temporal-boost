@@ -60,6 +60,7 @@ add_worker(
     interceptors: list[Interceptor] | None = None,
     cron_schedule: str | None = None,
     cron_runner: MethodAsyncNoParam[Any, Any] | None = None,
+    cron_workflow_id: str | None = None,
     **worker_kwargs: Any,
 ) -> TemporalBoostWorker
 ```
@@ -73,6 +74,9 @@ add_worker(
 - `interceptors` (list[Interceptor] | None): List of Temporal interceptors.
 - `cron_schedule` (str | None): CRON schedule string for scheduled workflows.
 - `cron_runner` (MethodAsyncNoParam | None): Workflow run method for CRON workers.
+- `cron_workflow_id` (str | None): Stable workflow ID in the configured namespace. Defaults to
+  `temporal-boost/cron/<percent-encoded task_queue>/<percent-encoded worker_name>`.
+  Empty or whitespace-only explicit IDs raise `ValueError`.
 - `**worker_kwargs`: Additional worker configuration options.
 
 `graceful_shutdown_timeout=timedelta(...)` in `worker_kwargs` sets the SDK activity grace period.
@@ -344,6 +348,12 @@ worker.run()
 
 Run the worker as a CRON worker.
 
+Atomically starts or reuses the ID using `WorkflowIDConflictPolicy.USE_EXISTING`. Closed IDs are
+rejected with `WorkflowAlreadyStartedError` using `WorkflowIDReusePolicy.REJECT_DUPLICATE`, subject
+to server history retention. Reuse preserves the existing schedule and configuration. Local shutdown
+does not cancel the server-side workflow. See [CRON identity](creating_application.md#cron-workflow-identity)
+and the [UUID migration procedure](running_application.md#migrating-existing-uuid-cron-workflows).
+
 ```python
 cron() -> None
 ```
@@ -406,6 +416,7 @@ Early stop or failure may skip `running`. Setup options should be configured bef
 - `temporal_client` (Client): Get Temporal client instance.
 - `temporal_worker` (Worker): Get Temporal worker instance.
 - `temporal_cron_runner` (MethodAsyncNoParam): Get CRON runner method.
+- `cron_workflow_id` (str): Read-only resolved CRON workflow ID.
 - `state`: Current lifecycle state. Client and SDK worker properties raise after cleanup until rebuilt.
 
 ## TemporalClientBuilder

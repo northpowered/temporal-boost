@@ -10,7 +10,7 @@ Run with: python3 example_cron.py cron daily_report
 """
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from temporalio import activity, workflow
 
@@ -28,10 +28,10 @@ async def generate_report() -> dict:
     """Generate a daily report."""
     logger.info("Generating daily report...")
     # Simulate report generation
-    import datetime
+    now = datetime.now(tz=timezone.utc)
     return {
-        "report_id": f"report_{datetime.date.today()}",
-        "generated_at": datetime.datetime.now().isoformat(),
+        "report_id": f"report_{now.date()}",
+        "generated_at": now.isoformat(),
         "status": "completed",
     }
 
@@ -62,7 +62,12 @@ app.add_worker(
     workflows=[DailyReportWorkflow],
     cron_schedule="0 0 * * *",  # Every day at midnight
     cron_runner=DailyReportWorkflow.run,
+    cron_workflow_id="reports/daily-v1",  # Keep identical across replicas and restarts
 )
+
+# Stopping this consumer leaves the server-side CRON chain running. Restarting
+# reuses it; changing this ID creates a separate job. See the migration guide
+# before upgrading deployments that previously registered random UUID IDs.
 
 if __name__ == "__main__":
     app.run()
