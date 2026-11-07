@@ -1270,12 +1270,20 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">run_all_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
-<p><code>run_all_workers()</code> starts a thread for each registered worker and waits for completion or a stop request.
+<p><code>run_all_workers()</code> starts a thread for each registered worker and waits for a stop request or failure.
 In the main thread it temporarily handles SIGINT and SIGTERM. <code>stop()</code> requests shutdown from any thread,
 returns immediately, and is safe to repeat. Calls outside a run do not affect the next run.
 Once stopping, the coordinator calls each live worker's <code>request_stop()</code> and joins all threads within
-<code>shutdown_timeout</code>. It raises <code>TimeoutError</code> naming any remaining workers. Their daemon threads may
+<code>shutdown_timeout</code>. It raises <code>TimeoutError</code> naming any remaining workers if there was no earlier failure.
+Otherwise the timeout is logged and the earlier exception is re-raised. Their daemon threads may
 continue; restarting is rejected while they remain alive. Concurrent calls are rejected too.</p>
+<p>The first worker failure requests application shutdown and is re-raised with its original traceback
+after cleanup. Later failures are logged without replacing it. A normal <code>run()</code> return before
+application shutdown is a <code>RuntimeError</code>; finite workers must call <code>app.stop()</code> before returning or
+use an individual command. A normal return or <code>asyncio.CancelledError</code> / <code>concurrent.futures.CancelledError</code>
+during application shutdown is accepted. Cancellation before stop and all other exceptions (including
+<code>SystemExit</code> / <code>KeyboardInterrupt</code>) propagate as failures. The same ordering preserves startup and
+stop-request failures. Full CLI exit-code handling remains tracked in TB-008/TB-009.</p>
 <p>Workers must opt into managed stopping. Built-in adapter integration remains pending; see
 <a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> for guarantees and limitations.</p>
 <h3 id="boostappadd_async_runtime"><code>BoostApp.add_async_runtime()</code></h3>
@@ -1299,6 +1307,9 @@ the default returns <code>False</code>. Async cleanup belongs on the resource-ow
 for asyncio workers. Call <code>super().__init__()</code>, set <code>name</code>, implement async <code>run_async()</code> and <code>shutdown()</code>,
 and inherit <code>run()</code> and <code>request_stop()</code>. The helper owns the loop, runs <code>shutdown()</code> once per run, and
 waits for <code>run_async()</code> to return. <code>shutdown()</code> must handle partial startup and unblock <code>run_async()</code>.
+If <code>run_async()</code> fails, its exception survives a subsequent cleanup failure, which is logged.
+When <code>run_async()</code> is cancelled and cleanup fails, the cleanup error propagates so normal cancellation
+cannot hide failed cleanup.
 See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 <h2 id="temporalboostworker">TemporalBoostWorker</h2>
 <p>Temporal worker class.</p>

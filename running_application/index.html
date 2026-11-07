@@ -1631,13 +1631,29 @@ Repeated requests are safe and keep the original shutdown deadline.</p>
 all started worker threads. The value must be finite and non-negative; zero allows no waiting.
 The coordinator polls for stop requests at intervals of up to 50 ms, then requests all workers
 to stop before joining them against one shared deadline. <code>request_stop()</code> implementations must
-return promptly. If threads remain alive at the deadline, <code>run_all_workers()</code> raises <code>TimeoutError</code>
-listing those workers. Python cannot forcibly terminate threads: they remain daemon threads and
+return promptly. If threads remain alive at the deadline, the coordinator reports <code>TimeoutError</code>
+listing those workers. An earlier failure remains the raised exception; a subsequent timeout is logged.
+Python cannot forcibly terminate threads: they remain daemon threads and
 may continue running until process exit. Another run is rejected while those threads remain alive.</p>
 <p>For programmatic use in a background thread, call <code>app.stop()</code> from another thread and wait for
 <code>run_all_workers()</code> to return. No signal handlers are installed in this mode. <code>stop()</code> is non-blocking;
 calling it before or after a run has no effect on the next run. Worker registration must finish
 before starting the coordinator.</p>
+<p><code>run all</code> treats registered workers as long-running services. The first failure observed at a
+worker's <code>run()</code> boundary requests application shutdown, stops the other started workers, and is
+re-raised in the coordinator's calling thread after bounded cleanup. The original exception object
+and traceback are preserved. Later worker failures, stop-request failures, and timeouts are logged
+without replacing the first failure. Further workers are not started once a stop is observed.</p>
+<p>A normal return before application shutdown is a <code>RuntimeError</code> naming the worker: the application
+must not keep running with a missing service or report success after all workers exit unexpectedly.
+Normal returns during shutdown succeed. <code>asyncio.CancelledError</code> and <code>concurrent.futures.CancelledError</code>
+are normal only after application stop has been requested; otherwise they are failures. Other
+exceptions, including <code>KeyboardInterrupt</code> and <code>SystemExit</code>, remain failures even during shutdown.</p>
+<p><strong>Migration:</strong> a finite custom worker that previously returned successfully from <code>run all</code> must now
+call <code>app.stop()</code> before returning to request normal application completion, or use its individual
+<code>run &lt;name&gt;</code> command. A worker-local stop alone does not request application shutdown. End-to-end
+exit codes through <code>BoostApp.run()</code> and the external CLI remain tracked in TB-008/TB-009; the coordinator
+itself propagates failures, and the Typer <code>run all</code> command propagates ordinary worker exceptions.</p>
 <p>Workers participate by implementing <code>BaseBoostWorker.request_stop() -&gt; bool</code>: a thread-safe,
 non-blocking, repeatable request that also handles startup. Return <code>True</code> when supported.
 The default returns <code>False</code>, which produces a warning. The coordinator never runs async
