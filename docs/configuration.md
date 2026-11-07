@@ -226,7 +226,8 @@ zero unless a value was passed explicitly through worker kwargs.
 
 The application coordinator has a separate budget, `BoostApp(shutdown_timeout=30.0)`, for joining all
 worker threads; external process supervisors have their own deadlines. This setting changes neither
-budget and does not initiate shutdown. The Temporal adapter's managed stop integration is still pending.
+budget and does not initiate shutdown. The Temporal adapter participates in managed stopping through
+`request_stop()`; its SDK cleanup still depends on activities respecting cancellation.
 See [Graceful Shutdown](running_application.md#graceful-shutdown) for current guarantees and limitations.
 
 ## Prometheus Metrics Configuration

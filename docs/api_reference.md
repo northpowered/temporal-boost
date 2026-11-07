@@ -203,7 +203,8 @@ during application shutdown is accepted. Cancellation before stop and all other 
 `SystemExit` / `KeyboardInterrupt`) propagate as failures. The same ordering preserves startup and
 stop-request failures. Full CLI exit-code handling remains tracked in TB-008/TB-009.
 
-Workers must opt into managed stopping. Built-in adapter integration remains pending; see
+Workers must opt into managed stopping. `TemporalBoostWorker` supports this contract;
+FastStream and ASGI adapter integration remains pending. See
 [Graceful Shutdown](running_application.md#graceful-shutdown) for guarantees and limitations.
 
 ### `BoostApp.add_async_runtime()`
@@ -353,11 +354,59 @@ cron() -> None
 worker.cron()
 ```
 
+Both commands own their event loop and use one lifecycle for startup, execution, and cleanup. A stop
+during startup cancels pending connection work. CRON cleanup completes the local wait and cancels any
+pending registration call, then stops the SDK worker. The adapter owns the SDK `run()` task and uses
+its public `shutdown()` API; it does not also enter the SDK async context manager. Normal `run()` does
+not register a CRON workflow. Local stop does not delete a server-side workflow.
+
+Sequential runs are supported and rebuild the client, runtime, and SDK worker on the next loop.
+Concurrent `run()` / `cron()` calls on the same adapter raise `RuntimeError`. Startup and execution
+errors propagate after cleanup; later cleanup errors are logged without replacing the original error.
+Unexpected cancellation now propagates too. SDK validation failure before starting does not wait on an
+SDK `shutdown()` that could never finish. No public Client/Runtime close API exists in the supported
+SDK: the adapter releases its and its builders' references, and does not close caller-supplied executors
+or invent close methods. External references may keep SDK objects alive.
+
+### `TemporalBoostWorker.request_stop()` and `TemporalBoostWorker.shutdown()`
+
+```python
+def request_stop() -> bool
+async def shutdown() -> None
+```
+
+`request_stop()` returns `True` and requests stop without waiting, from any thread. Repeats are safe;
+a request before the first run is remembered and prevents resource creation. Requests after stopping
+have no effect on the next run. `shutdown()` before/after a run is a no-op. During a run it must be called
+on the owning loop, requests stop, and waits for lifecycle completion, including any error. Concurrent
+waiters share cleanup; cancelling a waiter does not cancel the lifecycle. A foreign-loop call raises
+`RuntimeError` directing callers to `request_stop()`. Use `request_stop()` inside worker callbacks too.
+
+SDK shutdown is invoked at most once for an active SDK run. After SDK `run()` has already completed,
+its result is retrieved without another SDK shutdown call. On a shutdown failure the adapter cancels
+and joins its SDK task before releasing references. A stuck SDK operation can still exceed its activity
+grace period; `BoostApp.shutdown_timeout` bounds the coordinator's wait, not the SDK operation itself.
+
+### Lifecycle states
+
+The read-only `state` property reports:
+
+| Value | Meaning |
+| --- | --- |
+| `created` | Constructed; no active lifecycle |
+| `building` | Creating runtime, connecting client, and constructing the SDK worker |
+| `running` | SDK run task started; CRON registration may still be pending |
+| `stopping` | Cancelling startup/CRON work and waiting for SDK cleanup |
+| `stopped` | Adapter and builder resource references released; another run is allowed |
+
+Early stop or failure may skip `running`. Setup options should be configured before a run.
+
 ### Properties
 
 - `temporal_client` (Client): Get Temporal client instance.
 - `temporal_worker` (Worker): Get Temporal worker instance.
 - `temporal_cron_runner` (MethodAsyncNoParam): Get CRON runner method.
+- `state`: Current lifecycle state. Client and SDK worker properties raise after cleanup until rebuilt.
 
 ## TemporalClientBuilder
 
