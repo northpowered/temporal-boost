@@ -25,7 +25,7 @@ python3 main.py run all
 This command will:
 - Start all registered workers in separate threads
 - Keep the process running until interrupted
-- Handle graceful shutdown on SIGTERM/SIGINT
+- Coordinate SIGTERM/SIGINT shutdown for workers implementing the managed stop contract
 
 ### Running Individual Workers
 
@@ -253,13 +253,13 @@ FROM python:3.11-slim as builder
 WORKDIR /app
 
 # Install build dependencies
-RUN pip install --user poetry
+COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /usr/local/bin/uv
 
 # Copy dependency files
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN uv export --locked --no-default-groups --no-emit-project --no-hashes --output-file requirements.txt
 
 # Runtime stage
 FROM python:3.11-slim
@@ -414,14 +414,41 @@ pm2 save
 
 ### Graceful Shutdown
 
-Temporal-boost handles graceful shutdown automatically:
+`app.run_all_workers()` (also `python main.py run all`) coordinates cooperative shutdown.
+When it runs in the main thread, SIGINT and SIGTERM request the same stop as `app.stop()`.
+Previous signal handlers are restored when the coordinator exits, including on errors.
+Repeated requests are safe and keep the original shutdown deadline.
 
-- Workers receive SIGTERM/SIGINT
-- Running activities complete (up to `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`)
-- New tasks are not accepted
-- Connections are closed cleanly
+`BoostApp(shutdown_timeout=30.0)` sets the total budget, in seconds, for stopping and joining
+all started worker threads. The value must be finite and non-negative; zero allows no waiting.
+The coordinator polls for stop requests at intervals of up to 50 ms, then requests all workers
+to stop before joining them against one shared deadline. `request_stop()` implementations must
+return promptly. If threads remain alive at the deadline, `run_all_workers()` raises `TimeoutError`
+listing those workers. Python cannot forcibly terminate threads: they remain daemon threads and
+may continue running until process exit. Another run is rejected while those threads remain alive.
 
-Default timeout is 30 seconds (configurable via `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`).
+For programmatic use in a background thread, call `app.stop()` from another thread and wait for
+`run_all_workers()` to return. No signal handlers are installed in this mode. `stop()` is non-blocking;
+calling it before or after a run has no effect on the next run. Worker registration must finish
+before starting the coordinator.
+
+Workers participate by implementing `BaseBoostWorker.request_stop() -> bool`: a thread-safe,
+non-blocking, repeatable request that also handles startup. Return `True` when supported.
+The default returns `False`, which produces a warning. The coordinator never runs async
+`shutdown()` in another event loop. Async workers can inherit `AsyncBoostWorker`, which owns
+one loop per run, schedules stop requests onto it, calls `shutdown()` once on that loop, and
+waits for `run_async()` to return. See the [custom worker example](advanced_usage.md#custom-worker-shutdown).
+
+**Current scope:** the Temporal, FastStream, Uvicorn, Hypercorn, and Granian adapters do not yet
+implement this managed stop contract. Their existing cleanup paths do not guarantee application-wide
+graceful shutdown; a stop may reach the coordinator's timeout. Adapter integration is tracked separately
+in TB-005, TB-013, and TB-014. Individual `run <name>` and `cron <name>` commands use adapter lifecycle
+directly, and the external CLI's multiple-process supervisor has its own shutdown behavior (TB-009).
+
+The application budget is independent of the SDK's activity grace period.
+`TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` is currently read into configuration but is not wired to the
+Temporal SDK worker (TB-004); it does not configure `BoostApp.shutdown_timeout` or guarantee completion
+of activities or connection cleanup.
 
 ## Monitoring and Observability
 

@@ -13,6 +13,15 @@ class BaseBoostWorker(ABC):
     async def shutdown(self) -> None:
         pass
 
+    def request_stop(self) -> bool:
+        """Request stopping without blocking, from any thread.
+
+        Implementations must tolerate repeated requests and requests during startup.
+        Return False when managed stopping is unsupported. Async cleanup belongs
+        in the resource-owning loop; the coordinator never calls shutdown directly.
+        """
+        return False
+
 
 class BaseAsgiWorker(BaseBoostWorker):
     def __init__(

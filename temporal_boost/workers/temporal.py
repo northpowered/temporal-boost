@@ -131,7 +131,7 @@ class TemporalBoostWorker(BaseBoostWorker):
             self._client_builder.set_tls(tls)
 
         if use_pydantic_data_converter is not None:
-            self._client_builder.set_pydantic_data_converter()
+            self._client_builder.set_pydantic_data_converter(enabled=use_pydantic_data_converter)
 
         if kwargs:
             self._client_builder.set_kwargs(**kwargs)

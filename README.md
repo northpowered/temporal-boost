@@ -1,6 +1,6 @@
 # Temporal-boost
 
-![social_preview](https://socialify.git.ci/northpowered/temporal-boost/image?description=1&font=Source%20Code%20Pro&logo=https%3A%2F%2Fraw.githubusercontent.com%2Ftemporalio%2Fdocumentation%2Fmain%2Fstatic%2Fimg%2Ffavicon.svg&name=1&owner=1&pattern=Brick%20Wall&theme=Light)
+![social_preview](https://socialify.dev/northpowered/temporal-boost/image?font=JetBrains+Mono&logo=https%3A%2F%2Fimages.ctfassets.net%2F0uuz8ydxyd9p%2F3B1zR4imcNyF9oHQxT06AD%2F9fce8b9ead280e66c21805c58d115176%2FTemporal_Symbol_dark.svg&name=1&owner=1&pattern=Plus&stargazers=1&theme=Light)
 
 [![Python 3.10+](https://img.shields.io/pypi/pyversions/temporal-boost.svg?style=for-the-badge)](https://pypi.org/project/temporal-boost)
 [![PyPI](https://img.shields.io/pypi/v/temporal-boost.svg?style=for-the-badge)](https://pypi.org/project/temporal-boost)
@@ -17,7 +17,7 @@
 - ✅ **CRON workers** - Scheduled workflows with one line of code
 - ✅ **ASGI integration** - Run FastAPI alongside Temporal workers
 - ✅ **FastStream support** - Event-driven architectures
-- ✅ **Production-ready** - Built-in logging, metrics, and graceful shutdown
+- ✅ **Operations** - Built-in logging and metrics; coordinated shutdown for managed workers
 - ✅ **Type-safe** - Full type hints and Pydantic integration
 
 ## Requirements
@@ -30,7 +30,7 @@
 ```bash
 pip install temporal-boost
 # or
-poetry add temporal-boost
+uv add temporal-boost
 ```
 
 ### Optional Extras

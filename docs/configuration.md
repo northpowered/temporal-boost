@@ -81,6 +81,37 @@ export TEMPORAL_USE_PYDANTIC_DATA_CONVERTER=true
 
 When enabled, Temporal-boost uses Pydantic models for data serialization, providing better type safety and validation.
 
+`BoostApp(use_pydantic=...)` and `use_pydantic_data_converter` on `TemporalClientBuilder` or
+`worker.configure_temporal_client()` use the same selection rule when creating a client builder:
+
+| Argument | Behavior |
+| --- | --- |
+| `None` (default) | Inherit `TEMPORAL_USE_PYDANTIC_DATA_CONVERTER` |
+| `True` | Enable the SDK Pydantic converter |
+| `False` | Disable automatic Pydantic selection, even when the environment enables it |
+
+An explicit `data_converter` passed to `TemporalClientBuilder`, `set_kwargs()`, or
+`worker.configure_temporal_client()` takes priority over both the flag and environment setting.
+Disabling the flag preserves that converter. Without an explicit converter, disabling the flag leaves
+the Temporal SDK's default converter in use.
+
+```python
+app = BoostApp(use_pydantic=False)  # Overrides an environment value of true
+worker = app.add_worker("example", "example-queue", activities=[my_activity])
+worker.configure_temporal_client(data_converter=custom_converter)  # Explicit converter takes priority
+```
+
+On an existing worker builder, `configure_temporal_client()` updates the flag only when given `True`
+or `False`; `None` leaves the previous selection unchanged. Use
+`builder.set_pydantic_data_converter(enabled=False)` to disable Pydantic on a standalone builder;
+`builder.set_pydantic_data_converter()` still enables it. Each subsequent `build()` uses the current
+selection without retaining a converter automatically added by an earlier build. These changes apply
+to future client builds; they do not reconfigure an already connected client.
+
+**Migration:** Code that relied on `False` enabling Pydantic must pass `True`. Code that supplied both
+an explicit converter and an enabled Pydantic flag now uses the explicit converter; remove it to use
+the SDK Pydantic converter.
+
 ## Worker Configuration
 
 These settings control worker behavior and resource limits.
@@ -161,13 +192,15 @@ Sticky workflows improve performance by keeping workflow state in memory.
 
 **Type**: Integer (seconds)  
 **Default**: `30`  
-**Description**: Timeout for graceful shutdown
+**Description**: Intended Temporal SDK activity grace period; currently read but not passed to the SDK worker (TB-004)
 
 ```bash
 export TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT=60
 ```
 
-Workers will wait this long for running activities to complete before shutting down.
+This setting currently does not affect worker shutdown. The application coordinator has a separate
+budget, `BoostApp(shutdown_timeout=30.0)`, for joining all worker threads. See
+[Graceful Shutdown](running_application.md#graceful-shutdown) for the managed stop contract and adapter limitations.
 
 ## Prometheus Metrics Configuration
 
@@ -221,18 +254,19 @@ Runtime configuration is done programmatically. See [Advanced Usage](advanced_us
 
 ## Configuration Priority
 
-Configuration is loaded in this order (highest to lowest priority):
+Temporal client settings use this order (highest to lowest priority):
 
-1. **Environment variables** - Highest priority
+1. **Explicit worker configuration** via `configure_temporal_client()`
 2. **BoostApp initialization parameters**
-3. **Default values** - Lowest priority
+3. **Environment variables**
+4. **Default values**
 
 Example:
 
 ```python
 # Environment variable: TEMPORAL_TARGET_HOST=temporal.prod:7233
 # BoostApp parameter: temporal_endpoint="temporal.dev:7233"
-# Result: Uses "temporal.prod:7233" (environment variable wins)
+# Result: Uses "temporal.dev:7233" (explicit application parameter wins)
 app = BoostApp(temporal_endpoint="temporal.dev:7233")
 ```
 

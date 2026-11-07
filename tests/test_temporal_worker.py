@@ -2,7 +2,10 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.converter import DataConverter
 
+from temporal_boost.temporal import config
 from temporal_boost.temporal.worker import TemporalWorkerBuilder
 from temporal_boost.workers.temporal import TemporalBoostWorker
 
@@ -112,6 +115,59 @@ class TestTemporalWorkerBuilder:
 
 
 class TestTemporalBoostWorker:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("env_enabled", [False, True])
+    @pytest.mark.parametrize("use_pydantic", [None, False, True])
+    async def test_configure_pydantic_override_matrix(
+        self, monkeypatch: pytest.MonkeyPatch, env_enabled: bool, use_pydantic: bool | None
+    ) -> None:
+        monkeypatch.setattr(config, "USE_PYDANTIC_DATA_CONVERTER", env_enabled)
+        worker = TemporalBoostWorker("test_worker", "test_queue", activities=[MagicMock()])
+        worker.configure_temporal_client(use_pydantic_data_converter=use_pydantic)
+
+        with (
+            patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect,
+            patch.object(worker._worker_builder, "build"),
+        ):
+            await worker._build_worker()
+
+        enabled = env_enabled if use_pydantic is None else use_pydantic
+        if enabled:
+            assert connect.call_args.kwargs["data_converter"] is pydantic_data_converter
+        else:
+            assert "data_converter" not in connect.call_args.kwargs
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("custom_converter", [False, True])
+    async def test_reconfigure_pydantic_after_build(
+        self, monkeypatch: pytest.MonkeyPatch, custom_converter: bool
+    ) -> None:
+        monkeypatch.setattr(config, "USE_PYDANTIC_DATA_CONVERTER", True)
+        worker = TemporalBoostWorker("test_worker", "test_queue", activities=[MagicMock()])
+        converter = DataConverter()
+        kwargs = {"data_converter": converter} if custom_converter else {}
+        worker.configure_temporal_client(use_pydantic_data_converter=True, **kwargs)
+
+        with (
+            patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect,
+            patch.object(worker._worker_builder, "build"),
+        ):
+            await worker._build_worker()
+            worker.configure_temporal_client(use_pydantic_data_converter=False)
+            await worker._build_worker()
+            worker.configure_temporal_client(namespace="updated")
+            await worker._build_worker()
+
+        assert connect.call_args_list[0].kwargs["data_converter"] is (
+            converter if custom_converter else pydantic_data_converter
+        )
+        for call in connect.call_args_list[1:]:
+            if custom_converter:
+                assert call.kwargs["data_converter"] is converter
+            else:
+                assert "data_converter" not in call.kwargs
+        assert connect.call_args.kwargs["namespace"] == "updated"
+
     def test_init_with_minimal_params(self):
         def dummy_activity():
             pass
@@ -402,4 +458,3 @@ class TestTemporalBoostWorker:
 
         assert "Worker 'test_worker' started" in caplog.text
         assert "test_queue" in caplog.text
-

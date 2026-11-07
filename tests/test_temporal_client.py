@@ -1,11 +1,77 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.converter import DataConverter
 
+from temporal_boost.temporal import config
 from temporal_boost.temporal.client import TemporalClientBuilder
 
 
 class TestTemporalClientBuilder:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("env_enabled", [False, True])
+    @pytest.mark.parametrize("use_pydantic", [None, False, True])
+    async def test_pydantic_override_matrix(
+        self, monkeypatch: pytest.MonkeyPatch, env_enabled: bool, use_pydantic: bool | None
+    ) -> None:
+        monkeypatch.setattr(config, "USE_PYDANTIC_DATA_CONVERTER", env_enabled)
+        builder = TemporalClientBuilder(use_pydantic_data_converter=use_pydantic)
+        builder.set_runtime(MagicMock())
+
+        with patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect:
+            await builder.build()
+
+        enabled = env_enabled if use_pydantic is None else use_pydantic
+        if enabled:
+            assert connect.call_args.kwargs["data_converter"] is pydantic_data_converter
+        else:
+            assert "data_converter" not in connect.call_args.kwargs
+
+    @pytest.mark.asyncio
+    async def test_disable_pydantic_after_build(self) -> None:
+        builder = TemporalClientBuilder(use_pydantic_data_converter=True, custom_param="value")
+        builder.set_runtime(MagicMock())
+
+        with patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect:
+            await builder.build()
+            builder.set_pydantic_data_converter(enabled=False)
+            await builder.build()
+
+        assert connect.call_args_list[0].kwargs["data_converter"] is pydantic_data_converter
+        assert "data_converter" not in connect.call_args_list[1].kwargs
+        assert connect.call_args_list[1].kwargs["custom_param"] == "value"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("env_enabled", [False, True])
+    @pytest.mark.parametrize("use_pydantic", [None, False, True])
+    @pytest.mark.parametrize("via_set_kwargs", [False, True])
+    async def test_custom_converter_takes_priority(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        env_enabled: bool,
+        use_pydantic: bool | None,
+        via_set_kwargs: bool,
+    ) -> None:
+        monkeypatch.setattr(config, "USE_PYDANTIC_DATA_CONVERTER", env_enabled)
+        converter = DataConverter()
+        kwargs = {} if via_set_kwargs else {"data_converter": converter}
+        builder = TemporalClientBuilder(use_pydantic_data_converter=use_pydantic, **kwargs)
+        builder.set_runtime(MagicMock())
+
+        with patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect:
+            if via_set_kwargs:
+                await builder.build()
+                builder.set_kwargs(data_converter=converter)
+            await builder.build()
+            builder.set_pydantic_data_converter()
+            await builder.build()
+            builder.set_pydantic_data_converter(enabled=False)
+            await builder.build()
+
+        for call in connect.call_args_list[-3:]:
+            assert call.kwargs["data_converter"] is converter
+
     def test_init_with_defaults(self):
         builder = TemporalClientBuilder()
         assert builder._target_host is not None
@@ -166,4 +232,3 @@ class TestTemporalClientBuilder:
             assert call_kwargs["tls"] is True
             assert call_kwargs["custom_param"] == "value"
             assert call_kwargs["runtime"] == mock_runtime
-

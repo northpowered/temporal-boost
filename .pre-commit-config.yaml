@@ -27,13 +27,13 @@ repos:
         types: [text]
         stages: [commit, push, manual]
 
-      - id: check-poetry
-        name: Poetry check
-        description: Validates the structure of the pyproject.toml file
-        entry: poetry check
+      - id: check-uv-lock
+        name: uv lock check
+        description: Validates project metadata and lockfile consistency
+        entry: uv lock --check
         language: system
         pass_filenames: false
-        files: pyproject.toml
+        files: ^(pyproject\.toml|uv\.lock)$
 
       - id: ruff-linter
         name: ruff-linter

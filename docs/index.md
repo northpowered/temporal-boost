@@ -12,7 +12,7 @@ If you're familiar with FastAPI's declarative style and want to build reliable, 
 
 - **FastAPI-style API**: Organize your Temporal workers similar to how you organize FastAPI routes
 - **Zero boilerplate**: Focus on your business logic, not infrastructure setup
-- **Production-ready**: Built-in logging, tracing, metrics, and graceful shutdown
+- **Operations**: Built-in logging, tracing, and metrics; coordinated shutdown for managed workers
 - **Flexible**: Support for activities, workflows, CRON schedules, and ASGI apps
 - **Type-safe**: Full type hints and Pydantic integration support
 
@@ -33,7 +33,7 @@ If you're familiar with FastAPI's declarative style and want to build reliable, 
 - ✅ **FastStream integration** for event-driven architectures
 - ✅ **Environment-based configuration** for all settings
 - ✅ **Prometheus metrics** support out of the box
-- ✅ **Graceful shutdown** handling
+- ✅ **Graceful shutdown** for workers implementing the managed stop contract
 - ✅ **CLI interface** for running workers individually or together
 
 ## Installation
@@ -46,10 +46,10 @@ Install the core package:
 pip install temporal-boost
 ```
 
-or with Poetry:
+or with uv:
 
 ```bash
-poetry add temporal-boost
+uv add temporal-boost
 ```
 
 ### Optional extras

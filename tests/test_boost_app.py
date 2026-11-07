@@ -3,16 +3,56 @@ import logging
 import os
 import sys
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import yaml
+from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.converter import DataConverter
 
 from temporal_boost.boost_app import BoostApp
+from temporal_boost.temporal import config
 from temporal_boost.workers.temporal import TemporalBoostWorker
 
 
 class TestBoostApp:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("env_enabled", [False, True])
+    @pytest.mark.parametrize("use_pydantic", [None, False, True])
+    async def test_registered_worker_pydantic_override_matrix(
+        self, monkeypatch: pytest.MonkeyPatch, env_enabled: bool, use_pydantic: bool | None
+    ) -> None:
+        monkeypatch.setattr(config, "USE_PYDANTIC_DATA_CONVERTER", env_enabled)
+        app = BoostApp(use_pydantic=use_pydantic, logger_config=None)
+        worker = app.add_worker("test_worker", "test_queue", activities=[MagicMock()])
+
+        with (
+            patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect,
+            patch.object(worker._worker_builder, "build"),
+        ):
+            await worker._build_worker()
+
+        enabled = env_enabled if use_pydantic is None else use_pydantic
+        if enabled:
+            assert connect.call_args.kwargs["data_converter"] is pydantic_data_converter
+        else:
+            assert "data_converter" not in connect.call_args.kwargs
+
+    @pytest.mark.asyncio
+    async def test_worker_converter_overrides_app_pydantic(self) -> None:
+        app = BoostApp(use_pydantic=True, logger_config=None)
+        worker = app.add_worker("test_worker", "test_queue", activities=[MagicMock()])
+        converter = DataConverter()
+        worker.configure_temporal_client(data_converter=converter)
+
+        with (
+            patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect,
+            patch.object(worker._worker_builder, "build"),
+        ):
+            await worker._build_worker()
+
+        assert connect.call_args.kwargs["data_converter"] is converter
+
     def test_init_with_defaults(self):
         app = BoostApp()
         assert app._name == "temporal_generic_service"
@@ -374,8 +414,6 @@ class TestBoostApp:
         )
 
         with patch.object(worker, "run") as mock_run:
-            mock_run.side_effect = KeyboardInterrupt()
-
             app.run_all_workers()
 
             mock_run.assert_called_once()
@@ -407,4 +445,3 @@ class TestBoostApp:
             except (SystemExit, Exception):
                 pass
             assert mock_run.called or len(app.get_registered_workers()) == 1
-
