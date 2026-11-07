@@ -102,10 +102,8 @@ class BoostApp:
         worker.configure_temporal_client(
             target_host=self._global_temporal_endpoint,
             namespace=self._global_temporal_namespace,
+            use_pydantic_data_converter=self._global_use_pydantic,
         )
-
-        if self._global_use_pydantic is not None:
-            worker.configure_temporal_client(use_pydantic_data_converter=self._global_use_pydantic)
 
         self._run_typer.command(name=worker_name)(worker.run)
 

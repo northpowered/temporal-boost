@@ -28,7 +28,8 @@ BoostApp(
 - `temporal_endpoint` (str | None): Override `TEMPORAL_TARGET_HOST` environment variable.
 - `temporal_namespace` (str | None): Override `TEMPORAL_NAMESPACE` environment variable.
 - `debug_mode` (bool): Enable debug mode. Defaults to False.
-- `use_pydantic` (bool | None): Override `TEMPORAL_USE_PYDANTIC_DATA_CONVERTER` environment variable.
+- `use_pydantic` (bool | None): `None` inherits `TEMPORAL_USE_PYDANTIC_DATA_CONVERTER`; `True` enables
+  Pydantic and `False` disables automatic Pydantic selection. An explicit client `data_converter` takes priority.
 - `logger_config` (dict | str | Path | None): Logging configuration. Can be a dict, path to JSON/YAML file, or path to logging config file.
 
 **Example:**
@@ -211,7 +212,9 @@ configure_temporal_client(
 - `api_key` (str | None): API key for Temporal Cloud.
 - `identity` (str | None): Client identity.
 - `tls` (bool | None): Enable TLS.
-- `use_pydantic_data_converter` (bool | None): Use Pydantic data converter.
+- `use_pydantic_data_converter` (bool | None): `True` enables Pydantic; `False` disables automatic
+  Pydantic selection. `None` inherits the environment on initial configuration and leaves an existing
+  builder unchanged. An explicit `data_converter` in `kwargs` takes priority.
 - `**kwargs`: Additional client options.
 
 **Example:**
@@ -328,6 +331,19 @@ async def build() -> Client
 **Returns:**
 
 - `Client`: Temporal client instance.
+
+The constructor's `use_pydantic_data_converter` flag inherits the environment when `None`, enables
+Pydantic when `True`, and disables automatic selection when `False`. An explicit `data_converter`
+in constructor kwargs or `set_kwargs()` takes priority over the flag.
+
+### `TemporalClientBuilder.set_pydantic_data_converter()`
+
+```python
+def set_pydantic_data_converter(*, enabled: bool = True) -> None
+```
+
+Enable or disable automatic Pydantic selection for future builds. Calling without arguments enables it.
+Passing `enabled=False` removes the automatic selection while preserving any explicit `data_converter`.
 
 ## TemporalWorkerBuilder
 

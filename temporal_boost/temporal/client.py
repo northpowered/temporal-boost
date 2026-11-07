@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class TemporalClientBuilder:
+    """Configure a client; an explicit data_converter takes priority over the Pydantic flag."""
+
     def __init__(  # noqa: PLR0913
         self,
         target_host: str | None = None,
@@ -31,9 +33,10 @@ class TemporalClientBuilder:
 
         self._runtime: Runtime | None = None
 
-        self._data_converter: DataConverter | None = None
-        if use_pydantic_data_converter or config.USE_PYDANTIC_DATA_CONVERTER:
-            self._data_converter = pydantic_data_converter
+        use_pydantic = (
+            config.USE_PYDANTIC_DATA_CONVERTER if use_pydantic_data_converter is None else use_pydantic_data_converter
+        )
+        self._data_converter: DataConverter | None = pydantic_data_converter if use_pydantic else None
 
         self._client_kwargs = kwargs
 
@@ -58,15 +61,17 @@ class TemporalClientBuilder:
     def set_kwargs(self, **kwargs: Any) -> None:
         self._client_kwargs.update(kwargs)
 
-    def set_pydantic_data_converter(self) -> None:
-        self._data_converter = pydantic_data_converter
+    def set_pydantic_data_converter(self, *, enabled: bool = True) -> None:
+        """Enable or disable automatic Pydantic selection, preserving any explicit data_converter."""
+        self._data_converter = pydantic_data_converter if enabled else None
 
     async def build(self) -> Client:
         if self._runtime is None:
             self._runtime = Runtime.default()
 
-        if self._data_converter:
-            self._client_kwargs["data_converter"] = self._data_converter
+        client_kwargs = self._client_kwargs.copy()
+        if self._data_converter is not None:
+            client_kwargs.setdefault("data_converter", self._data_converter)
 
         return await Client.connect(
             target_host=self._target_host,
@@ -75,5 +80,5 @@ class TemporalClientBuilder:
             tls=self._tls,
             identity=self._identity,
             runtime=self._runtime,
-            **self._client_kwargs,
+            **client_kwargs,
         )
