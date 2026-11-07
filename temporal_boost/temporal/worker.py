@@ -56,7 +56,7 @@ class TemporalWorkerBuilder:
             raise RuntimeError
         return self._client
 
-    def set_client(self, client: Client) -> None:
+    def set_client(self, client: Client | None) -> None:
         self._client = client
 
     def set_activities(self, activities: list[Callable[..., Any]]) -> None:

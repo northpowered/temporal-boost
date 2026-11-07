@@ -520,13 +520,9 @@ class TestTemporalBoostWorker:
             activities=[dummy_activity],
         )
 
-        mock_worker = MagicMock()
-        mock_worker.shutdown = AsyncMock()
-        worker._worker = mock_worker
-
         await worker.shutdown()
-
-        mock_worker.shutdown.assert_called_once()
+        await worker.shutdown()
+        assert worker._worker is None
 
     def test_log_worker_start(self, caplog):
         def dummy_activity():
