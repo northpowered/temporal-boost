@@ -510,6 +510,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cron-workflow-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRON Workflow Identity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cron-schedule-format" class="md-nav__link">
     <span class="md-ellipsis">
       CRON Schedule Format
@@ -1167,6 +1176,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#cron-workflow-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRON Workflow Identity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cron-schedule-format" class="md-nav__link">
     <span class="md-ellipsis">
       CRON Schedule Format
@@ -1652,8 +1670,9 @@
 </span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">interceptors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interceptor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Optional interceptors</span>
 </span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">cron_schedule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>           <span class="c1"># CRON schedule (for CRON workers)</span>
 </span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">cron_runner</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>        <span class="c1"># CRON runner method</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="o">**</span><span class="n">worker_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>                <span class="c1"># Additional worker options</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemporalBoostWorker</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="n">cron_workflow_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>        <span class="c1"># Stable workflow ID (optional override)</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="o">**</span><span class="n">worker_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>                <span class="c1"># Additional worker options</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemporalBoostWorker</span>
 </span></code></pre></div>
 <h3 id="multiple-workers-example">Multiple Workers Example</h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Activity-only worker</span>
@@ -1718,8 +1737,31 @@
 </span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    <span class="n">workflows</span><span class="o">=</span><span class="p">[</span><span class="n">DailyReportWorkflow</span><span class="p">],</span>
 </span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>    <span class="n">cron_schedule</span><span class="o">=</span><span class="s2">&quot;0 0 * * *&quot;</span><span class="p">,</span>  <span class="c1"># Run at midnight every day</span>
 </span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    <span class="n">cron_runner</span><span class="o">=</span><span class="n">DailyReportWorkflow</span><span class="o">.</span><span class="n">run</span><span class="p">,</span>
-</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="p">)</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    <span class="n">cron_workflow_id</span><span class="o">=</span><span class="s2">&quot;reports/daily-v1&quot;</span><span class="p">,</span>  <span class="c1"># Same ID on every replica and restart</span>
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="p">)</span>
 </span></code></pre></div>
+<h3 id="cron-workflow-identity">CRON Workflow Identity</h3>
+<p><code>cron_workflow_id</code> identifies one logical CRON job within a Temporal namespace. It is also supported
+when constructing <code>TemporalBoostWorker</code> directly. If omitted, the ID is
+<code>temporal-boost/cron/&lt;escaped task_queue&gt;/&lt;escaped worker_name&gt;</code>; each component is URL percent-encoded
+(including <code>/</code> and <code>%</code>). For example, queue <code>report_queue</code> and worker <code>daily_report_cron</code> produce
+<code>temporal-boost/cron/report_queue/daily_report_cron</code>. Explicit IDs must contain a non-whitespace character
+and are otherwise preserved exactly.</p>
+<p>Keep queue and worker name stable when using the default. Supply an explicit ID to preserve identity
+across renames or queue moves. Independent jobs sharing the same queue and worker name need distinct
+explicit IDs; replicas of one job must use the same ID and namespace.</p>
+<p>Registration uses server-side <code>WorkflowIDConflictPolicy.USE_EXISTING</code> for a running workflow and
+<code>WorkflowIDReusePolicy.REJECT_DUPLICATE</code> for a closed workflow. Concurrent processes and restarts reuse
+the active chain atomically. A completed, failed, cancelled, or terminated ID raises the SDK's
+<code>WorkflowAlreadyStartedError</code>; registration does not generate a replacement ID. Closed-ID protection
+lasts only while Temporal retains the execution history. A running workflow with that ID is reused
+even if it was created outside this application, so reserve IDs for their intended jobs.</p>
+<p>Reusing an active workflow does not update its workflow type, task queue, or CRON expression. Treat
+configuration changes as an explicit migration. Registration logs include namespace, workflow ID,
+and the run ID returned by the server; "registered or already running" covers both creation and reuse.</p>
+<p>This continues to use SDK <code>cron_schedule</code>, rather than Temporal Schedules. Local shutdown leaves the
+server-side CRON chain in place. Before upgrading from random UUID IDs, follow the
+<a href="../running_application/#migrating-existing-uuid-cron-workflows">migration procedure</a>.</p>
 <h3 id="cron-schedule-format">CRON Schedule Format</h3>
 <p>CRON schedules use standard format: <code>minute hour day month weekday</code></p>
 <p>Examples:</p>

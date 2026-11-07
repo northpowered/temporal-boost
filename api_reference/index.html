@@ -1212,8 +1212,9 @@
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">interceptors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interceptor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">cron_schedule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">cron_runner</span><span class="p">:</span> <span class="n">MethodAsyncNoParam</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="o">**</span><span class="n">worker_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemporalBoostWorker</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">cron_workflow_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="o">**</span><span class="n">worker_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemporalBoostWorker</span>
 </span></code></pre></div>
 <p><strong>Parameters:</strong></p>
 <ul>
@@ -1224,6 +1225,9 @@
 <li><code>interceptors</code> (list[Interceptor] | None): List of Temporal interceptors.</li>
 <li><code>cron_schedule</code> (str | None): CRON schedule string for scheduled workflows.</li>
 <li><code>cron_runner</code> (MethodAsyncNoParam | None): Workflow run method for CRON workers.</li>
+<li><code>cron_workflow_id</code> (str | None): Stable workflow ID in the configured namespace. Defaults to
+  <code>temporal-boost/cron/&lt;percent-encoded task_queue&gt;/&lt;percent-encoded worker_name&gt;</code>.
+  Empty or whitespace-only explicit IDs raise <code>ValueError</code>.</li>
 <li><code>**worker_kwargs</code>: Additional worker configuration options.</li>
 </ul>
 <p><code>graceful_shutdown_timeout=timedelta(...)</code> in <code>worker_kwargs</code> sets the SDK activity grace period.
@@ -1428,6 +1432,11 @@ See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 </span></code></pre></div>
 <h3 id="temporalboostworkercron"><code>TemporalBoostWorker.cron()</code></h3>
 <p>Run the worker as a CRON worker.</p>
+<p>Atomically starts or reuses the ID using <code>WorkflowIDConflictPolicy.USE_EXISTING</code>. Closed IDs are
+rejected with <code>WorkflowAlreadyStartedError</code> using <code>WorkflowIDReusePolicy.REJECT_DUPLICATE</code>, subject
+to server history retention. Reuse preserves the existing schedule and configuration. Local shutdown
+does not cancel the server-side workflow. See <a href="../creating_application/#cron-workflow-identity">CRON identity</a>
+and the <a href="../running_application/#migrating-existing-uuid-cron-workflows">UUID migration procedure</a>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">cron</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <p><strong>Example:</strong></p>
@@ -1497,6 +1506,7 @@ grace period; <code>BoostApp.shutdown_timeout</code> bounds the coordinator's wa
 <li><code>temporal_client</code> (Client): Get Temporal client instance.</li>
 <li><code>temporal_worker</code> (Worker): Get Temporal worker instance.</li>
 <li><code>temporal_cron_runner</code> (MethodAsyncNoParam): Get CRON runner method.</li>
+<li><code>cron_workflow_id</code> (str): Read-only resolved CRON workflow ID.</li>
 <li><code>state</code>: Current lifecycle state. Client and SDK worker properties raise after cleanup until rebuilt.</li>
 </ul>
 <h2 id="temporalclientbuilder">TemporalClientBuilder</h2>

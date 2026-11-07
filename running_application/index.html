@@ -365,6 +365,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#migrating-existing-uuid-cron-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migrating Existing UUID CRON Workflows
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#development-best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       Development Best Practices
@@ -945,6 +954,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#migrating-existing-uuid-cron-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migrating Existing UUID CRON Workflows
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#development-best-practices" class="md-nav__link">
     <span class="md-ellipsis">
       Development Best Practices
@@ -1333,6 +1351,41 @@
 <p>Example:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python3<span class="w"> </span>main.py<span class="w"> </span>cron<span class="w"> </span>daily_report_cron
 </span></code></pre></div>
+<p>The command registers or reuses one server-side CRON chain and consumes its task queue. Keep the
+same <code>cron_workflow_id</code> on every replica. The registration log contains the namespace, workflow ID,
+and returned run ID. Repeated and concurrent starts reuse a running ID; a closed ID is rejected.
+<code>run &lt;name&gt;</code> and <code>run all</code> consume queues without registering a CRON chain.</p>
+<p>Stopping the local process does not cancel, terminate, or delete the server-side CRON workflow.
+It can continue executing through other consumers; without consumers, work waits on its queue.
+Use Temporal Web or the Temporal client to cancel or terminate an identified chain when appropriate.
+To permanently stop one, also disable its registrars; history retention eventually expires closed-ID
+protection. Changing the ID creates a separate job. Changing the expression, type, or queue while
+reusing an active ID does not change the existing chain.</p>
+<h3 id="migrating-existing-uuid-cron-workflows">Migrating Existing UUID CRON Workflows</h3>
+<p>Earlier releases generated a fresh UUID on every <code>cron</code> start. The new stable default cannot discover
+which old UUID belongs to a logical job, and deployment alone leaves those chains active. No workflow
+is automatically cancelled or deleted.</p>
+<ol>
+<li>Stop all old CRON registration processes and prevent the old deployment from restarting while
+   migrating. Record the Temporal endpoint, namespace, workflow type, queue, and expected expression.</li>
+<li>In Temporal Web, filter the namespace with, for example,
+   <code>WorkflowType = 'DailyReportWorkflow' AND ExecutionStatus = 'Running'</code>.
+   Inspect <strong>all pages</strong> of matching executions. Check each execution's task queue and its first
+   <code>WorkflowExecutionStarted</code> history event's <code>cronSchedule</code>, together with business ownership.
+   A UUID-shaped ID alone does not prove that a workflow is a duplicate. Inventory workflow IDs
+   and current run IDs, and review closed history as well if a proposed ID may already exist.</li>
+<li>To retain a known active chain, set <code>cron_workflow_id</code> to its existing UUID on every new replica.
+   Cancel or terminate only the reviewed duplicate chains through Temporal Web or
+   <code>client.get_workflow_handle(workflow_id).cancel()</code> / <code>.terminate(reason=...)</code>. Cancellation is
+   cooperative: confirm each unwanted chain is closed and reconcile any in-flight business work.</li>
+<li>Alternatively, move to a new explicit stable ID (or the documented default): stop and verify closure
+   of <strong>all</strong> old chains for that job before registering the new ID. Coordinate in-flight work to
+   prevent overlapping business effects. Never delete unrelated workflows based on a broad query.</li>
+<li>Start the new deployment, compare its logged workflow ID with the inventory, and verify one
+   active chain for the logical job. Repeat registration to confirm the same chain is reused.</li>
+</ol>
+<p>Use the same deliberate procedure for schedule/type/queue changes. A closed ID is rejected while
+its history is retained; use a reviewed new versioned ID when intentionally creating a replacement.</p>
 <h3 id="development-best-practices">Development Best Practices</h3>
 <ol>
 <li><strong>Use separate terminals</strong>: Run each worker type in a separate terminal for easier debugging</li>
