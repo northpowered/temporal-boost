@@ -4,7 +4,7 @@
     {
       "label": "🧹 Lint & Fix",
       "type": "shell",
-      "command": "poetry run ruff check . --fix || poetry run ruff format .",
+      "command": "uv run ruff check . --fix || uv run ruff format .",
       "icon": {
         "color": "terminal.ansiYellow",
         "id": "wrench"
@@ -27,7 +27,7 @@
     {
       "label": "🔍 Mypy (Type Check)",
       "type": "shell",
-      "command": "poetry run mypy .",
+      "command": "uv run mypy .",
       "icon": {
         "color": "terminal.ansiBlue",
         "id": "search"
@@ -39,7 +39,7 @@
     {
       "label": "🧪 Pytest",
       "type": "shell",
-      "command": "poetry run pytest",
+      "command": "uv run pytest",
       "icon": {
         "color": "terminal.ansiMagenta",
         "id": "beaker"
@@ -51,18 +51,18 @@
     {
       "label": "📦 Install Dependencies",
       "type": "shell",
-      "command": "poetry install",
+      "command": "uv sync --locked",
       "icon": {
         "color": "terminal.ansiCyan",
         "id": "package"
       },
       "problemMatcher": [],
-      "detail": "Installs project dependencies via Poetry."
+      "detail": "Installs project dependencies via uv."
     },
     {
       "label": "🔒 Install Pre-commit Hooks",
       "type": "shell",
-      "command": "poetry run pre-commit install",
+      "command": "uv run pre-commit install",
       "icon": {
         "color": "terminal.ansiRed",
         "id": "lock"

@@ -253,13 +253,13 @@ FROM python:3.11-slim as builder
 WORKDIR /app
 
 # Install build dependencies
-RUN pip install --user poetry
+COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /usr/local/bin/uv
 
 # Copy dependency files
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN uv export --locked --no-default-groups --no-emit-project --no-hashes --output-file requirements.txt
 
 # Runtime stage
 FROM python:3.11-slim

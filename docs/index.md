@@ -46,10 +46,10 @@ Install the core package:
 pip install temporal-boost
 ```
 
-or with Poetry:
+or with uv:
 
 ```bash
-poetry add temporal-boost
+uv add temporal-boost
 ```
 
 ### Optional extras

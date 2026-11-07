@@ -30,7 +30,7 @@
 ```bash
 pip install temporal-boost
 # or
-poetry add temporal-boost
+uv add temporal-boost
 ```
 
 ### Optional Extras
