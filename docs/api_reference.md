@@ -182,12 +182,21 @@ run_all_workers() -> None
 stop() -> None
 ```
 
-`run_all_workers()` starts a thread for each registered worker and waits for completion or a stop request.
+`run_all_workers()` starts a thread for each registered worker and waits for a stop request or failure.
 In the main thread it temporarily handles SIGINT and SIGTERM. `stop()` requests shutdown from any thread,
 returns immediately, and is safe to repeat. Calls outside a run do not affect the next run.
 Once stopping, the coordinator calls each live worker's `request_stop()` and joins all threads within
-`shutdown_timeout`. It raises `TimeoutError` naming any remaining workers. Their daemon threads may
+`shutdown_timeout`. It raises `TimeoutError` naming any remaining workers if there was no earlier failure.
+Otherwise the timeout is logged and the earlier exception is re-raised. Their daemon threads may
 continue; restarting is rejected while they remain alive. Concurrent calls are rejected too.
+
+The first worker failure requests application shutdown and is re-raised with its original traceback
+after cleanup. Later failures are logged without replacing it. A normal `run()` return before
+application shutdown is a `RuntimeError`; finite workers must call `app.stop()` before returning or
+use an individual command. A normal return or `asyncio.CancelledError` / `concurrent.futures.CancelledError`
+during application shutdown is accepted. Cancellation before stop and all other exceptions (including
+`SystemExit` / `KeyboardInterrupt`) propagate as failures. The same ordering preserves startup and
+stop-request failures. Full CLI exit-code handling remains tracked in TB-008/TB-009.
 
 Workers must opt into managed stopping. Built-in adapter integration remains pending; see
 [Graceful Shutdown](running_application.md#graceful-shutdown) for guarantees and limitations.
@@ -223,6 +232,9 @@ the default returns `False`. Async cleanup belongs on the resource-owning loop.
 for asyncio workers. Call `super().__init__()`, set `name`, implement async `run_async()` and `shutdown()`,
 and inherit `run()` and `request_stop()`. The helper owns the loop, runs `shutdown()` once per run, and
 waits for `run_async()` to return. `shutdown()` must handle partial startup and unblock `run_async()`.
+If `run_async()` fails, its exception survives a subsequent cleanup failure, which is logged.
+When `run_async()` is cancelled and cleanup fails, the cleanup error propagates so normal cancellation
+cannot hide failed cleanup.
 See the [example](advanced_usage.md#custom-worker-shutdown).
 
 ## TemporalBoostWorker

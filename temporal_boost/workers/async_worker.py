@@ -1,8 +1,13 @@
 import asyncio
+import logging
 import threading
 from abc import abstractmethod
+from concurrent.futures import CancelledError as FutureCancelledError
 
 from temporal_boost.workers.base import BaseBoostWorker
+
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncBoostWorker(BaseBoostWorker):
@@ -56,7 +61,17 @@ class AsyncBoostWorker(BaseBoostWorker):
         try:
             try:
                 await asyncio.wait((run_task, stop_task), return_when=asyncio.FIRST_COMPLETED)
-            finally:
+                if run_task.done():
+                    run_task.result()
+            except BaseException as run_error:
+                try:
+                    await self.shutdown()
+                except BaseException:
+                    if isinstance(run_error, (asyncio.CancelledError, FutureCancelledError)):
+                        raise
+                    logger.exception("Cleanup failed for worker '%s'; preserving run error", self.name)
+                raise
+            else:
                 await self.shutdown()
             await run_task
         finally:

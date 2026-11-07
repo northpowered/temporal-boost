@@ -345,6 +345,11 @@ thread-safe `request_stop()`; keep those implementations and override `run_async
 Cleanup runs once per invocation, including when `run_async()` returns normally. It must tolerate
 partially initialized resources and make `run_async()` return. A stop requested before the loop
 starts is remembered. Successful sequential runs create fresh loops; concurrent runs are rejected.
+In `run all`, an exception or a normal return before application shutdown stops the other workers
+and propagates as a failure. Finite workers must call `app.stop()` before returning to finish normally,
+or be run individually. The first failure remains primary if peer cleanup fails or times out.
+For `AsyncBoostWorker`, an error in `run_async()` survives its own cleanup failure too; cleanup errors
+during cancellation propagate instead of being mistaken for normal cancellation.
 Calling async `shutdown()` directly is reserved for code already running on the owning loop.
 For another threading or loop model, implement `BaseBoostWorker.request_stop()` using that model's
 thread-safe signaling API. The [shutdown guide](running_application.md#graceful-shutdown) describes

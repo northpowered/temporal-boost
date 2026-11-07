@@ -189,7 +189,7 @@ runner вызывает `.run(arguments)` у импортированного о
 | Режим | Модель исполнения | Поведение при завершении |
 | --- | --- | --- |
 | `app.run()` → `run <name>` | Один блокирующий worker в текущем потоке | Управляется конкретным адаптером |
-| `app.run()` → `run all` | По одному daemon-потоку `worker-<name>`; coordinator проверяет stop раз в 50 мс | `request_stop()` живым worker, общий deadline для join; передача ошибок worker пока не реализована (TB-003) |
+| `app.run()` → `run all` | По одному daemon-потоку `worker-<name>`; coordinator проверяет stop раз в 50 мс | Первая ошибка останавливает остальные worker и пробрасывается после stop/join с общим deadline |
 | Внешний CLI, `--workers <= 1` | Импорт приложения и вызов его CLI в текущем процессе | `KeyboardInterrupt` перехватывается runner |
 | Внешний CLI, `--workers > 1` | Несколько `multiprocessing.Process`, каждый запускает тот же набор команд | Родитель делает `join()`; при `KeyboardInterrupt` — `terminate()`, ожидание до 5 секунд и при необходимости `kill()` |
 
@@ -206,9 +206,26 @@ runner вызывает `.run(arguments)` у импортированного о
 
 `BoostApp(shutdown_timeout=30.0)` задаёт общий бюджет stop/join в секундах: конечное число >= 0.
 Все живые worker получают неблокирующий `request_stop()` до ожидания потоков; coordinator не вызывает
-async `shutdown()` самостоятельно. При превышении бюджета поднимается `TimeoutError` с именами worker;
+async `shutdown()` самостоятельно. При превышении бюджета поднимается `TimeoutError` с именами worker
+(если ранее уже была ошибка, timeout логируется, а исходная ошибка остаётся основной);
 daemon-потоки могут продолжать работу до выхода процесса. Повторный запуск запрещён, пока они живы,
 как и одновременный вызов `run_all_workers()`.
+
+Обёртка каждого потока перехватывает `BaseException` из `worker.run()` и передаёт исходный объект
+с traceback через `SimpleQueue` координатору. Первая опубликованная ошибка инициирует stop;
+после ограниченного cleanup coordinator логирует накопленные ошибки и поднимает первую. Тот же FIFO
+сохраняет порядок ошибок запуска потоков, stop-запросов и timeout; последующий отказ не скрывает первый.
+Ошибки stop callback не прерывают рассылку stop остальным worker. При замеченном stop запуск следующих
+регистраций прекращается. Исключения worker не уходят в `threading.excepthook`.
+
+`run all` считает worker долгоживущими: возврат `run()` до запроса остановки приложения — `RuntimeError`
+с именем worker и остановкой остальных. Для finite worker миграция — `app.stop()` перед возвратом
+или отдельная команда `run <name>`. Возврат после stop — штатное завершение. `asyncio.CancelledError`
+и `concurrent.futures.CancelledError` штатны только после запроса stop; до него они пробрасываются.
+Остальные исключения, включая `SystemExit` / `KeyboardInterrupt`, фатальны и во время shutdown.
+Поведение внешнего CLI/кодов завершения остаётся в TB-008/TB-009: `BoostApp.run()` всё ещё перехватывает
+`SystemExit`, а supervisor не передаёт код дочернего процесса. Внутренняя команда Typer `run all`
+проверена через `CliRunner` на ненулевой код при обычной ошибке worker.
 
 `BaseBoostWorker.request_stop()` по умолчанию возвращает `False` с диагностикой coordinator о неподдержанном
 stop. Новая база `AsyncBoostWorker` реализует opt-in: подкласс вызывает `super().__init__()`, определяет
@@ -217,6 +234,10 @@ stop. Новая база `AsyncBoostWorker` реализует opt-in: подк
 `shutdown()` выполняется один раз в этом loop при stop или нормальном возврате/ошибке `run_async()`;
 он должен быть безопасен при частичном старте и обеспечить возврат `run_async()`. После него helper
 дожидается основной coroutine, закрывает loop; повторный последовательный запуск создаёт новый loop.
+Ошибка `run_async()` сохраняется, если его собственный `shutdown()` тоже выбросил исключение:
+cleanup error логируется. При отмене основной coroutine ошибка cleanup пробрасывается, чтобы штатная
+отмена при stop не скрыла отказ cleanup. Ошибки собственных cleanup путей существующих адаптеров
+остаются ответственностью адаптеров (в частности, TB-005 для Temporal).
 
 Существующие Temporal/FastStream/ASGI адаптеры пока не подключены к контракту managed stop
 (TB-005/TB-013/TB-014). Их собственный cleanup не гарантирует общего graceful shutdown; stop может
@@ -389,7 +410,10 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 CRON и длительно работающие циклы адаптеров также не проверены полноценно. Coordinator покрыт
 управляемыми worker: cleanup в собственном loop, повторный stop, общий timeout, повторный запуск,
 отказ запуска потока. SIGINT/SIGTERM и восстановление обработчиков проверяются отдельными subprocess
-в `tests/test_worker_coordinator.py`. Suite не доказывает graceful shutdown реальных адаптеров.
+в `tests/test_worker_coordinator.py`. TB-003 добавляет наблюдаемую ошибку при работающем peer,
+первенство исходной ошибки перед отказами cleanup и timeout, unexpected return, классификацию
+отмены до/после stop и внутренний CLI. Искусственные отказы проверяются с
+`-W error::pytest.PytestUnhandledThreadExceptionWarning`. Suite не доказывает graceful shutdown реальных адаптеров.
 
 В `tests/test_boost_app.py` два метода названы `test_run_with_args`: Python оставляет только второй.
 Тест `test_run_all_workers_with_workers` теперь проверяет нормальный возврат mock worker;

@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 from collections.abc import Iterator
+from concurrent.futures import CancelledError as FutureCancelledError
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
@@ -115,13 +116,20 @@ def test_stop_waits_for_cleanup_on_each_workers_own_loop() -> None:
 
 def test_stop_before_worker_loop_starts_is_remembered() -> None:
     worker = ControlledWorker()
-    worker.request_stop()
-    worker.request_stop()
     app = BoostApp(logger_config=None)
     app.add_async_runtime(worker.name, worker)
 
-    with running_app(app) as (thread, errors):
-        thread.join(WAIT_TIMEOUT)
+    original_run = worker.run
+
+    def run() -> None:
+        worker.request_stop()
+        worker.request_stop()
+        app.stop()
+        original_run()
+
+    with patch.object(worker, "run", side_effect=run):
+        with running_app(app) as (thread, errors):
+            thread.join(WAIT_TIMEOUT)
 
     assert errors == []
     assert worker.returned.is_set()
@@ -265,6 +273,198 @@ def test_unsupported_worker_is_reported_and_wait_is_bounded(caplog: pytest.LogCa
         if worker.run_thread is not None:
             worker.run_thread.join(WAIT_TIMEOUT)
             assert not worker.run_thread.is_alive()
+
+
+class ExitingWorker(BaseBoostWorker):
+    name = "exiting"
+
+    def __init__(self, peer_ready: threading.Event, error: BaseException | None = None) -> None:
+        self.peer_ready = peer_ready
+        self.error = error
+
+    def run(self) -> None:
+        assert self.peer_ready.wait(WAIT_TIMEOUT)
+        if self.error is not None:
+            raise self.error
+
+    async def shutdown(self) -> None:
+        pytest.fail("Coordinator must use request_stop(), not async shutdown()")
+
+
+def test_unexpected_return_is_fatal_and_stops_peer() -> None:
+    app = BoostApp(logger_config=None)
+    peer = ControlledWorker()
+    exiting = ExitingWorker(peer.ready)
+    app.add_async_runtime(exiting.name, exiting)
+    app.add_async_runtime(peer.name, peer)
+
+    with running_app(app) as (thread, errors):
+        thread.join(WAIT_TIMEOUT)
+
+    assert len(errors) == 1
+    assert isinstance(errors[0], RuntimeError)
+    assert "exiting" in str(errors[0])
+    assert "returned before shutdown" in str(errors[0])
+    assert peer.returned.is_set()
+
+
+def test_first_failure_survives_peer_cleanup_failure(caplog: pytest.LogCaptureFixture) -> None:
+    primary = RuntimeError("first failure")
+    secondary = ValueError("peer cleanup failed")
+
+    class CleanupFailingWorker(ControlledWorker):
+        async def shutdown(self) -> None:
+            await super().shutdown()
+            raise secondary
+
+    app = BoostApp(logger_config=None)
+    peer = CleanupFailingWorker()
+    exiting = ExitingWorker(peer.ready, primary)
+    app.add_async_runtime(exiting.name, exiting)
+    app.add_async_runtime(peer.name, peer)
+
+    with running_app(app) as (thread, errors):
+        thread.join(WAIT_TIMEOUT)
+
+    assert errors == [primary]
+    assert errors[0] is primary
+    assert peer.cleanup_started.is_set()
+    assert "peer cleanup failed" in caplog.text
+
+
+def test_first_failure_survives_shutdown_timeout(caplog: pytest.LogCaptureFixture) -> None:
+    app = BoostApp(logger_config=None, shutdown_timeout=0.01)
+    primary = RuntimeError("first failure")
+    peer = ControlledWorker()
+    peer.cleanup_release.clear()
+    exiting = ExitingWorker(peer.ready, primary)
+    app.add_async_runtime(exiting.name, exiting)
+    app.add_async_runtime(peer.name, peer)
+
+    with running_app(app) as (thread, errors):
+        thread.join(WAIT_TIMEOUT)
+        assert not thread.is_alive()
+        assert errors == [primary]
+        assert errors[0] is primary
+        assert peer.cleanup_started.is_set()
+        assert "Workers did not stop within" in caplog.text
+        assert peer.name in caplog.text
+        with pytest.raises(RuntimeError, match="previous run"):
+            app.run_all_workers()
+
+
+@pytest.mark.parametrize("cancellation", [asyncio.CancelledError(), FutureCancelledError()])
+def test_cancellation_after_stop_is_normal_shutdown(cancellation: BaseException) -> None:
+    app = BoostApp(logger_config=None)
+    worker = ControlledWorker()
+    app.add_async_runtime(worker.name, worker)
+    original_run = worker.run
+
+    def run() -> None:
+        original_run()
+        raise cancellation
+
+    with patch.object(worker, "run", side_effect=run):
+        with running_app(app) as (thread, errors):
+            assert worker.ready.wait(WAIT_TIMEOUT)
+            app.stop()
+            thread.join(WAIT_TIMEOUT)
+
+    assert errors == []
+    assert worker.returned.is_set()
+
+
+@pytest.mark.parametrize("failure", [RuntimeError("shutdown failed"), KeyboardInterrupt(), SystemExit(0)])
+def test_failure_after_stop_is_not_suppressed(failure: BaseException) -> None:
+    app = BoostApp(logger_config=None)
+    worker = ControlledWorker()
+    app.add_async_runtime(worker.name, worker)
+    original_run = worker.run
+
+    def run() -> None:
+        original_run()
+        raise failure
+
+    with patch.object(worker, "run", side_effect=run):
+        with running_app(app) as (thread, errors):
+            assert worker.ready.wait(WAIT_TIMEOUT)
+            app.stop()
+            thread.join(WAIT_TIMEOUT)
+
+    assert errors == [failure]
+    assert errors[0] is failure
+
+
+def test_async_run_error_survives_own_cleanup_failure(caplog: pytest.LogCaptureFixture) -> None:
+    primary = RuntimeError("run failed")
+    cleanup_called = threading.Event()
+
+    class BrokenWorker(AsyncBoostWorker):
+        name = "broken"
+
+        async def run_async(self) -> None:
+            raise primary
+
+        async def shutdown(self) -> None:
+            cleanup_called.set()
+            raise ValueError("own cleanup failed")
+
+    app = BoostApp(logger_config=None)
+    worker = BrokenWorker()
+    app.add_async_runtime(worker.name, worker)
+    with pytest.raises(RuntimeError, match="run failed") as raised:
+        app.run_all_workers()
+
+    assert raised.value is primary
+    assert cleanup_called.is_set()
+    assert "own cleanup failed" in caplog.text
+
+
+@pytest.mark.parametrize("cancellation", [asyncio.CancelledError(), FutureCancelledError()])
+def test_async_cancellation_does_not_hide_cleanup_failure(cancellation: BaseException) -> None:
+    app = BoostApp(logger_config=None)
+    cleanup_error = RuntimeError("cleanup failed during cancellation")
+
+    class CancellingWorker(AsyncBoostWorker):
+        name = "cancelling"
+
+        async def run_async(self) -> None:
+            app.stop()
+            raise cancellation
+
+        async def shutdown(self) -> None:
+            raise cleanup_error
+
+    worker = CancellingWorker()
+    app.add_async_runtime(worker.name, worker)
+    with pytest.raises(RuntimeError, match="cleanup failed during cancellation") as raised:
+        app.run_all_workers()
+
+    assert raised.value is cleanup_error
+
+
+@pytest.mark.parametrize("failure", [RuntimeError("stop request failed"), SystemExit(1)])
+def test_stop_request_failure_does_not_skip_remaining_workers(failure: BaseException) -> None:
+    class StopFailingWorker(ControlledWorker):
+        def request_stop(self) -> bool:
+            super().request_stop()
+            raise failure
+
+    app = BoostApp(logger_config=None)
+    first, second = StopFailingWorker("first"), ControlledWorker("second")
+    app.add_async_runtime(first.name, first)
+    app.add_async_runtime(second.name, second)
+
+    with running_app(app) as (thread, errors):
+        assert first.ready.wait(WAIT_TIMEOUT)
+        assert second.ready.wait(WAIT_TIMEOUT)
+        app.stop()
+        thread.join(WAIT_TIMEOUT)
+
+    assert errors == [failure]
+    assert errors[0] is failure
+    assert first.returned.is_set()
+    assert second.returned.is_set()
 
 
 @pytest.mark.parametrize("signum", [signal.SIGINT, signal.SIGTERM])
