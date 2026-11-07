@@ -1493,7 +1493,8 @@ grace period (30 seconds by default). Previously this setting was ignored and th
 zero unless a value was passed explicitly through worker kwargs.</p>
 <p>The application coordinator has a separate budget, <code>BoostApp(shutdown_timeout=30.0)</code>, for joining all
 worker threads; external process supervisors have their own deadlines. This setting changes neither
-budget and does not initiate shutdown. The Temporal adapter's managed stop integration is still pending.
+budget and does not initiate shutdown. The Temporal adapter participates in managed stopping through
+<code>request_stop()</code>; its SDK cleanup still depends on activities respecting cancellation.
 See <a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> for current guarantees and limitations.</p>
 <h2 id="prometheus-metrics-configuration">Prometheus Metrics Configuration</h2>
 <p>These settings control Prometheus metrics collection and export.</p>

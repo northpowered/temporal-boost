@@ -1660,19 +1660,29 @@ The default returns <code>False</code>, which produces a warning. The coordinato
 <code>shutdown()</code> in another event loop. Async workers can inherit <code>AsyncBoostWorker</code>, which owns
 one loop per run, schedules stop requests onto it, calls <code>shutdown()</code> once on that loop, and
 waits for <code>run_async()</code> to return. See the <a href="../advanced_usage/#custom-worker-shutdown">custom worker example</a>.</p>
-<p><strong>Current scope:</strong> the Temporal, FastStream, Uvicorn, Hypercorn, and Granian adapters do not yet
-implement this managed stop contract. Their existing cleanup paths do not guarantee application-wide
-graceful shutdown; a stop may reach the coordinator's timeout. Adapter integration is tracked separately
-in TB-005, TB-013, and TB-014. Individual <code>run &lt;name&gt;</code> and <code>cron &lt;name&gt;</code> commands use adapter lifecycle
-directly, and the external CLI's multiple-process supervisor has its own shutdown behavior (TB-009).</p>
+<p><code>TemporalBoostWorker</code> implements managed stopping for both normal execution and its local CRON runner.
+<code>request_stop()</code> is safe from another thread and during startup. <code>run all</code> uses it to stop Temporal
+workers alongside custom managed workers. Pending connection or CRON registration work is cancelled,
+the local CRON wait is completed, and a running SDK worker is stopped and joined on its owning loop.
+Startup failures preserve their original exception even if cleanup also fails. Sequential runs build
+fresh SDK worker/client/runtime objects; concurrent normal and CRON runs on one adapter are rejected.</p>
+<p>Async <code>worker.shutdown()</code> is safe before/after a run and repeatable on the owning loop. It requests stop
+and waits for lifecycle completion; cancelling one shutdown waiter does not cancel cleanup. Calling it
+from another active loop raises <code>RuntimeError</code>: use <code>worker.request_stop()</code> there. Worker callbacks
+should also use the non-blocking request rather than awaiting their own shutdown.</p>
+<p>FastStream, Uvicorn, Hypercorn, and Granian do not yet implement this managed stop contract (TB-013/TB-014).
+Their existing cleanup paths may reach the coordinator's timeout. Individual <code>run &lt;name&gt;</code> and
+<code>cron &lt;name&gt;</code> commands use adapter lifecycle directly; the application coordinator's signal handlers
+apply to <code>run all</code>. The external CLI's multiple-process supervisor has its own behavior (TB-009).
+Stopping a local CRON runner does not cancel or delete the server-side CRON workflow (TB-006).</p>
 <p>The application budget is independent of the SDK's activity grace period. The worker builder now passes
 <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> (integer seconds, default 30) to the SDK as <code>graceful_shutdown_timeout</code>.
 An explicit <code>datetime.timedelta</code> passed to <code>app.add_worker(..., graceful_shutdown_timeout=...)</code> overrides
 the environment, including zero; omission or <code>None</code> inherits it. Negative durations are rejected.</p>
 <p>Once SDK shutdown starts, activities have that grace period before the SDK requests cancellation.
 Zero skips the grace period. This is not a deadline for the whole SDK shutdown: it still waits for
-activities, which may ignore cancellation. The option does not initiate shutdown or connect the Temporal
-adapter to the application's managed stop contract. It does not configure <code>BoostApp.shutdown_timeout</code>
+activities, which may ignore cancellation. The option does not itself initiate shutdown.
+It does not configure <code>BoostApp.shutdown_timeout</code>
 or a process supervisor's deadline. Allow time for the SDK grace period plus cancellation and resource
 cleanup within those budgets when using a managed adapter. See the
 <a href="../configuration/#temporal_graceful_shutdown_timeout">configuration guide</a> for an override example and migration details.</p>
