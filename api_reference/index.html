@@ -1190,6 +1190,10 @@
 <li><code>cron_runner</code> (MethodAsyncNoParam | None): Workflow run method for CRON workers.</li>
 <li><code>**worker_kwargs</code>: Additional worker configuration options.</li>
 </ul>
+<p><code>graceful_shutdown_timeout=timedelta(...)</code> in <code>worker_kwargs</code> sets the SDK activity grace period.
+Omission or <code>None</code> inherits <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> (default 30 seconds), zero is preserved,
+and negative durations raise <code>ValueError</code> at registration. This is independent of <code>BoostApp.shutdown_timeout</code>;
+see <a href="../configuration/#temporal_graceful_shutdown_timeout">configuration</a>.</p>
 <p><strong>Returns:</strong></p>
 <ul>
 <li><code>TemporalBoostWorker</code>: The created worker instance.</li>
@@ -1441,8 +1445,9 @@ Passing <code>enabled=False</code> removes the automatic selection while preserv
 </span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>    <span class="n">max_concurrent_workflow_task_polls</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>    <span class="n">nonsticky_to_sticky_poll_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>    <span class="n">max_concurrent_activity_task_polls</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>    <span class="n">graceful_shutdown_timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <h3 id="temporalworkerbuilderbuild"><code>TemporalWorkerBuilder.build()</code></h3>
 <p>Build and return Temporal worker.</p>
@@ -1452,6 +1457,15 @@ Passing <code>enabled=False</code> removes the automatic selection while preserv
 <ul>
 <li><code>Worker</code>: Temporal worker instance.</li>
 </ul>
+<p>The builder passes <code>graceful_shutdown_timeout</code> directly to the SDK <code>Worker</code>. An explicit non-negative
+<code>datetime.timedelta</code>, including zero, overrides the environment; omission or <code>None</code> uses
+<code>config.GRACEFUL_SHUTDOWN_TIMEOUT</code> (30 seconds by default). A selected negative value raises <code>ValueError</code>
+when constructing the builder. <code>BoostApp.add_worker()</code> and <code>TemporalBoostWorker</code> forward this option
+through their worker kwargs without duplicating it.</p>
+<p>This grace period begins when SDK shutdown is requested and controls how long activities may finish
+before cancellation is requested. It does not cap total SDK shutdown time, initiate application stop,
+or change application/process shutdown budgets. Workers omitting this option now receive the framework
+default instead of the SDK's zero grace period.</p>
 <h2 id="temporalruntimebuilder">TemporalRuntimeBuilder</h2>
 <p>Builder for Temporal runtime configuration.</p>
 <h3 id="temporalruntimebuilder__init__"><code>TemporalRuntimeBuilder.__init__()</code></h3>
@@ -1500,7 +1514,7 @@ Passing <code>enabled=False</code> removes the automatic selection while preserv
 <li><code>MAX_WORKFLOW_TASK_POLLS</code>: Max workflow task polls</li>
 <li><code>MAX_ACTIVITY_TASK_POLLS</code>: Max activity task polls</li>
 <li><code>NONSTICKY_STICKY_RATIO</code>: Non-sticky to sticky ratio</li>
-<li><code>GRACEFUL_SHUTDOWN_TIMEOUT</code>: Graceful shutdown timeout</li>
+<li><code>GRACEFUL_SHUTDOWN_TIMEOUT</code>: SDK activity grace period (<code>timedelta</code>, default 30 seconds), independent of application shutdown budget</li>
 <li><code>PROMETHEUS_BIND_ADDRESS</code>: Prometheus bind address</li>
 <li><code>PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code>: Counters total suffix flag</li>
 <li><code>PROMETHEUS_UNIT_SUFFIX</code>: Unit suffix flag</li>

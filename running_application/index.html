@@ -1665,10 +1665,17 @@ implement this managed stop contract. Their existing cleanup paths do not guaran
 graceful shutdown; a stop may reach the coordinator's timeout. Adapter integration is tracked separately
 in TB-005, TB-013, and TB-014. Individual <code>run &lt;name&gt;</code> and <code>cron &lt;name&gt;</code> commands use adapter lifecycle
 directly, and the external CLI's multiple-process supervisor has its own shutdown behavior (TB-009).</p>
-<p>The application budget is independent of the SDK's activity grace period.
-<code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> is currently read into configuration but is not wired to the
-Temporal SDK worker (TB-004); it does not configure <code>BoostApp.shutdown_timeout</code> or guarantee completion
-of activities or connection cleanup.</p>
+<p>The application budget is independent of the SDK's activity grace period. The worker builder now passes
+<code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> (integer seconds, default 30) to the SDK as <code>graceful_shutdown_timeout</code>.
+An explicit <code>datetime.timedelta</code> passed to <code>app.add_worker(..., graceful_shutdown_timeout=...)</code> overrides
+the environment, including zero; omission or <code>None</code> inherits it. Negative durations are rejected.</p>
+<p>Once SDK shutdown starts, activities have that grace period before the SDK requests cancellation.
+Zero skips the grace period. This is not a deadline for the whole SDK shutdown: it still waits for
+activities, which may ignore cancellation. The option does not initiate shutdown or connect the Temporal
+adapter to the application's managed stop contract. It does not configure <code>BoostApp.shutdown_timeout</code>
+or a process supervisor's deadline. Allow time for the SDK grace period plus cancellation and resource
+cleanup within those budgets when using a managed adapter. See the
+<a href="../configuration/#temporal_graceful_shutdown_timeout">configuration guide</a> for an override example and migration details.</p>
 <h2 id="monitoring-and-observability">Monitoring and Observability</h2>
 <h3 id="prometheus-metrics">Prometheus Metrics</h3>
 <p>Enable Prometheus metrics:</p>
