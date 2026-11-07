@@ -310,28 +310,45 @@ worker2.configure_temporal_client(
 ### Custom Worker Shutdown
 
 ```python
-import signal
-import sys
+import asyncio
 
-app = BoostApp("lifecycle-example")
+from temporal_boost import AsyncBoostWorker, BoostApp
 
-def signal_handler(sig, frame):
-    logger.info("Received shutdown signal")
-    # Custom cleanup logic here
-    sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+class ServiceWorker(AsyncBoostWorker):
+    def __init__(self) -> None:
+        super().__init__()
+        self.name = "service"
+        self.finished: asyncio.Event | None = None
 
-worker = app.add_worker("lifecycle_worker", "lifecycle_queue", activities=[...])
+    async def run_async(self) -> None:
+        # Create loop-bound resources here.
+        self.finished = asyncio.Event()
+        await self.finished.wait()
 
-# Custom shutdown hook
-async def custom_shutdown():
-    logger.info("Performing custom cleanup")
-    # Your cleanup logic
+    async def shutdown(self) -> None:
+        # Close resources here, on the loop that created them.
+        # This must also be safe during partial startup.
+        if self.finished is not None:
+            self.finished.set()
 
-# Note: Temporal-boost handles graceful shutdown automatically
+
+app = BoostApp("lifecycle-example", shutdown_timeout=30.0)
+app.add_async_runtime("service", ServiceWorker())
+
+if __name__ == "__main__":
+    app.run()
 ```
+
+Run this example with `python main.py run all`. `AsyncBoostWorker` implements `run()` and the
+thread-safe `request_stop()`; keep those implementations and override `run_async()` and `shutdown()`.
+Cleanup runs once per invocation, including when `run_async()` returns normally. It must tolerate
+partially initialized resources and make `run_async()` return. A stop requested before the loop
+starts is remembered. Successful sequential runs create fresh loops; concurrent runs are rejected.
+Calling async `shutdown()` directly is reserved for code already running on the owning loop.
+For another threading or loop model, implement `BaseBoostWorker.request_stop()` using that model's
+thread-safe signaling API. The [shutdown guide](running_application.md#graceful-shutdown) describes
+deadlines and current adapter limitations.
 
 ## Error Handling Patterns
 

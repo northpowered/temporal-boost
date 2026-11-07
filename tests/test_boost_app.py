@@ -414,8 +414,6 @@ class TestBoostApp:
         )
 
         with patch.object(worker, "run") as mock_run:
-            mock_run.side_effect = KeyboardInterrupt()
-
             app.run_all_workers()
 
             mock_run.assert_called_once()

@@ -19,6 +19,7 @@ BoostApp(
     debug_mode: bool = False,
     use_pydantic: bool | None = None,
     logger_config: dict[str, Any] | str | Path | None = DEFAULT_LOGGING_CONFIG,
+    shutdown_timeout: float = 30.0,
 ) -> None
 ```
 
@@ -31,6 +32,8 @@ BoostApp(
 - `use_pydantic` (bool | None): `None` inherits `TEMPORAL_USE_PYDANTIC_DATA_CONVERTER`; `True` enables
   Pydantic and `False` disables automatic Pydantic selection. An explicit client `data_converter` takes priority.
 - `logger_config` (dict | str | Path | None): Logging configuration. Can be a dict, path to JSON/YAML file, or path to logging config file.
+- `shutdown_timeout` (float): Shared timeout in seconds for cooperative shutdown and joining worker threads.
+  Must be finite and non-negative. Independent of Temporal SDK configuration.
 
 **Example:**
 
@@ -172,6 +175,32 @@ if __name__ == "__main__":
     app.run()
 ```
 
+### `BoostApp.run_all_workers()` and `BoostApp.stop()`
+
+```python
+run_all_workers() -> None
+stop() -> None
+```
+
+`run_all_workers()` starts a thread for each registered worker and waits for completion or a stop request.
+In the main thread it temporarily handles SIGINT and SIGTERM. `stop()` requests shutdown from any thread,
+returns immediately, and is safe to repeat. Calls outside a run do not affect the next run.
+Once stopping, the coordinator calls each live worker's `request_stop()` and joins all threads within
+`shutdown_timeout`. It raises `TimeoutError` naming any remaining workers. Their daemon threads may
+continue; restarting is rejected while they remain alive. Concurrent calls are rejected too.
+
+Workers must opt into managed stopping. Built-in adapter integration remains pending; see
+[Graceful Shutdown](running_application.md#graceful-shutdown) for guarantees and limitations.
+
+### `BoostApp.add_async_runtime()`
+
+```python
+add_async_runtime(worker_name: str, boost_worker: BaseBoostWorker) -> None
+```
+
+Register a custom worker's `run()` under a CLI command and include it in `run all`.
+Set the worker's `name` to `worker_name` before registration.
+
 ### `BoostApp.get_registered_workers()`
 
 Get list of all registered workers.
@@ -183,6 +212,18 @@ get_registered_workers() -> list[BaseBoostWorker]
 **Returns:**
 
 - `list[BaseBoostWorker]`: List of registered workers.
+
+## Worker Stop Contract
+
+`BaseBoostWorker.request_stop() -> bool` is a non-blocking, thread-safe stop request.
+Implementations must tolerate repeats and requests during startup. Return `True` when supported;
+the default returns `False`. Async cleanup belongs on the resource-owning loop.
+
+`AsyncBoostWorker` (exported from `temporal_boost` and `temporal_boost.workers`) provides this contract
+for asyncio workers. Call `super().__init__()`, set `name`, implement async `run_async()` and `shutdown()`,
+and inherit `run()` and `request_stop()`. The helper owns the loop, runs `shutdown()` once per run, and
+waits for `run_async()` to return. `shutdown()` must handle partial startup and unblock `run_async()`.
+See the [example](advanced_usage.md#custom-worker-shutdown).
 
 ## TemporalBoostWorker
 

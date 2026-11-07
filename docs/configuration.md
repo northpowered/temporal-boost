@@ -192,13 +192,15 @@ Sticky workflows improve performance by keeping workflow state in memory.
 
 **Type**: Integer (seconds)  
 **Default**: `30`  
-**Description**: Timeout for graceful shutdown
+**Description**: Intended Temporal SDK activity grace period; currently read but not passed to the SDK worker (TB-004)
 
 ```bash
 export TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT=60
 ```
 
-Workers will wait this long for running activities to complete before shutting down.
+This setting currently does not affect worker shutdown. The application coordinator has a separate
+budget, `BoostApp(shutdown_timeout=30.0)`, for joining all worker threads. See
+[Graceful Shutdown](running_application.md#graceful-shutdown) for the managed stop contract and adapter limitations.
 
 ## Prometheus Metrics Configuration
 

@@ -16,7 +16,8 @@ Temporal-boost — небольшой слой организации прило
 | Понятие | Значение в этом проекте |
 | --- | --- |
 | `BoostApp` | Контейнер регистраций и команд Typer; точка сборки пользовательского приложения |
-| Boost worker | Объект с синхронным блокирующим `run()` и асинхронным `shutdown()` |
+| Boost worker | Объект с блокирующим `run()`, асинхронным `shutdown()` и потокобезопасным `request_stop()` (по умолчанию не поддержан) |
+| `AsyncBoostWorker` | Опциональная база: один asyncio loop на запуск, cleanup в том же loop, stop из любого потока |
 | `TemporalBoostWorker` | Адаптер жизненного цикла SDK worker, client и runtime |
 | `TemporalWorkerBuilder` | Фабрика непосредственно `temporalio.worker.Worker` |
 | `worker_name` | Локальное имя регистрации и CLI-команды |
@@ -32,10 +33,12 @@ activities, signals и queries через `temporalio`. ASGI и FastStream от�
 
 | Путь | Ответственность |
 | --- | --- |
-| [temporal_boost/__init__.py](temporal_boost/__init__.py) | Корневой API: `BoostApp`, `ASGIWorkerType`, `BaseBoostWorker`, `BaseAsgiWorker` |
+| [temporal_boost/__init__.py](temporal_boost/__init__.py) | Корневой API: `BoostApp`, `ASGIWorkerType`, `BaseBoostWorker`, `BaseAsgiWorker`, `AsyncBoostWorker` |
 | [temporal_boost/boost_app.py](temporal_boost/boost_app.py) | Регистрация воркеров, логирование, дерево Typer, запуск всех воркеров в потоках |
 | [temporal_boost/common.py](temporal_boost/common.py) | Стандартный словарь Python logging |
 | [temporal_boost/workers/base.py](temporal_boost/workers/base.py) | Абстрактный контракт воркера и общие параметры ASGI |
+| [temporal_boost/worker_coordinator.py](temporal_boost/worker_coordinator.py) | Запуск потоков, SIGINT/SIGTERM, кооперативная остановка и общий deadline |
+| [temporal_boost/workers/async_worker.py](temporal_boost/workers/async_worker.py) | Владение asyncio loop, планирование stop и однократного cleanup в нём |
 | [temporal_boost/workers/temporal.py](temporal_boost/workers/temporal.py) | Сборка и запуск Temporal worker; отдельный режим CRON |
 | [temporal_boost/temporal/config.py](temporal_boost/temporal/config.py) | Чтение env и значения по умолчанию |
 | [temporal_boost/temporal/client.py](temporal_boost/temporal/client.py) | `TemporalClientBuilder`: параметры подключения и data converter |
@@ -186,7 +189,7 @@ runner вызывает `.run(arguments)` у импортированного о
 | Режим | Модель исполнения | Поведение при завершении |
 | --- | --- | --- |
 | `app.run()` → `run <name>` | Один блокирующий worker в текущем потоке | Управляется конкретным адаптером |
-| `app.run()` → `run all` | По одному daemon-потоку `worker-<name>`; главный поток проверяет `is_alive()` раз в секунду | Централизованного вызова `shutdown()` и передачи ошибок из потоков нет |
+| `app.run()` → `run all` | По одному daemon-потоку `worker-<name>`; coordinator проверяет stop раз в 50 мс | `request_stop()` живым worker, общий deadline для join; передача ошибок worker пока не реализована (TB-003) |
 | Внешний CLI, `--workers <= 1` | Импорт приложения и вызов его CLI в текущем процессе | `KeyboardInterrupt` перехватывается runner |
 | Внешний CLI, `--workers > 1` | Несколько `multiprocessing.Process`, каждый запускает тот же набор команд | Родитель делает `join()`; при `KeyboardInterrupt` — `terminate()`, ожидание до 5 секунд и при необходимости `kill()` |
 
@@ -195,9 +198,30 @@ runner вызывает `.run(arguments)` у импортированного о
 В process runner нет перезапуска упавших процессов и передачи их ненулевого exit code родителю:
 код завершения только записывается в лог.
 
-Общего координатора graceful shutdown или установленных фреймворком обработчиков SIGTERM нет.
-У отдельных адаптеров есть собственные блоки cleanup; их наличие не гарантирует согласованного завершения
-приложения с несколькими потоками или процессами.
+`run_all_workers()` временно устанавливает обработчики SIGINT/SIGTERM только при запуске в главном потоке
+и восстанавливает прежние при выходе, включая ошибки. Обработчики и явный `app.stop()` только отмечают
+запрос; coordinator запускает единый путь остановки. Повторный stop не сокращает и не продлевает deadline.
+Из другого потока сигналы не настраиваются: вызывающий код использует `app.stop()` и ожидает возврата запуска.
+До/после запуска `stop()` не влияет на следующий запуск; регистрации завершаются до запуска coordinator.
+
+`BoostApp(shutdown_timeout=30.0)` задаёт общий бюджет stop/join в секундах: конечное число >= 0.
+Все живые worker получают неблокирующий `request_stop()` до ожидания потоков; coordinator не вызывает
+async `shutdown()` самостоятельно. При превышении бюджета поднимается `TimeoutError` с именами worker;
+daemon-потоки могут продолжать работу до выхода процесса. Повторный запуск запрещён, пока они живы,
+как и одновременный вызов `run_all_workers()`.
+
+`BaseBoostWorker.request_stop()` по умолчанию возвращает `False` с диагностикой coordinator о неподдержанном
+stop. Новая база `AsyncBoostWorker` реализует opt-in: подкласс вызывает `super().__init__()`, определяет
+`name`, async `run_async()` и `shutdown()`. `run()` владеет loop через `asyncio.run()`, а потокобезопасный
+`request_stop()` запоминает ранний запрос и использует `call_soon_threadsafe()` для уведомления loop.
+`shutdown()` выполняется один раз в этом loop при stop или нормальном возврате/ошибке `run_async()`;
+он должен быть безопасен при частичном старте и обеспечить возврат `run_async()`. После него helper
+дожидается основной coroutine, закрывает loop; повторный последовательный запуск создаёт новый loop.
+
+Существующие Temporal/FastStream/ASGI адаптеры пока не подключены к контракту managed stop
+(TB-005/TB-013/TB-014). Их собственный cleanup не гарантирует общего graceful shutdown; stop может
+завершиться timeout. Отдельные CLI-команды и внешний supervisor процессов остаются вне этого coordinator.
+Бюджет приложения не связан с `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`: подключение grace period SDK — TB-004.
 
 ## 6. Конфигурация: фактическая семантика
 
@@ -319,7 +343,7 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 | --- | --- |
 | Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
-| Автоматический graceful shutdown с таймаутом из env в [running_application.md](docs/running_application.md) | Нет общего shutdown coordinator; `GRACEFUL_SHUTDOWN_TIMEOUT` не подключён к builder |
+| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает opt-in worker и отдельный `BoostApp.shutdown_timeout`; адаптеры ещё не подключены, `GRACEFUL_SHUTDOWN_TIMEOUT` не передаётся SDK |
 | Автоматически общий runtime в [advanced_usage.md](docs/advanced_usage.md) | Каждый `TemporalBoostWorker` создаёт свой runtime |
 | Пример custom runtime в [advanced_usage.md](docs/advanced_usage.md) | Построенный отдельно runtime не влияет на client без `client_builder.set_runtime(runtime)` до `build()` |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
@@ -343,7 +367,8 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 
 При добавлении нового ASGI backend реализуйте `BaseAsgiWorker`, зарегистрируйте класс с проверкой
 зависимостей, обеспечьте импорт модуля для выполнения декоратора, добавьте enum/extra при необходимости.
-При добавлении иного worker реализуйте оба метода `BaseBoostWorker` и заранее определите владение event loop
+При добавлении иного worker реализуйте `run()` / `shutdown()` и неблокирующий потокобезопасный
+`request_stop()`; для asyncio можно наследовать `AsyncBoostWorker`. Определите владение event loop
 и ресурсами. Синхронный `run()` может выполняться в daemon-потоке.
 
 Для новой env-настройки проследите полный путь: `config.py` → аргумент builder → вызов SDK → путь настройки
@@ -361,12 +386,14 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 
 Покрыты регистрация, env parsers, builders, часть свойств и настройки lifecycle, ASGI registry и logging.
 Отдельных тестов внешнего CLI, процессов, FastStream и реального запуска ASGI-адаптеров нет.
-CRON и длительно работающие циклы также не проверены полноценно. Зелёная suite не доказывает работу
-интеграций или корректное завершение многопоточного приложения.
+CRON и длительно работающие циклы адаптеров также не проверены полноценно. Coordinator покрыт
+управляемыми worker: cleanup в собственном loop, повторный stop, общий timeout, повторный запуск,
+отказ запуска потока. SIGINT/SIGTERM и восстановление обработчиков проверяются отдельными subprocess
+в `tests/test_worker_coordinator.py`. Suite не доказывает graceful shutdown реальных адаптеров.
 
 В `tests/test_boost_app.py` два метода названы `test_run_with_args`: Python оставляет только второй.
-Тест `test_run_all_workers_with_workers` намеренно поднимает `KeyboardInterrupt` в потоке и вызывает
-`PytestUnhandledThreadExceptionWarning`; это существующее предупреждение suite.
+Тест `test_run_all_workers_with_workers` теперь проверяет нормальный возврат mock worker;
+искусственный `KeyboardInterrupt` и соответствующее `PytestUnhandledThreadExceptionWarning` удалены в TB-002.
 
 Рабочие команды из корня репозитория:
 

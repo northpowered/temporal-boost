@@ -1,10 +1,10 @@
 import json
 import logging
 import logging.config
+import math
 import os
 import sys
 import threading
-import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, ClassVar
@@ -16,6 +16,7 @@ from temporalio.types import MethodAsyncNoParam
 from temporalio.worker._interceptor import Interceptor
 
 from temporal_boost.common import DEFAULT_LOGGING_CONFIG
+from temporal_boost.worker_coordinator import WorkerCoordinator
 from temporal_boost.workers import (
     ASGIWorkerType,
     BaseAsgiWorker,
@@ -41,7 +42,13 @@ class BoostApp:
         debug_mode: bool = False,
         use_pydantic: bool | None = None,
         logger_config: dict[str, Any] | str | Path | None = DEFAULT_LOGGING_CONFIG,
+        shutdown_timeout: float = 30.0,
     ) -> None:
+        if not math.isfinite(shutdown_timeout) or shutdown_timeout < 0:
+            raise ValueError("shutdown_timeout must be a finite, non-negative number of seconds")
+        self._shutdown_timeout = shutdown_timeout
+        self._worker_coordinator: WorkerCoordinator | None = None
+        self._run_lock = threading.Lock()
         self._name: str = name or "temporal_generic_service"
 
         self._global_temporal_endpoint = temporal_endpoint
@@ -177,7 +184,7 @@ class BoostApp:
     def add_exec_method_sync(self, name: str, callback: Callable[..., Any]) -> None:
         self._exec_typer.command(name=name)(callback)
 
-    def add_async_runtime(self, worker_name: str, boost_worker: TemporalBoostWorker) -> None:
+    def add_async_runtime(self, worker_name: str, boost_worker: BaseBoostWorker) -> None:
         if worker_name in self._RESERVED_NAMES:
             raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
 
@@ -198,19 +205,25 @@ class BoostApp:
 
         logger.info(f"Starting {len(self._registered_workers)} workers in separate threads")
 
-        worker_threads: list[threading.Thread] = []
-        for worker in self._registered_workers:
-            thread = threading.Thread(target=worker.run, name=f"worker-{worker.name}", daemon=True)
-            worker_threads.append(thread)
-            thread.start()
-            logger.info(f"Started worker thread: {worker.name}")
-
+        if not self._run_lock.acquire(blocking=False):
+            raise RuntimeError("Application workers are already running")
         try:
-            while any(thread.is_alive() for thread in worker_threads):
-                time.sleep(1)
-        except Exception:
-            logger.exception("Error during application run")
-            raise
+            if self._worker_coordinator is not None and self._worker_coordinator.is_alive():
+                raise RuntimeError("Workers from the previous run are still running")
+            self._worker_coordinator = WorkerCoordinator(self.get_registered_workers(), self._shutdown_timeout)
+            self._worker_coordinator.run()
+        finally:
+            self._run_lock.release()
+
+    def stop(self) -> None:
+        """Request that the current run_all_workers() stop; safe from any thread.
+
+        This is non-blocking and idempotent. Before/after a run it has no effect.
+        Wait for run_all_workers() to return to observe completion or timeout.
+        """
+        coordinator = self._worker_coordinator
+        if coordinator is not None:
+            coordinator.request_stop()
 
     def run(self, *args: Any, **kwargs: Any) -> None:
         typer_args = list(args)
