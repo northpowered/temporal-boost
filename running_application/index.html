@@ -1318,7 +1318,7 @@
 <p>This command will:
 - Start all registered workers in separate threads
 - Keep the process running until interrupted
-- Handle graceful shutdown on SIGTERM/SIGINT</p>
+- Coordinate SIGTERM/SIGINT shutdown for workers implementing the managed stop contract</p>
 <h3 id="running-individual-workers">Running Individual Workers</h3>
 <p>Run a specific worker by name:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>worker_name
@@ -1489,13 +1489,13 @@
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/app</span>
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
 </span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="c"># Install build dependencies</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">RUN</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>poetry
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>ghcr.io/astral-sh/uv:0.9.9<span class="w"> </span>/uv<span class="w"> </span>/usr/local/bin/uv
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="c"># Copy dependency files</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>poetry.lock<span class="w"> </span>./
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="k">COPY</span><span class="w"> </span>pyproject.toml<span class="w"> </span>uv.lock<span class="w"> </span>./
 </span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>
 </span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="c"># Install dependencies</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="k">RUN</span><span class="w"> </span>poetry<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-f<span class="w"> </span>requirements.txt<span class="w"> </span>--output<span class="w"> </span>requirements.txt<span class="w"> </span>--without-hashes
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--locked<span class="w"> </span>--no-default-groups<span class="w"> </span>--no-emit-project<span class="w"> </span>--no-hashes<span class="w"> </span>--output-file<span class="w"> </span>requirements.txt
 </span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>
 </span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="c"># Runtime stage</span>
 </span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="k">FROM</span><span class="w"> </span><span class="s">python:3.11-slim</span>
@@ -1623,14 +1623,36 @@
 </span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>pm2<span class="w"> </span>save
 </span></code></pre></div>
 <h3 id="graceful-shutdown">Graceful Shutdown</h3>
-<p>Temporal-boost handles graceful shutdown automatically:</p>
-<ul>
-<li>Workers receive SIGTERM/SIGINT</li>
-<li>Running activities complete (up to <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code>)</li>
-<li>New tasks are not accepted</li>
-<li>Connections are closed cleanly</li>
-</ul>
-<p>Default timeout is 30 seconds (configurable via <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code>).</p>
+<p><code>app.run_all_workers()</code> (also <code>python main.py run all</code>) coordinates cooperative shutdown.
+When it runs in the main thread, SIGINT and SIGTERM request the same stop as <code>app.stop()</code>.
+Previous signal handlers are restored when the coordinator exits, including on errors.
+Repeated requests are safe and keep the original shutdown deadline.</p>
+<p><code>BoostApp(shutdown_timeout=30.0)</code> sets the total budget, in seconds, for stopping and joining
+all started worker threads. The value must be finite and non-negative; zero allows no waiting.
+The coordinator polls for stop requests at intervals of up to 50 ms, then requests all workers
+to stop before joining them against one shared deadline. <code>request_stop()</code> implementations must
+return promptly. If threads remain alive at the deadline, <code>run_all_workers()</code> raises <code>TimeoutError</code>
+listing those workers. Python cannot forcibly terminate threads: they remain daemon threads and
+may continue running until process exit. Another run is rejected while those threads remain alive.</p>
+<p>For programmatic use in a background thread, call <code>app.stop()</code> from another thread and wait for
+<code>run_all_workers()</code> to return. No signal handlers are installed in this mode. <code>stop()</code> is non-blocking;
+calling it before or after a run has no effect on the next run. Worker registration must finish
+before starting the coordinator.</p>
+<p>Workers participate by implementing <code>BaseBoostWorker.request_stop() -&gt; bool</code>: a thread-safe,
+non-blocking, repeatable request that also handles startup. Return <code>True</code> when supported.
+The default returns <code>False</code>, which produces a warning. The coordinator never runs async
+<code>shutdown()</code> in another event loop. Async workers can inherit <code>AsyncBoostWorker</code>, which owns
+one loop per run, schedules stop requests onto it, calls <code>shutdown()</code> once on that loop, and
+waits for <code>run_async()</code> to return. See the <a href="../advanced_usage/#custom-worker-shutdown">custom worker example</a>.</p>
+<p><strong>Current scope:</strong> the Temporal, FastStream, Uvicorn, Hypercorn, and Granian adapters do not yet
+implement this managed stop contract. Their existing cleanup paths do not guarantee application-wide
+graceful shutdown; a stop may reach the coordinator's timeout. Adapter integration is tracked separately
+in TB-005, TB-013, and TB-014. Individual <code>run &lt;name&gt;</code> and <code>cron &lt;name&gt;</code> commands use adapter lifecycle
+directly, and the external CLI's multiple-process supervisor has its own shutdown behavior (TB-009).</p>
+<p>The application budget is independent of the SDK's activity grace period.
+<code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> is currently read into configuration but is not wired to the
+Temporal SDK worker (TB-004); it does not configure <code>BoostApp.shutdown_timeout</code> or guarantee completion
+of activities or connection cleanup.</p>
 <h2 id="monitoring-and-observability">Monitoring and Observability</h2>
 <h3 id="prometheus-metrics">Prometheus Metrics</h3>
 <p>Enable Prometheus metrics:</p>

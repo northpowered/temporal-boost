@@ -829,7 +829,7 @@
 <ul>
 <li><strong>FastAPI-style API</strong>: Organize your Temporal workers similar to how you organize FastAPI routes</li>
 <li><strong>Zero boilerplate</strong>: Focus on your business logic, not infrastructure setup</li>
-<li><strong>Production-ready</strong>: Built-in logging, tracing, metrics, and graceful shutdown</li>
+<li><strong>Operations</strong>: Built-in logging, tracing, and metrics; coordinated shutdown for managed workers</li>
 <li><strong>Flexible</strong>: Support for activities, workflows, CRON schedules, and ASGI apps</li>
 <li><strong>Type-safe</strong>: Full type hints and Pydantic integration support</li>
 </ul>
@@ -850,7 +850,7 @@
 <li>✅ <strong>FastStream integration</strong> for event-driven architectures</li>
 <li>✅ <strong>Environment-based configuration</strong> for all settings</li>
 <li>✅ <strong>Prometheus metrics</strong> support out of the box</li>
-<li>✅ <strong>Graceful shutdown</strong> handling</li>
+<li>✅ <strong>Graceful shutdown</strong> for workers implementing the managed stop contract</li>
 <li>✅ <strong>CLI interface</strong> for running workers individually or together</li>
 </ul>
 <h2 id="installation">Installation</h2>
@@ -858,8 +858,8 @@
 <p>Install the core package:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>temporal-boost
 </span></code></pre></div>
-<p>or with Poetry:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>poetry<span class="w"> </span>add<span class="w"> </span>temporal-boost
+<p>or with uv:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>add<span class="w"> </span>temporal-boost
 </span></code></pre></div>
 <h3 id="optional-extras">Optional extras</h3>
 <p>Install additional features as needed:</p>

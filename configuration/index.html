@@ -1380,181 +1380,225 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
 </span></code></pre></div>
 <p>When enabled, Temporal-boost uses Pydantic models for data serialization, providing better type safety and validation.</p>
+<p><code>BoostApp(use_pydantic=...)</code> and <code>use_pydantic_data_converter</code> on <code>TemporalClientBuilder</code> or
+<code>worker.configure_temporal_client()</code> use the same selection rule when creating a client builder:</p>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>None</code> (default)</td>
+<td>Inherit <code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code></td>
+</tr>
+<tr>
+<td><code>True</code></td>
+<td>Enable the SDK Pydantic converter</td>
+</tr>
+<tr>
+<td><code>False</code></td>
+<td>Disable automatic Pydantic selection, even when the environment enables it</td>
+</tr>
+</tbody>
+</table>
+<p>An explicit <code>data_converter</code> passed to <code>TemporalClientBuilder</code>, <code>set_kwargs()</code>, or
+<code>worker.configure_temporal_client()</code> takes priority over both the flag and environment setting.
+Disabling the flag preserves that converter. Without an explicit converter, disabling the flag leaves
+the Temporal SDK's default converter in use.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">use_pydantic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># Overrides an environment value of true</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">,</span> <span class="s2">&quot;example-queue&quot;</span><span class="p">,</span> <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">])</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span><span class="n">data_converter</span><span class="o">=</span><span class="n">custom_converter</span><span class="p">)</span>  <span class="c1"># Explicit converter takes priority</span>
+</span></code></pre></div>
+<p>On an existing worker builder, <code>configure_temporal_client()</code> updates the flag only when given <code>True</code>
+or <code>False</code>; <code>None</code> leaves the previous selection unchanged. Use
+<code>builder.set_pydantic_data_converter(enabled=False)</code> to disable Pydantic on a standalone builder;
+<code>builder.set_pydantic_data_converter()</code> still enables it. Each subsequent <code>build()</code> uses the current
+selection without retaining a converter automatically added by an earlier build. These changes apply
+to future client builds; they do not reconfigure an already connected client.</p>
+<p><strong>Migration:</strong> Code that relied on <code>False</code> enabling Pydantic must pass <code>True</code>. Code that supplied both
+an explicit converter and an enabled Pydantic flag now uses the explicit converter; remove it to use
+the SDK Pydantic converter.</p>
 <h2 id="worker-configuration">Worker Configuration</h2>
 <p>These settings control worker behavior and resource limits.</p>
 <h3 id="temporal_max_concurrent_workflow_tasks"><code>TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</code></h3>
 <p><strong>Type</strong>: Integer<br />
 <strong>Default</strong>: <code>300</code><br />
 <strong>Description</strong>: Maximum concurrent workflow tasks per worker</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
 </span></code></pre></div>
 <p>Increase for high workflow throughput, decrease to limit resource usage.</p>
 <h3 id="temporal_max_concurrent_activities"><code>TEMPORAL_MAX_CONCURRENT_ACTIVITIES</code></h3>
 <p><strong>Type</strong>: Integer<br />
 <strong>Default</strong>: <code>300</code><br />
 <strong>Description</strong>: Maximum concurrent activity executions per worker</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">200</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">200</span>
 </span></code></pre></div>
 <p>Tune based on your activity workload and available resources.</p>
 <h3 id="temporal_max_concurrent_local_activities"><code>TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</code></h3>
 <p><strong>Type</strong>: Integer<br />
 <strong>Default</strong>: <code>100</code><br />
 <strong>Description</strong>: Maximum concurrent local activity executions</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
 </span></code></pre></div>
 <p>Local activities execute in the same process as workflows.</p>
 <h3 id="temporal_max_workflow_task_polls"><code>TEMPORAL_MAX_WORKFLOW_TASK_POLLS</code></h3>
 <p><strong>Type</strong>: Integer<br />
 <strong>Default</strong>: <code>10</code><br />
 <strong>Description</strong>: Maximum concurrent workflow task polls</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
 </span></code></pre></div>
 <p>Controls how many workflow tasks can be polled simultaneously.</p>
 <h3 id="temporal_max_activity_task_polls"><code>TEMPORAL_MAX_ACTIVITY_TASK_POLLS</code></h3>
 <p><strong>Type</strong>: Integer<br />
 <strong>Default</strong>: <code>10</code><br />
 <strong>Description</strong>: Maximum concurrent activity task polls</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
 </span></code></pre></div>
 <p>Controls how many activity tasks can be polled simultaneously.</p>
 <h3 id="temporal_nonsticky_to_sticky_ratio"><code>TEMPORAL_NONSTICKY_TO_STICKY_RATIO</code></h3>
 <p><strong>Type</strong>: Float<br />
 <strong>Default</strong>: <code>0.2</code><br />
 <strong>Description</strong>: Ratio of non-sticky to sticky workflow task polls</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.3
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.3
 </span></code></pre></div>
 <p>Sticky workflows improve performance by keeping workflow state in memory.</p>
 <h3 id="temporal_graceful_shutdown_timeout"><code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code></h3>
 <p><strong>Type</strong>: Integer (seconds)<br />
 <strong>Default</strong>: <code>30</code><br />
-<strong>Description</strong>: Timeout for graceful shutdown</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
+<strong>Description</strong>: Intended Temporal SDK activity grace period; currently read but not passed to the SDK worker (TB-004)</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
 </span></code></pre></div>
-<p>Workers will wait this long for running activities to complete before shutting down.</p>
+<p>This setting currently does not affect worker shutdown. The application coordinator has a separate
+budget, <code>BoostApp(shutdown_timeout=30.0)</code>, for joining all worker threads. See
+<a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> for the managed stop contract and adapter limitations.</p>
 <h2 id="prometheus-metrics-configuration">Prometheus Metrics Configuration</h2>
 <p>These settings control Prometheus metrics collection and export.</p>
 <h3 id="temporal_prometheus_bind_address"><code>TEMPORAL_PROMETHEUS_BIND_ADDRESS</code></h3>
 <p><strong>Type</strong>: String<br />
 <strong>Default</strong>: <code>None</code><br />
 <strong>Description</strong>: Bind address for Prometheus metrics endpoint</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
 </span></code></pre></div>
 <p>When set, exposes Prometheus metrics at <code>/metrics</code> endpoint.</p>
 <h3 id="temporal_prometheus_counters_total_suffix"><code>TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code></h3>
 <p><strong>Type</strong>: Boolean<br />
 <strong>Default</strong>: <code>false</code><br />
 <strong>Description</strong>: Append <code>_total</code> suffix to counter metrics</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
 </span></code></pre></div>
 <h3 id="temporal_prometheus_unit_suffix"><code>TEMPORAL_PROMETHEUS_UNIT_SUFFIX</code></h3>
 <p><strong>Type</strong>: Boolean<br />
 <strong>Default</strong>: <code>false</code><br />
 <strong>Description</strong>: Append unit suffix to metric names</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_UNIT_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_UNIT_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
 </span></code></pre></div>
 <h3 id="temporal_prometheus_durations_as_seconds"><code>TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</code></h3>
 <p><strong>Type</strong>: Boolean<br />
 <strong>Default</strong>: <code>false</code><br />
 <strong>Description</strong>: Express durations in seconds instead of milliseconds</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="o">=</span><span class="nb">true</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="o">=</span><span class="nb">true</span>
 </span></code></pre></div>
 <h2 id="runtime-configuration">Runtime Configuration</h2>
 <p>Runtime configuration is done programmatically. See <a href="../advanced_usage/">Advanced Usage</a> for details.</p>
 <h2 id="configuration-priority">Configuration Priority</h2>
-<p>Configuration is loaded in this order (highest to lowest priority):</p>
+<p>Temporal client settings use this order (highest to lowest priority):</p>
 <ol>
-<li><strong>Environment variables</strong> - Highest priority</li>
+<li><strong>Explicit worker configuration</strong> via <code>configure_temporal_client()</code></li>
 <li><strong>BoostApp initialization parameters</strong></li>
-<li><strong>Default values</strong> - Lowest priority</li>
+<li><strong>Environment variables</strong></li>
+<li><strong>Default values</strong></li>
 </ol>
 <p>Example:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Environment variable: TEMPORAL_TARGET_HOST=temporal.prod:7233</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># BoostApp parameter: temporal_endpoint=&quot;temporal.dev:7233&quot;</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="c1"># Result: Uses &quot;temporal.prod:7233&quot; (environment variable wins)</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">&quot;temporal.dev:7233&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Environment variable: TEMPORAL_TARGET_HOST=temporal.prod:7233</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># BoostApp parameter: temporal_endpoint=&quot;temporal.dev:7233&quot;</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="c1"># Result: Uses &quot;temporal.dev:7233&quot; (explicit application parameter wins)</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">&quot;temporal.dev:7233&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="configuration-examples">Configuration Examples</h2>
 <h3 id="development-configuration">Development Configuration</h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># .env.development</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>development
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">10</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">10</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># .env.development</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>development
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">10</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">10</span>
 </span></code></pre></div>
 <h3 id="production-configuration">Production Configuration</h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># .env.production</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.production.example.com:7233
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nv">TEMPORAL_API_KEY</span><span class="o">=</span><span class="si">${</span><span class="nv">TEMPORAL_API_KEY</span><span class="si">}</span><span class="w">  </span><span class="c1"># From secrets manager</span>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">300</span>
-</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">300</span>
-</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
-</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
-</span></code></pre></div>
-<h3 id="high-performance-configuration">High-Performance Configuration</h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># .env.high-performance</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.cluster.example.com:7233
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># .env.production</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.production.example.com:7233
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
 </span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">1000</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.1
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="nv">TEMPORAL_API_KEY</span><span class="o">=</span><span class="si">${</span><span class="nv">TEMPORAL_API_KEY</span><span class="si">}</span><span class="w">  </span><span class="c1"># From secrets manager</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">300</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">300</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
+</span></code></pre></div>
+<h3 id="high-performance-configuration">High-Performance Configuration</h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># .env.high-performance</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.cluster.example.com:7233
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">1000</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.1
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
 </span></code></pre></div>
 <h3 id="resource-limited-configuration">Resource-Limited Configuration</h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># .env.limited-resources</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>default
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">50</span>
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">20</span>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># .env.limited-resources</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>default
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">20</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
 </span></code></pre></div>
 <h3 id="using-configuration-files">Using Configuration Files</h3>
 <p>Load from <code>.env</code> file:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Load .env file</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">load_dotenv</span><span class="p">()</span>
-</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
-</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Access configuration</span>
-</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="n">host</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost:7233&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># Load .env file</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">load_dotenv</span><span class="p">()</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="c1"># Access configuration</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="n">host</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost:7233&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="configuration-validation">Configuration Validation</h3>
 <p>Validate configuration at startup:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_config</span><span class="p">():</span>
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate required configuration.&quot;&quot;&quot;</span>
-</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>        <span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span>
-</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>        <span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">,</span>
-</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>    <span class="p">]</span>
-</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>
-</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">required_vars</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">var</span><span class="p">)]</span>
-</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required environment variables: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>
-</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="n">validate_config</span><span class="p">()</span>
-</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_config</span><span class="p">():</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate required configuration.&quot;&quot;&quot;</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>        <span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>        <span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">,</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>    <span class="p">]</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>
+</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">required_vars</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">var</span><span class="p">)]</span>
+</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required environment variables: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-24-14"><a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>
+</span><span id="__span-24-15"><a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a><span class="n">validate_config</span><span class="p">()</span>
+</span><span id="__span-24-16"><a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
 </span></code></pre></div>
 <h3 id="dynamic-configuration">Dynamic Configuration</h3>
 <p>Override configuration programmatically:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="c1"># Override for testing</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;localhost:7233&quot;</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="c1"># Override for testing</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;localhost:7233&quot;</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
 </span></code></pre></div>
 <h3 id="configuration-tips">Configuration Tips</h3>
 <ol>
@@ -1567,49 +1611,49 @@
 </ol>
 <h3 id="common-configuration-patterns">Common Configuration Patterns</h3>
 <h4 id="pattern-1-environment-based">Pattern 1: Environment-Based</h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;ENVIRONMENT&quot;</span><span class="p">,</span> <span class="s2">&quot;development&quot;</span><span class="p">)</span>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="k">if</span> <span class="n">env</span> <span class="o">==</span> <span class="s2">&quot;production&quot;</span><span class="p">:</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TLS&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_PROMETHEUS_BIND_ADDRESS&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0.0.0:9090&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;ENVIRONMENT&quot;</span><span class="p">,</span> <span class="s2">&quot;development&quot;</span><span class="p">)</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="k">if</span> <span class="n">env</span> <span class="o">==</span> <span class="s2">&quot;production&quot;</span><span class="p">:</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TLS&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_PROMETHEUS_BIND_ADDRESS&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0.0.0:9090&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="pattern-2-configuration-class">Pattern 2: Configuration Class</h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="nd">@dataclass</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalConfig</span><span class="p">:</span>
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>    <span class="n">tls</span><span class="p">:</span> <span class="nb">bool</span>
-</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>
-</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>    <span class="nd">@classmethod</span>
-</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
-</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a>            <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost:7233&quot;</span><span class="p">),</span>
-</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a>            <span class="n">namespace</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">),</span>
-</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a>            <span class="n">tls</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TLS&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
-</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a>            <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_API_KEY&quot;</span><span class="p">),</span>
-</span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18" href="#__codelineno-26-18"></a>        <span class="p">)</span>
-</span><span id="__span-26-19"><a id="__codelineno-26-19" name="__codelineno-26-19" href="#__codelineno-26-19"></a>
-</span><span id="__span-26-20"><a id="__codelineno-26-20" name="__codelineno-26-20" href="#__codelineno-26-20"></a><span class="n">config</span> <span class="o">=</span> <span class="n">TemporalConfig</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="nd">@dataclass</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalConfig</span><span class="p">:</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>    <span class="n">tls</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>    <span class="nd">@classmethod</span>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>            <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TARGET_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost:7233&quot;</span><span class="p">),</span>
+</span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a>            <span class="n">namespace</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_NAMESPACE&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">),</span>
+</span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a>            <span class="n">tls</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_TLS&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+</span><span id="__span-27-17"><a id="__codelineno-27-17" name="__codelineno-27-17" href="#__codelineno-27-17"></a>            <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;TEMPORAL_API_KEY&quot;</span><span class="p">),</span>
+</span><span id="__span-27-18"><a id="__codelineno-27-18" name="__codelineno-27-18" href="#__codelineno-27-18"></a>        <span class="p">)</span>
+</span><span id="__span-27-19"><a id="__codelineno-27-19" name="__codelineno-27-19" href="#__codelineno-27-19"></a>
+</span><span id="__span-27-20"><a id="__codelineno-27-20" name="__codelineno-27-20" href="#__codelineno-27-20"></a><span class="n">config</span> <span class="o">=</span> <span class="n">TemporalConfig</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
 </span></code></pre></div>
 <h4 id="pattern-3-pydantic-settings">Pattern 3: Pydantic Settings</h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>    <span class="n">temporal_target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost:7233&quot;</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>    <span class="n">temporal_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">temporal_tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>    <span class="n">temporal_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>
-</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
-</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">&quot;TEMPORAL_&quot;</span>
-</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>        <span class="n">case_sensitive</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>
-</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="n">settings</span> <span class="o">=</span> <span class="n">TemporalSettings</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="n">temporal_target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;localhost:7233&quot;</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="n">temporal_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>    <span class="n">temporal_tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>    <span class="n">temporal_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">&quot;TEMPORAL_&quot;</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>        <span class="n">case_sensitive</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>
+</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="n">settings</span> <span class="o">=</span> <span class="n">TemporalSettings</span><span class="p">()</span>
 </span></code></pre></div>
 <h3 id="security-best-practices">Security Best Practices</h3>
 <ol>
@@ -1622,24 +1666,24 @@
 </ol>
 <h3 id="troubleshooting-configuration">Troubleshooting Configuration</h3>
 <h4 id="check-current-configuration">Check Current Configuration</h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Host: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Namespace: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TLS: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max Activities: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">MAX_CONCURRENT_ACTIVITIES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Host: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Namespace: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TLS: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max Activities: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">MAX_CONCURRENT_ACTIVITIES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="validate-configuration">Validate Configuration</h4>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">():</span>
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="p">,</span> <span class="s2">&quot;TEMPORAL_TARGET_HOST not set&quot;</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="p">,</span> <span class="s2">&quot;TEMPORAL_NAMESPACE not set&quot;</span>
-</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_API_KEY</span><span class="p">:</span>
-</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: TLS enabled but no API key provided&quot;</span><span class="p">)</span>
-</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>
-</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="n">validate</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">():</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="p">,</span> <span class="s2">&quot;TEMPORAL_TARGET_HOST not set&quot;</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="p">,</span> <span class="s2">&quot;TEMPORAL_NAMESPACE not set&quot;</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_API_KEY</span><span class="p">:</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: TLS enabled but no API key provided&quot;</span><span class="p">)</span>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="n">validate</span><span class="p">()</span>
 </span></code></pre></div>
 
 
