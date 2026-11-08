@@ -327,7 +327,8 @@ cleanup error логируется. При отмене основной corouti
 остаются ответственностью адаптеров; Temporal использует специализированный lifecycle из раздела 4.
 
 Temporal adapter подключён к managed stop в TB-005 и проходит unit-проверку через настоящий coordinator
-с SDK double. FastStream/ASGI ещё не подключены (TB-013/TB-014); stop может завершиться timeout.
+с SDK double. FastStream подключён в TB-013 с проверкой настоящего in-memory broker. ASGI ещё не
+подключены (TB-014); stop может завершиться timeout.
 SDK activities, игнорирующие отмену, тоже могут превысить бюджет coordinator. Отдельные CLI-команды
 используют lifecycle adapter напрямую, а внешний supervisor процессов остаётся вне этого coordinator.
 Бюджет приложения не связан с `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`: TB-004 подключает эту настройку
@@ -443,13 +444,25 @@ converter по умолчанию SDK. Настройки относятся к 
 ### FastStream
 
 FastStream и AnyIO импортируются при `run()`. Проверяется `isinstance(app, FastStream)`; неверный тип
-даёт `TypeError`, отсутствующие импорты — `RuntimeError`. Запуск выполняется как
-`anyio.run(app.run, log_level, faststream_kwargs)`: словарь передаётся вторым позиционным аргументом,
-а не разворачивается в `**kwargs`. При обновлении FastStream необходимо сверять эту сигнатуру.
+даёт `TypeError`, отсутствующие импорты — `RuntimeError` с подсказкой установить extra. Базовый пакет
+импортируется без этих зависимостей. Сигнатура FastStream 0.5.48 из lockfile подтверждена тестом:
+`app.run(log_level, faststream_kwargs)` корректно принимает словарь как `run_extra_options`.
+Однако `run()` устанавливает signal handlers, что несовместимо с worker thread в `run all`.
 
-Адаптер устанавливает уровень логгера `faststream`, перехватывает прерывание/отмену и вызывает свой
-`shutdown()` в `finally`. Этот `shutdown()` только логирует завершение; прямого вызова закрытия broker
-в нём нет. Жизненный цикл ресурсов FastStream зависит от `app.run()`.
+В TB-013 адаптер использует `anyio.run(..., backend="asyncio")`, публичные `app.start(**options)` /
+`app.stop()` и `app.lifespan_context(**options)`. Options по-прежнему доходят до startup hooks и lifespan.
+Lifespan входит/выходит в одной task; startup отменяется и join-ится перед cleanup, а cleanup защищён
+от повторной отмены и отменённого AnyIO scope lifespan. Ошибка shutdown hook не мешает попытке
+публичного `broker.stop()`. Исходная lifecycle error сохраняется при отказе cleanup; при обычной отмене
+cleanup error получает приоритет. `SystemExit` / `KeyboardInterrupt` пробрасываются после закрытия loop.
+Сообщение об успешном shutdown появляется только после успешного stop и выхода из lifespan.
+
+`request_stop()` потокобезопасен, запоминает ранний запрос, повторяем и завершает managed wait.
+`shutdown()` безопасен до/после run, на активном owning loop запрашивает stop и ждёт cleanup;
+из другого loop или lifecycle callback требуется `request_stop()`. Main-thread run устанавливает и
+восстанавливает SIGINT/SIGTERM handlers; thread run их не меняет. Бюджет coordinator ограничивает
+ожидание worker, но не принудительно прерывает зависший broker/hook. Для миграции `app.exit()` и
+переопределённого `app.run()` используются adapter stop и публичные lifecycle hooks.
 
 ## 8. Логирование и телеметрия
 
@@ -497,7 +510,7 @@ SDK runtime строится лениво в процессе worker и не п�
 | --- | --- |
 | Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
-| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal и custom managed workers с отдельным `BoostApp.shutdown_timeout`; FastStream/ASGI ещё не подключены. SDK activity grace period задаётся отдельно |
+| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal, FastStream и custom managed workers с отдельным `BoostApp.shutdown_timeout`; ASGI ещё не подключены. SDK activity grace period задаётся отдельно |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
 | `TestAsyncRuntime` в [example_app.py](examples/example_app.py) | У класса нет обязательного `shutdown()`; как есть он абстрактен и не зарегистрирован в приложении |
 
@@ -572,7 +585,11 @@ Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позво�
 в `tests/test_worker_coordinator.py`. TB-003 добавляет наблюдаемую ошибку при работающем peer,
 первенство исходной ошибки перед отказами cleanup и timeout, unexpected return, классификацию
 отмены до/после stop и внутренний CLI. Искусственные отказы проверяются с
-`-W error::pytest.PytestUnhandledThreadExceptionWarning`. Suite не доказывает graceful shutdown реальных адаптеров.
+`-W error::pytest.PytestUnhandledThreadExceptionWarning`. `tests/test_faststream_worker.py` проверяет
+ранний/повторный stop, partial startup, ошибки/отмену, lifespan task failures, owner loop, coordinator,
+SIGINT/SIGTERM и optional imports. Smoke-тест FastStream 0.5.48 с `TestRedisBroker(connect_only=True)`
+доказывает передачу options, доставку сообщения, broker stop и выход из lifespan без Redis-сервера.
+Graceful shutdown реальных ASGI-адаптеров остаётся вне этих проверок.
 
 В `tests/test_boost_app.py` прежние дублирующиеся `test_run_with_args` заменены раздельными проверками
 списка аргументов и `sys.argv`, с фактическим запуском только выбранного callback и ожидаемым `SystemExit`.

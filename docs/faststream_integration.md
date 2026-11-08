@@ -176,9 +176,36 @@ app.add_faststream_worker(
     "message_processor",
     faststream_app,
     log_level=logging.DEBUG,  # Custom log level
-    # Additional FastStream options
+    region="west",  # Passed to startup hooks and the lifespan context
 )
 ```
+
+### Managed Shutdown
+
+FastStream workers support `app.stop()` when launched through `run all`. The coordinator requests
+stop and waits up to `BoostApp(shutdown_timeout=...)` for cleanup. You can also retain the worker
+returned by `add_faststream_worker()` and call its thread-safe `worker.request_stop()`, including
+during startup. Repeated requests are safe.
+
+The adapter uses FastStream's public `start()` and `stop()` methods and its lifespan context on
+one owning event loop. Pending startup is cancelled and joined before shutdown hooks and broker
+cleanup run. Startup and cleanup failures propagate to the caller; a cleanup failure does not
+replace an earlier startup failure. If a shutdown hook fails before the broker closes, the adapter
+also attempts the broker's public `stop()` method.
+
+Async `worker.shutdown()` waits for cleanup on the owning loop and is harmless before or after
+a run. From another thread or loop, or inside a lifecycle hook, use `worker.request_stop()`.
+Cancellation of one shutdown waiter does not cancel cleanup. A broker or hook that never finishes
+can exceed the coordinator's shutdown budget.
+
+The lifecycle and option forwarding are verified against FastStream **0.5.48**, the lockfile version,
+using an in-memory broker. Its existing `run(log_level, options)` signature accepts the positional
+options mapping. The adapter now manages the lifecycle directly because `FastStream.run()` installs
+signal handlers that cannot be installed in a `run all` worker thread. Startup options still reach
+startup hooks and the lifespan context. Code using `FastStream.exit()` or overriding `FastStream.run()`
+should move its stop requests to `worker.request_stop()` and initialization/cleanup to lifecycle hooks.
+For an individual worker running on the main thread, the adapter handles SIGINT/SIGTERM and restores
+the previous handlers after cleanup.
 
 ### Message Broker Configuration
 
