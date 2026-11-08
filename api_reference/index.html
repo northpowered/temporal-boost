@@ -1465,7 +1465,10 @@ See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="temporalboostworkerconfigure_temporal_runtime"><code>TemporalBoostWorker.configure_temporal_runtime()</code></h3>
-<p>Configure Temporal runtime for the worker.</p>
+<p>Configure an independent, worker-owned Temporal runtime before first use. Concurrent workers need
+distinct Prometheus endpoints; runtimes are not shared automatically. Each process must expose every
+worker's endpoint for scraping. See
+<a href="../advanced_usage/#metrics-across-workers-and-processes">Metrics Across Workers and Processes</a>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">configure_temporal_runtime</span><span class="p">(</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="o">*</span><span class="p">,</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">logging</span><span class="p">:</span> <span class="n">LoggingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1668,12 +1671,20 @@ default instead of the SDK's zero grace period.</p>
 </span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <h3 id="temporalruntimebuilderbuild"><code>TemporalRuntimeBuilder.build()</code></h3>
-<p>Build and return Temporal runtime.</p>
+<p>Build and return a new independent Temporal runtime. An explicit <code>metrics</code> backend takes priority
+over <code>prometheus_bind_address</code>. Only the effective Prometheus endpoint is logged as bound.
+The caller owns the returned runtime; pass it to <code>TemporalClientBuilder.set_runtime()</code> before
+building a standalone client. Do not pass a live runtime between processes.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Runtime</span>
 </span></code></pre></div>
 <p><strong>Returns:</strong></p>
 <ul>
 <li><code>Runtime</code>: Temporal runtime instance.</li>
+</ul>
+<p><strong>Raises:</strong></p>
+<ul>
+<li><code>ValueError</code>: Original SDK initialization error, including exporter bind conflicts. The builder
+  never retries with metrics disabled. Every concurrent Prometheus runtime needs its own endpoint.</li>
 </ul>
 <h2 id="enums">Enums</h2>
 <h3 id="asgiworkertype"><code>ASGIWorkerType</code></h3>

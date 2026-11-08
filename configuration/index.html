@@ -1506,7 +1506,12 @@ See <a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> fo
 <strong>Description</strong>: Bind address for Prometheus metrics endpoint</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
 </span></code></pre></div>
-<p>When set, exposes Prometheus metrics at <code>/metrics</code> endpoint.</p>
+<p>When set, each Temporal worker runtime exposes <code>/metrics</code> at this address. Concurrent runtimes need
+distinct endpoints; a bind conflict fails startup instead of disabling telemetry. Override the address
+per worker with <code>configure_temporal_runtime()</code>, and allocate separate ports or network addresses for
+each process. <code>--workers N</code> does not assign metrics ports. Scrape every endpoint; see
+<a href="../advanced_usage/#metrics-across-workers-and-processes">Metrics Across Workers and Processes</a>.</p>
+<p>The SDK exporter does not use <code>PROMETHEUS_MULTIPROC_DIR</code>; that directory does not aggregate SDK metrics.</p>
 <h3 id="temporal_prometheus_counters_total_suffix"><code>TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code></h3>
 <p><strong>Type</strong>: Boolean<br />
 <strong>Default</strong>: <code>false</code><br />
