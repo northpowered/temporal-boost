@@ -79,6 +79,12 @@ add_worker(
   Empty or whitespace-only explicit IDs raise `ValueError`.
 - `**worker_kwargs`: Additional worker configuration options.
 
+`cron_schedule` and `cron_runner` must be provided together or both omitted. Partial configuration,
+or an explicitly empty/whitespace-only schedule, raises `ValueError` during worker construction before
+connecting. Expression syntax is validated by the SDK/server. These rules also apply to direct
+`TemporalBoostWorker` construction. Supplying `cron_workflow_id` alone does not enable CRON mode.
+`add_worker()` registers commands locally; it does not create a server-side schedule.
+
 `graceful_shutdown_timeout=timedelta(...)` in `worker_kwargs` sets the SDK activity grace period.
 Omission or `None` inherits `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT` (default 30 seconds), zero is preserved,
 and negative durations raise `ValueError` at registration. This is independent of `BoostApp.shutdown_timeout`;
@@ -332,7 +338,8 @@ worker.configure_temporal_runtime(
 
 ### `TemporalBoostWorker.run()`
 
-Run the worker.
+Consume the worker's task queue. This never registers a CRON workflow, including when CRON parameters
+are configured. `run <name>` uses this method; `run all` uses it for every registered worker.
 
 ```python
 run() -> None
@@ -347,6 +354,10 @@ worker.run()
 ### `TemporalBoostWorker.cron()`
 
 Run the worker as a CRON worker.
+
+Available as `cron <name>` only when both CRON parameters are configured. Calling this method directly
+without them raises `RuntimeError` before creating a loop or connecting. It registers once per process
+start, then keeps consuming the task queue until stopped.
 
 Atomically starts or reuses the ID using `WorkflowIDConflictPolicy.USE_EXISTING`. Closed IDs are
 rejected with `WorkflowAlreadyStartedError` using `WorkflowIDReusePolicy.REJECT_DUPLICATE`, subject

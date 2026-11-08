@@ -6,7 +6,14 @@ This example demonstrates:
 - Scheduled workflow execution
 - Daily report generation
 
-Run with: python3 example_cron.py cron daily_report
+Register or reuse the server-side CRON chain and consume its queue:
+    uv run python examples/example_cron.py cron daily_report
+
+Consume the queue without creating a schedule (for an existing chain):
+    uv run python examples/example_cron.py run daily_report
+
+Run every registered consumer without creating schedules:
+    uv run python examples/example_cron.py run all
 """
 
 import logging
@@ -54,7 +61,8 @@ class DailyReportWorkflow:
         logger.info(f"Daily report generated: {result['report_id']}")
 
 
-# Register CRON worker - runs daily at midnight
+# Configure the CRON worker locally. Only the `cron daily_report` command
+# registers the server-side chain; `run daily_report` and `run all` only consume.
 app.add_worker(
     "daily_report",
     "report_queue",
@@ -66,7 +74,7 @@ app.add_worker(
 )
 
 # Stopping this consumer leaves the server-side CRON chain running. Restarting
-# reuses it; changing this ID creates a separate job. See the migration guide
+# with `cron daily_report` reuses it; changing this ID creates a separate job. See the migration guide
 # before upgrading deployments that previously registered random UUID IDs.
 
 if __name__ == "__main__":

@@ -116,7 +116,7 @@ class BoostApp:
 
         self._run_typer.command(name=worker_name)(worker.run)
 
-        if cron_schedule and cron_runner:
+        if cron_schedule is not None and cron_runner is not None:
             self._cron_typer.command(name=worker_name)(worker.cron)
             self._registered_cron_workers.append(worker)
 
@@ -201,6 +201,11 @@ class BoostApp:
         return self._registered_workers.copy()
 
     def run_all_workers(self) -> None:
+        """Run all consumers without registering CRON workflows.
+
+        Raises:
+            RuntimeError: If another run is active or a worker fails.
+        """
         if not self._registered_workers:
             logger.warning("No workers registered to run")
             return

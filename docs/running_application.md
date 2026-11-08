@@ -23,9 +23,13 @@ python3 main.py run all
 ```
 
 This command will:
+
 - Start all registered workers in separate threads
 - Keep the process running until interrupted
 - Coordinate SIGTERM/SIGINT shutdown for workers implementing the managed stop contract
+
+Temporal workers configured with CRON parameters also run as consumers here. `run all` does not create
+or register their server-side CRON chains; use `cron <name>` explicitly for each job that needs registration.
 
 ### Running Individual Workers
 
@@ -40,6 +44,9 @@ Example:
 ```bash
 python3 main.py run payment_worker
 ```
+
+For a Temporal worker, this consumes its task queue, including tasks from a previously registered
+CRON chain. It does not call `start_workflow()`, even when that worker has CRON configuration.
 
 ### Running CRON Workers
 
@@ -59,6 +66,17 @@ The command registers or reuses one server-side CRON chain and consumes its task
 same `cron_workflow_id` on every replica. The registration log contains the namespace, workflow ID,
 and returned run ID. Repeated and concurrent starts reuse a running ID; a closed ID is rejected.
 `run <name>` and `run all` consume queues without registering a CRON chain.
+
+| Command | Consumes tasks | Registers a server-side CRON chain |
+| --- | --- | --- |
+| `run <name>` | Selected worker | No |
+| `run all` | All registered workers | No |
+| `cron <name>` | Selected CRON worker | Yes: starts or reuses its stable ID |
+
+`cron <name>` exists only for workers with both `cron_schedule` and `cron_runner`. A partial pair or
+an empty/whitespace-only expression is rejected with `ValueError` during application setup. Calling
+`worker.cron()` directly on an ordinary consumer raises `RuntimeError` before opening a connection.
+Fix older partial configurations by providing both parameters or omitting both.
 
 Stopping the local process does not cancel, terminate, or delete the server-side CRON workflow.
 It can continue executing through other consumers; without consumers, work waits on its queue.

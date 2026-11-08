@@ -111,16 +111,21 @@ async def test_closed_identity_error_propagates_without_retry_or_new_id() -> Non
 @pytest.mark.asyncio
 async def test_cron_path_registers_and_local_cancellation_does_not_cancel_server_workflow() -> None:
     worker = make_worker()
-    worker._worker = MagicMock(__aenter__=AsyncMock(), __aexit__=AsyncMock(return_value=False))
-    worker._client = MagicMock(start_workflow=AsyncMock())
+    finished = asyncio.Event()
+    sdk = MagicMock(run=AsyncMock(side_effect=finished.wait), shutdown=AsyncMock(side_effect=finished.set))
+    client = MagicMock(start_workflow=AsyncMock())
     registered = asyncio.Event()
+
+    async def build() -> None:
+        worker._worker = sdk
+        worker._client = client
 
     async def register() -> None:
         await TemporalBoostWorker._register_cron(worker)
         registered.set()
 
     with (
-        patch.object(worker, "_build_worker", new_callable=AsyncMock),
+        patch.object(worker, "_build_worker", side_effect=build),
         patch.object(worker, "_register_cron", side_effect=register),
     ):
         task = asyncio.create_task(worker._run_with_cron())
@@ -129,7 +134,8 @@ async def test_cron_path_registers_and_local_cancellation_does_not_cancel_server
         with pytest.raises(asyncio.CancelledError):
             await task
 
-    worker._client.start_workflow.assert_awaited_once()
-    worker._client.start_workflow.return_value.cancel.assert_not_called()
-    worker._client.start_workflow.return_value.terminate.assert_not_called()
-    worker._worker.__aexit__.assert_awaited_once()
+    client.start_workflow.assert_awaited_once()
+    client.start_workflow.return_value.cancel.assert_not_called()
+    client.start_workflow.return_value.terminate.assert_not_called()
+    sdk.shutdown.assert_awaited_once()
+    assert worker.state == "stopped"

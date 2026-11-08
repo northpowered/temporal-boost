@@ -347,7 +347,9 @@ worker.configure_temporal_runtime(
 
 ## CRON Workers
 
-CRON workers automatically start workflows on a schedule.
+CRON workers configure server-side recurring workflows. Calling `add_worker()` stores configuration
+and registers CLI commands locally. Use `cron <name>` to create or reuse the server-side chain and
+consume its task queue; `run <name>` and `run all` only consume queues.
 
 ### Creating a CRON Worker
 
@@ -372,6 +374,13 @@ app.add_worker(
     cron_workflow_id="reports/daily-v1",  # Same ID on every replica and restart
 )
 ```
+
+Provide both `cron_schedule` and `cron_runner`, or omit both for an ordinary consumer. A partial pair
+or an empty/whitespace-only schedule raises `ValueError` immediately, before any connection is opened.
+The same validation applies to direct `TemporalBoostWorker(...)` construction. The SDK/server validates
+the CRON expression syntax at registration. To migrate a previously accepted partial configuration,
+either supply the missing parameter or remove the CRON options. An explicit `cron_workflow_id` alone
+does not enable CRON mode.
 
 ### CRON Workflow Identity
 
@@ -416,9 +425,20 @@ Examples:
 ### Running CRON Workers
 
 ```bash
-# Run the CRON worker
+# Register/reuse the server-side chain and consume the queue
 python3 main.py cron daily_report_cron
+
+# Consume the queue for an already registered chain
+python3 main.py run daily_report_cron
+
+# Run all consumers; this does not create schedules
+python3 main.py run all
 ```
+
+Only workers with both CRON parameters receive a `cron <name>` command. Direct `worker.cron()` requires
+that configuration too and raises `RuntimeError` before starting a loop or connecting when it is absent.
+Registration runs once per CRON process start; Temporal continues the chain on the server. The process
+keeps consuming until stopped, and local stop leaves the server-side chain in place.
 
 ## ASGI Workers
 
