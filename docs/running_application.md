@@ -703,7 +703,10 @@ and waits for lifecycle completion; cancelling one shutdown waiter does not canc
 from another active loop raises `RuntimeError`: use `worker.request_stop()` there. Worker callbacks
 should also use the non-blocking request rather than awaiting their own shutdown.
 
-FastStream, Uvicorn, Hypercorn, and Granian do not yet implement this managed stop contract (TB-013/TB-014).
+`FastStreamBoostWorker` also implements managed stopping, including cancellation of pending startup,
+shutdown hooks, broker cleanup, and lifespan exit on its owning loop. See
+[FastStream managed shutdown](faststream_integration.md#managed-shutdown) for hook options and migration details.
+Uvicorn, Hypercorn, and Granian do not yet implement this managed stop contract (TB-014).
 Their existing cleanup paths may reach the coordinator's timeout. Individual `run <name>` and
 `cron <name>` commands use adapter lifecycle directly; the application coordinator's signal handlers
 apply to `run all`. The external CLI also coordinates selected workers through the
