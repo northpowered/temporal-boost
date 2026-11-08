@@ -1230,6 +1230,11 @@
   Empty or whitespace-only explicit IDs raise <code>ValueError</code>.</li>
 <li><code>**worker_kwargs</code>: Additional worker configuration options.</li>
 </ul>
+<p><code>cron_schedule</code> and <code>cron_runner</code> must be provided together or both omitted. Partial configuration,
+or an explicitly empty/whitespace-only schedule, raises <code>ValueError</code> during worker construction before
+connecting. Expression syntax is validated by the SDK/server. These rules also apply to direct
+<code>TemporalBoostWorker</code> construction. Supplying <code>cron_workflow_id</code> alone does not enable CRON mode.
+<code>add_worker()</code> registers commands locally; it does not create a server-side schedule.</p>
 <p><code>graceful_shutdown_timeout=timedelta(...)</code> in <code>worker_kwargs</code> sets the SDK activity grace period.
 Omission or <code>None</code> inherits <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> (default 30 seconds), zero is preserved,
 and negative durations raise <code>ValueError</code> at registration. This is independent of <code>BoostApp.shutdown_timeout</code>;
@@ -1424,7 +1429,8 @@ See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="temporalboostworkerrun"><code>TemporalBoostWorker.run()</code></h3>
-<p>Run the worker.</p>
+<p>Consume the worker's task queue. This never registers a CRON workflow, including when CRON parameters
+are configured. <code>run &lt;name&gt;</code> uses this method; <code>run all</code> uses it for every registered worker.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">run</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <p><strong>Example:</strong></p>
@@ -1432,6 +1438,9 @@ See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 </span></code></pre></div>
 <h3 id="temporalboostworkercron"><code>TemporalBoostWorker.cron()</code></h3>
 <p>Run the worker as a CRON worker.</p>
+<p>Available as <code>cron &lt;name&gt;</code> only when both CRON parameters are configured. Calling this method directly
+without them raises <code>RuntimeError</code> before creating a loop or connecting. It registers once per process
+start, then keeps consuming the task queue until stopped.</p>
 <p>Atomically starts or reuses the ID using <code>WorkflowIDConflictPolicy.USE_EXISTING</code>. Closed IDs are
 rejected with <code>WorkflowAlreadyStartedError</code> using <code>WorkflowIDReusePolicy.REJECT_DUPLICATE</code>, subject
 to server history retention. Reuse preserves the existing schedule and configuration. Local shutdown

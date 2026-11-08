@@ -1333,10 +1333,14 @@
 <p>Start all registered workers in separate threads:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>all
 </span></code></pre></div>
-<p>This command will:
-- Start all registered workers in separate threads
-- Keep the process running until interrupted
-- Coordinate SIGTERM/SIGINT shutdown for workers implementing the managed stop contract</p>
+<p>This command will:</p>
+<ul>
+<li>Start all registered workers in separate threads</li>
+<li>Keep the process running until interrupted</li>
+<li>Coordinate SIGTERM/SIGINT shutdown for workers implementing the managed stop contract</li>
+</ul>
+<p>Temporal workers configured with CRON parameters also run as consumers here. <code>run all</code> does not create
+or register their server-side CRON chains; use <code>cron &lt;name&gt;</code> explicitly for each job that needs registration.</p>
 <h3 id="running-individual-workers">Running Individual Workers</h3>
 <p>Run a specific worker by name:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>worker_name
@@ -1344,6 +1348,8 @@
 <p>Example:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>payment_worker
 </span></code></pre></div>
+<p>For a Temporal worker, this consumes its task queue, including tasks from a previously registered
+CRON chain. It does not call <code>start_workflow()</code>, even when that worker has CRON configuration.</p>
 <h3 id="running-cron-workers">Running CRON Workers</h3>
 <p>Start a CRON worker:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python3<span class="w"> </span>main.py<span class="w"> </span>cron<span class="w"> </span>cron_worker_name
@@ -1355,6 +1361,36 @@
 same <code>cron_workflow_id</code> on every replica. The registration log contains the namespace, workflow ID,
 and returned run ID. Repeated and concurrent starts reuse a running ID; a closed ID is rejected.
 <code>run &lt;name&gt;</code> and <code>run all</code> consume queues without registering a CRON chain.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Consumes tasks</th>
+<th>Registers a server-side CRON chain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>run &lt;name&gt;</code></td>
+<td>Selected worker</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>run all</code></td>
+<td>All registered workers</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>cron &lt;name&gt;</code></td>
+<td>Selected CRON worker</td>
+<td>Yes: starts or reuses its stable ID</td>
+</tr>
+</tbody>
+</table>
+<p><code>cron &lt;name&gt;</code> exists only for workers with both <code>cron_schedule</code> and <code>cron_runner</code>. A partial pair or
+an empty/whitespace-only expression is rejected with <code>ValueError</code> during application setup. Calling
+<code>worker.cron()</code> directly on an ordinary consumer raises <code>RuntimeError</code> before opening a connection.
+Fix older partial configurations by providing both parameters or omitting both.</p>
 <p>Stopping the local process does not cancel, terminate, or delete the server-side CRON workflow.
 It can continue executing through other consumers; without consumers, work waits on its queue.
 Use Temporal Web or the Temporal client to cancel or terminate an identified chain when appropriate.

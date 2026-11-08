@@ -1718,7 +1718,9 @@
 </span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="cron-workers">CRON Workers</h2>
-<p>CRON workers automatically start workflows on a schedule.</p>
+<p>CRON workers configure server-side recurring workflows. Calling <code>add_worker()</code> stores configuration
+and registers CLI commands locally. Use <code>cron &lt;name&gt;</code> to create or reuse the server-side chain and
+consume its task queue; <code>run &lt;name&gt;</code> and <code>run all</code> only consume queues.</p>
 <h3 id="creating-a-cron-worker">Creating a CRON Worker</h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nd">@workflow</span><span class="o">.</span><span class="n">defn</span><span class="p">(</span><span class="n">sandboxed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DailyReportWorkflow&quot;</span><span class="p">)</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">DailyReportWorkflow</span><span class="p">:</span>
@@ -1740,6 +1742,12 @@
 </span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    <span class="n">cron_workflow_id</span><span class="o">=</span><span class="s2">&quot;reports/daily-v1&quot;</span><span class="p">,</span>  <span class="c1"># Same ID on every replica and restart</span>
 </span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="p">)</span>
 </span></code></pre></div>
+<p>Provide both <code>cron_schedule</code> and <code>cron_runner</code>, or omit both for an ordinary consumer. A partial pair
+or an empty/whitespace-only schedule raises <code>ValueError</code> immediately, before any connection is opened.
+The same validation applies to direct <code>TemporalBoostWorker(...)</code> construction. The SDK/server validates
+the CRON expression syntax at registration. To migrate a previously accepted partial configuration,
+either supply the missing parameter or remove the CRON options. An explicit <code>cron_workflow_id</code> alone
+does not enable CRON mode.</p>
 <h3 id="cron-workflow-identity">CRON Workflow Identity</h3>
 <p><code>cron_workflow_id</code> identifies one logical CRON job within a Temporal namespace. It is also supported
 when constructing <code>TemporalBoostWorker</code> directly. If omitted, the ID is
@@ -1773,9 +1781,19 @@ server-side CRON chain in place. Before upgrading from random UUID IDs, follow t
 <li><code>"0 0 1 * *"</code> - First day of every month</li>
 </ul>
 <h3 id="running-cron-workers">Running CRON Workers</h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Run the CRON worker</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Register/reuse the server-side chain and consume the queue</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>python3<span class="w"> </span>main.py<span class="w"> </span>cron<span class="w"> </span>daily_report_cron
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># Consume the queue for an already registered chain</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>daily_report_cron
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="c1"># Run all consumers; this does not create schedules</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>python3<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>all
 </span></code></pre></div>
+<p>Only workers with both CRON parameters receive a <code>cron &lt;name&gt;</code> command. Direct <code>worker.cron()</code> requires
+that configuration too and raises <code>RuntimeError</code> before starting a loop or connecting when it is absent.
+Registration runs once per CRON process start; Temporal continues the chain on the server. The process
+keeps consuming until stopped, and local stop leaves the server-side chain in place.</p>
 <h2 id="asgi-workers">ASGI Workers</h2>
 <p>ASGI workers allow you to run FastAPI, Starlette, or any ASGI application alongside your Temporal workers.</p>
 <h3 id="basic-asgi-worker">Basic ASGI Worker</h3>
