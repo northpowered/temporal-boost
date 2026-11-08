@@ -5,6 +5,7 @@ This guide covers how to run Temporal-boost applications in development, testing
 ## Table of Contents
 
 - [Development](#development)
+- [CLI Exit Codes and Programmatic Invocation](#cli-exit-codes-and-programmatic-invocation)
 - [Production Deployment](#production-deployment)
 - [Docker Deployment](#docker-deployment)
 - [Kubernetes Deployment](#kubernetes-deployment)
@@ -138,6 +139,67 @@ Load with `python-dotenv`:
 from dotenv import load_dotenv
 load_dotenv()
 ```
+
+## CLI Exit Codes and Programmatic Invocation
+
+Use the same command arguments with a script or the installed single-process launcher:
+
+```bash
+uv run python main.py run payment_worker
+uv run temporal-boost service.main:app run payment_worker
+
+# Forward application options, including help, after --
+uv run temporal-boost service.main:app -- --help
+uv run temporal-boost service.main:app -- exec check --verbose
+```
+
+The outer launcher has one Typer command, so there is no extra `run` before `service.main:app`.
+`temporal-boost --help` shows the launcher's own help; `--` forwards subsequent options to the application.
+
+| Outcome | Process exit code |
+| --- | --- |
+| Explicit `--help` or successful command | 0 |
+| Unknown command, invalid/missing argument, or empty application argument list | 2 |
+| Unhandled ordinary worker exception | 1 |
+| Explicit nonzero `SystemExit` from a command | The requested code |
+| `KeyboardInterrupt` reaching Typer | 130 |
+
+`BoostApp.run()` preserves Typer's `SystemExit`. In `run all`, every worker exception is a coordinator
+failure, so even a worker's `SystemExit(0)` or `SystemExit(None)` produces a CLI error with code 1.
+Graceful application stop still completes normally. These guarantees apply to scripts and the default
+single-process launcher; propagation of child failures to a parent using `--workers > 1` is tracked
+separately in TB-009.
+
+Pass one list when calling from Python. Omitting it (or passing `None`) reads `sys.argv[1:]`; an explicit
+empty list remains empty. Do not use `app.run("run", "payment_worker")` or a single command string.
+
+```python
+app.run(["run", "payment_worker"])  # Raises SystemExit, including 0 after success
+```
+
+For embedding, disable standalone mode to receive a command result and handle exceptions yourself:
+
+```python
+from temporal_boost import BoostApp
+
+app = BoostApp(logger_config=None)
+
+def greet(name: str) -> str:
+    return f"Hello {name}"
+
+app.add_exec_method_sync("greet", greet)
+message = app.run(["exec", "greet", "Ada"], standalone_mode=False)
+assert message == "Hello Ada"
+```
+
+In this mode, parsing errors such as `click.UsageError` and ordinary worker exceptions propagate.
+Help returns 0, and directly raised callback `SystemExit` exceptions still propagate. Command results
+are values, so callers must not assume every returned integer is an OS exit code. Keep the default
+standalone mode in `if __name__ == "__main__": app.run()` to report failures to shell/CI.
+
+**Migration:** `run()` previously swallowed `SystemExit`, allowing invalid invocations to look successful.
+Programs that relied on that behavior must catch `SystemExit` explicitly or use non-standalone mode
+and handle the exceptions. Normal terminal entry points need no changes.
 
 ## Production Deployment
 
@@ -504,9 +566,9 @@ exceptions, including `KeyboardInterrupt` and `SystemExit`, remain failures even
 
 **Migration:** a finite custom worker that previously returned successfully from `run all` must now
 call `app.stop()` before returning to request normal application completion, or use its individual
-`run <name>` command. A worker-local stop alone does not request application shutdown. End-to-end
-exit codes through `BoostApp.run()` and the external CLI remain tracked in TB-008/TB-009; the coordinator
-itself propagates failures, and the Typer `run all` command propagates ordinary worker exceptions.
+`run <name>` command. A worker-local stop alone does not request application shutdown. The coordinator
+propagates failures, and `BoostApp.run()` preserves CLI exits. The `run all` CLI also rejects a worker's
+success `SystemExit` code as a failure. External multi-process supervision remains tracked in TB-009.
 
 Workers participate by implementing `BaseBoostWorker.request_stop() -> bool`: a thread-safe,
 non-blocking, repeatable request that also handles startup. Return `True` when supported.
