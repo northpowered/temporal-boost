@@ -246,13 +246,39 @@ runner вызывает `.run(arguments)` у импортированного о
 | --- | --- | --- |
 | `app.run()` → `run <name>` | Один блокирующий worker в текущем потоке | Управляется конкретным адаптером |
 | `app.run()` → `run all` | По одному daemon-потоку `worker-<name>`; coordinator проверяет stop раз в 50 мс | Первая ошибка останавливает остальные worker и пробрасывается после stop/join с общим deadline |
-| Внешний CLI, `--workers <= 1` | Импорт приложения и вызов его CLI в текущем процессе | `KeyboardInterrupt` перехватывается runner |
-| Внешний CLI, `--workers > 1` | Несколько `multiprocessing.Process`, каждый запускает тот же набор команд | Родитель делает `join()`; при `KeyboardInterrupt` — `terminate()`, ожидание до 5 секунд и при необходимости `kill()` |
+| Внешний CLI, `--workers <= 1` | Импорт приложения и вызов его CLI в текущем процессе | Коды CLI и исключения сохраняются; interrupt обрабатывает Typer |
+| Внешний CLI, `--workers > 1` | Несколько `multiprocessing.Process`, каждый запускает тот же набор команд | Supervisor наблюдает всех детей, при первом отказе останавливает peers и пробрасывает ненулевой код после cleanup |
 
 Количество процессов не распределяет регистрации: `--workers 3 ... run all` запускает весь набор
 в каждом из трёх процессов. Для ASGI это может создавать конфликт одного HTTP-порта.
-В process runner нет перезапуска упавших процессов и передачи их ненулевого exit code родителю:
-код завершения только записывается в лог.
+`_ProcessSupervisor` опрашивает exit codes всех детей раз в 50 мс и делает неблокирующий `join(0)`
+завершённых процессов. Первый замеченный ненулевой код определяет результат родителя: положительный
+сохраняется, отрицательный signal exit `-N` отображается в `128 + N`. Успешные finite children не
+останавливают peers; после завершения всех с кодом 0 supervisor возвращается нормально. Restart нет.
+
+Создание/start/ожидание процессов охвачены единым cleanup. Объект отслеживается до `start()`;
+ошибка следующего старта очищает ранее запущенные и закрывает не запущенный объект. При отказе или
+сигнале родителя stop отправляется через отдельный однонаправленный `multiprocessing.Pipe` каждому ребёнку;
+концы каналов закрываются владельцами. Нет общего IPC lock, который мог бы остаться захваченным при kill.
+В каждом ребёнке daemon watcher
+вызывает `app.stop()` для `run all` (повторяет во время startup) либо `request_stop()` выбранного worker
+для `run <name>` / `cron <name>`. До/после импорта проверяется ранний stop; до dispatch он пропускает run.
+Принадлежащий watcher завершается вместе с child run. Унаследованный SIGINT игнорируется ребёнком,
+SIGTERM сбрасывается до default для force step; внутренний coordinator может установить свои handlers.
+
+`--shutdown-timeout` / keyword `run_multiprocess(..., shutdown_timeout=...)` — конечный общий grace
+в секундах, default 30, zero допустим. После него все survivors получают `terminate()`, затем общий
+timeout 5 секунд, `kill()` и общий timeout ещё 5 секунд. Все завершённые дети joined, их process handles
+closed; ошибка одного cleanup не пропускает остальные объекты и не скрывает первичную ошибку.
+Success `SystemExit` при ошибке supervisor нормализуется в `RuntimeError`, чтобы не дать ложный code 0.
+В main thread временно устанавливаются SIGINT/SIGTERM handlers, в `finally` восстанавливаются.
+Обработчики только сохраняют первый сигнал; повторы не меняют deadlines. После штатного signal cleanup
+родитель даёт 130/143, если результат не определён ошибкой. В background thread supervisor не меняет handlers.
+
+Process grace независим от `BoostApp.shutdown_timeout` и SDK activity grace; внешний бюджет должен
+вмещать внутренний cleanup. Неподдерживающие managed stop адаптеры/длительные exec требуют force fallback.
+Собственные потомки пользовательского приложения должны закрываться его cleanup. Каталог Prometheus
+остаётся прежним механизмом с отдельной задачей ownership TB-028.
 
 `run_all_workers()` временно устанавливает обработчики SIGINT/SIGTERM только при запуске в главном потоке
 и восстанавливает прежние при выходе, включая ошибки. Обработчики и явный `app.stop()` только отмечают
@@ -282,7 +308,7 @@ daemon-потоки могут продолжать работу до выход
 `run_all_workers()` сохраняет исходное исключение; CLI-обёртка `_run_all_workers_cli()` преобразует
 worker `SystemExit(0)` / `SystemExit(None)` в `RuntimeError`, чтобы фатальная ошибка coordinator
 не завершала CLI успешно. Ненулевой `SystemExit` сохраняется. `BoostApp.run()` больше не подавляет
-exit codes; агрегация supervisor нескольких процессов остаётся TB-009.
+exit codes; supervisor нескольких процессов передаёт первый замеченный отказ ребёнка после cleanup peers.
 
 `BaseBoostWorker.request_stop()` по умолчанию возвращает `False` с диагностикой coordinator о неподдержанном
 stop. Новая база `AsyncBoostWorker` реализует opt-in: подкласс вызывает `super().__init__()`, определяет
@@ -457,7 +483,7 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 | Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/prometheus.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/advanced_usage.md` |
 | ASGI backend | `workers/asgi_registry.py`, соответствующий адаптер, `workers/__init__.py` | `tests/test_asgi_registry.py`, `pyproject.toml` extras, `examples/example_fastapi.py` |
 | FastStream | `workers/faststream_worker.py`, `boost_app.py` | `docs/faststream_integration.md`, `examples/example_*faststream*.py` |
-| Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; supervision нескольких процессов — TB-009 |
+| Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; `tests/test_process_runner.py`: supervision doubles и настоящие процессы |
 
 При добавлении нового ASGI backend реализуйте `BaseAsgiWorker`, зарегистрируйте класс с проверкой
 зависимостей, обеспечьте импорт модуля для выполнения декоратора, добавьте enum/extra при необходимости.
@@ -481,8 +507,12 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 Покрыты регистрация, env parsers, builders, часть свойств и настройки lifecycle, ASGI registry и logging.
 `tests/test_cli.py` проверяет внутренний/external CLI, реальный script и установленную entry point
 через subprocess без сервисов: help, пустые/неверные аргументы, выбранную команду, callback result,
-ошибки worker, явный exit code и interrupt. Supervision нескольких процессов, FastStream и реальный
-запуск ASGI-адаптеров этими тестами не проверяются.
+ошибки worker, явный exit code и interrupt. `tests/test_process_runner.py` проверяет поздний отказ ребёнка,
+частичный start, общие deadlines, восстановление handlers, эскалацию и сохранение первичной ошибки.
+Реальные subprocess без сервисов доказывают stop первого при отказе второго, cleanup при втором start
+failure, SIGINT/SIGTERM для `run all` и выбранного worker, kill stubborn children после grace и aggregation
+exit codes через установленную entry point. POSIX signal tests запускаются отдельно от тестового процесса;
+после возврата проверяются отсутствие live children и освобождение PID. Реальные FastStream/ASGI здесь не проверены.
 CRON-регистрация покрыта unit-тестами аргументов, ошибок и локальной отмены. Opt-in
 `TEMPORAL_BOOST_INTEGRATION=1 uv run pytest tests/test_cron_integration.py` запускает настоящий
 Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позволяет указать готовый бинарник),
