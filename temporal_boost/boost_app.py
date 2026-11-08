@@ -5,6 +5,7 @@ import math
 import sys
 import threading
 from collections.abc import Callable
+from functools import wraps
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -13,6 +14,7 @@ import yaml
 from temporalio.types import MethodAsyncNoParam
 from temporalio.worker._interceptor import Interceptor
 
+from temporal_boost.cli.process_context import validate_asgi_processes
 from temporal_boost.common import DEFAULT_LOGGING_CONFIG
 from temporal_boost.worker_coordinator import WorkerCoordinator
 from temporal_boost.workers import (
@@ -112,7 +114,7 @@ class BoostApp:
             use_pydantic_data_converter=self._global_use_pydantic,
         )
 
-        self._run_typer.command(name=worker_name)(worker.run)
+        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
 
         if cron_schedule is not None and cron_runner is not None:
             self._cron_typer.command(name=worker_name)(worker.cron)
@@ -151,7 +153,7 @@ class BoostApp:
 
         worker.name = worker_name
 
-        self._run_typer.command(name=worker_name)(worker.run)
+        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
         self._registered_workers.append(worker)
 
     def add_faststream_worker(
@@ -177,7 +179,7 @@ class BoostApp:
 
         worker.name = worker_name
 
-        self._run_typer.command(name=worker_name)(worker.run)
+        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
         self._registered_workers.append(worker)
         return worker
 
@@ -192,8 +194,20 @@ class BoostApp:
             if worker_name == registered_worker.name:
                 raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
 
-        self._run_typer.command(name=worker_name)(boost_worker.run)
+        self._run_typer.command(name=worker_name)(self._worker_run_command(boost_worker))
         self._registered_workers.append(boost_worker)
+
+    def _worker_run_command(self, worker: BaseBoostWorker) -> Callable[..., Any]:
+        run = worker.run
+        if not isinstance(worker, BaseAsgiWorker):
+            return run
+
+        @wraps(run)
+        def run_asgi(*args: Any, **kwargs: Any) -> Any:
+            validate_asgi_processes([worker])
+            return run(*args, **kwargs)
+
+        return run_asgi
 
     def get_registered_workers(self) -> list[BaseBoostWorker]:
         return self._registered_workers.copy()
@@ -227,6 +241,7 @@ class BoostApp:
             RuntimeError: If a worker fails with a success exit code.
             SystemExit: If a worker requests a nonzero exit code.
         """
+        validate_asgi_processes(self.get_registered_workers())
         try:
             self.run_all_workers()
         except SystemExit as exc:

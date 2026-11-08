@@ -362,6 +362,27 @@ Run:
 docker-compose up -d
 ```
 
+For an image that registers both HTTP and Temporal workers, give each deployment its own command.
+For example, with the registrations in `examples/example_fastapi.py` and the `uvicorn` extra installed:
+
+```yaml
+services:
+  http:
+    image: your-temporal-service
+    command: ["temporal-boost", "--workers", "1", "examples.example_fastapi:app", "run", "api_worker"]
+    expose:
+      - "8000"
+  consumers:
+    image: your-temporal-service
+    command: ["temporal-boost", "--workers", "3", "examples.example_fastapi:app", "run", "order_worker"]
+```
+
+Set the Temporal connection environment on both services to match your deployment. Each HTTP container
+owns its socket; consumers expose no HTTP port. Route a load balancer to port 8000 over the container
+network, without assigning the same fixed host port to multiple replicas. Scale HTTP containers and
+the consumer service independently. See
+[ASGI and External Processes](#asgi-and-external-processes) for the launch policy.
+
 ### Multi-stage Docker Build
 
 Optimize Docker image size:
@@ -579,8 +600,49 @@ in the deployment's final kill deadline. Programmatic callers can pass
 healthy earlier child. It now exits nonzero after coordinated cleanup. Startup failure also stops
 children already launched. Deployments should configure their grace budget and implement `request_stop()`
 for custom workers instead of relying on immediate termination. `run all` repeats every registration
-in every process; ASGI socket sharing remains a separate concern (TB-010). This change releases process
-resources; ownership of the Prometheus multiprocess directory remains tracked in TB-028.
+in every process and is rejected when it includes ASGI workers; see the launch policy below.
+This change releases process resources; ownership of the Prometheus multiprocess directory remains
+tracked in TB-028.
+
+### ASGI and External Processes
+
+The external launcher does not share listening sockets. With `--workers > 1`, commands that would
+start ASGI workers fail with usage exit code **2**, before any selected worker starts. The diagnostic
+names the ASGI workers and recommends a single HTTP process and separate consumer scaling.
+The supervisor propagates that status after cleaning up its children.
+
+| Application command | `--workers 1` | `--workers > 1` |
+| --- | --- | --- |
+| `run all`, no ASGI registered | Allowed | Allowed |
+| `run all`, at least one ASGI registered | Allowed | Rejected before any worker starts |
+| `run <asgi-name>` | Allowed | Rejected before server startup |
+| `run <temporal-name>` | Allowed | Allowed, even with ASGI registered |
+| `cron <temporal-name>` | Allowed | Allowed; existing CRON identity rules apply |
+| `exec <command>` | Allowed | Allowed; callback behavior is application-owned |
+| Help, including `run <asgi-name> --help` | Allowed | Allowed, without starting workers |
+
+The check runs in each child after Typer has selected and parsed the command. Imports remain in the
+children, and ordinary help and parsing errors keep their existing behavior. It applies to Uvicorn,
+Hypercorn, Granian, and custom `BaseAsgiWorker` subclasses, including those added with
+`add_async_runtime()`. Backend-specific kwargs do not opt into socket sharing. This launcher does not
+provide shared-socket ASGI support. Arbitrary `exec` callbacks or import-time server startup remain
+the application's responsibility.
+
+For the FastAPI example, run these commands in separate terminals or services:
+
+```bash
+# One HTTP process, with the uvicorn extra installed
+uv run temporal-boost --workers 1 examples.example_fastapi:app run api_worker
+
+# Three Temporal consumers; registering the API does not start it here
+uv run temporal-boost --workers 3 examples.example_fastapi:app run order_worker
+```
+
+**Migration:** replace replicated `run all` or `run <asgi-name>` deployments with separate HTTP and
+consumer commands. Single-process `run all` is still supported. Native backend process managers and
+their socket configuration are separate deployments; these ASGI adapter calls do not acquire a shared
+socket from the external launcher. Separate containers or pods may run HTTP on the same container
+port because they have separate network addresses; publish or route them accordingly.
 
 ### Graceful Shutdown
 

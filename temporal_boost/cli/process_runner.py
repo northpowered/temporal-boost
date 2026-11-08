@@ -9,6 +9,7 @@ from types import FrameType
 from typing import Any
 
 from temporal_boost.cli.importer import import_app_object
+from temporal_boost.cli.process_context import multiprocess_execution
 from temporal_boost.cli.prometheus import setup_prometheus_multiproc_dir
 
 
@@ -55,7 +56,7 @@ def _watch_for_stop(application: Any, arguments: list[str], stop: Connection, fi
             return
 
 
-def _run_child_process(app_path: str, arguments: list[str], stop: Connection) -> None:
+def _run_child_process(app_path: str, arguments: list[str], stop: Connection, process_count: int = 1) -> None:
     # The parent owns SIGINT and coordinates shutdown through a one-way pipe.
     # Reset an inherited SIGTERM handler so terminate() remains the forced step.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -72,7 +73,8 @@ def _run_child_process(app_path: str, arguments: list[str], stop: Connection) ->
         )
         watcher.start()
         try:
-            application.run(arguments)
+            with multiprocess_execution(process_count):
+                application.run(arguments)
         finally:
             finished.set()
             watcher.join(timeout=POLL_INTERVAL)
@@ -139,7 +141,7 @@ class _ProcessSupervisor:
             try:
                 process = Process(
                     target=_run_child_process,
-                    args=(self._app_path, self._arguments, child_stop),
+                    args=(self._app_path, self._arguments, child_stop, self._count),
                     name=f"worker-{index}",
                 )
             except BaseException:
