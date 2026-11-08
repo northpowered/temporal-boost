@@ -52,6 +52,12 @@ This directory contains comprehensive examples demonstrating various features an
 
 ### Integration Examples
 
+- **`example_metrics.py`** - Independent SDK metrics endpoints
+  - Two Temporal workers with one exporter each
+  - Run two processes in separate terminals with `METRICS_BASE_PORT=9100` and `METRICS_BASE_PORT=9102`
+  - Run with: `uv run python examples/example_metrics.py run all`
+  - Scrape every endpoint on ports 9100 through 9103; requires a Temporal server
+
 - **`example_app.py`** - Comprehensive example
   - Multiple workers with different configurations
   - Pydantic models

@@ -246,7 +246,13 @@ These settings control Prometheus metrics collection and export.
 export TEMPORAL_PROMETHEUS_BIND_ADDRESS=0.0.0.0:9090
 ```
 
-When set, exposes Prometheus metrics at `/metrics` endpoint.
+When set, each Temporal worker runtime exposes `/metrics` at this address. Concurrent runtimes need
+distinct endpoints; a bind conflict fails startup instead of disabling telemetry. Override the address
+per worker with `configure_temporal_runtime()`, and allocate separate ports or network addresses for
+each process. `--workers N` does not assign metrics ports. Scrape every endpoint; see
+[Metrics Across Workers and Processes](advanced_usage.md#metrics-across-workers-and-processes).
+
+The SDK exporter does not use `PROMETHEUS_MULTIPROC_DIR`; that directory does not aggregate SDK metrics.
 
 ### `TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX`
 

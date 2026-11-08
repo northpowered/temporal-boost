@@ -360,7 +360,10 @@ worker.configure_temporal_client(
 
 ### `TemporalBoostWorker.configure_temporal_runtime()`
 
-Configure Temporal runtime for the worker.
+Configure an independent, worker-owned Temporal runtime before first use. Concurrent workers need
+distinct Prometheus endpoints; runtimes are not shared automatically. Each process must expose every
+worker's endpoint for scraping. See
+[Metrics Across Workers and Processes](advanced_usage.md#metrics-across-workers-and-processes).
 
 ```python
 configure_temporal_runtime(
@@ -604,7 +607,10 @@ __init__(
 
 ### `TemporalRuntimeBuilder.build()`
 
-Build and return Temporal runtime.
+Build and return a new independent Temporal runtime. An explicit `metrics` backend takes priority
+over `prometheus_bind_address`. Only the effective Prometheus endpoint is logged as bound.
+The caller owns the returned runtime; pass it to `TemporalClientBuilder.set_runtime()` before
+building a standalone client. Do not pass a live runtime between processes.
 
 ```python
 def build() -> Runtime
@@ -613,6 +619,11 @@ def build() -> Runtime
 **Returns:**
 
 - `Runtime`: Temporal runtime instance.
+
+**Raises:**
+
+- `ValueError`: Original SDK initialization error, including exporter bind conflicts. The builder
+  never retries with metrics disabled. Every concurrent Prometheus runtime needs its own endpoint.
 
 ## Enums
 
