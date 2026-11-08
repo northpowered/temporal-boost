@@ -19,6 +19,102 @@ from temporal_boost.temporal import config
 from temporal_boost.workers.temporal import TemporalBoostWorker
 
 
+@pytest.mark.parametrize(
+    ("schedule", "with_runner"),
+    [("0 * * * *", False), (None, True), ("", True), (" ", True), ("", False), ("\t\n", False)],
+)
+def test_invalid_cron_registration_has_no_partial_app_or_connection_side_effects(
+    schedule: str | None, with_runner: bool
+) -> None:
+    app = BoostApp(logger_config=None)
+
+    async def runner() -> None:
+        pass
+
+    with patch.object(TemporalBoostWorker, "configure_temporal_client") as configure:
+        with pytest.raises(ValueError, match="cron_schedule.*cron_runner|cron_schedule.*non-empty"):
+            app.add_worker(
+                "invalid_cron",
+                "queue",
+                activities=[MagicMock()],
+                cron_schedule=schedule,
+                cron_runner=runner if with_runner else None,
+            )
+
+    configure.assert_not_called()
+    assert app.get_registered_workers() == []
+    assert app._registered_cron_workers == []
+    result = CliRunner().invoke(app._root_typer, ["run", "invalid_cron"])
+    assert result.exit_code == 2
+    assert "No such command" in result.output
+
+
+def test_consumer_registration_has_no_cron_cli_command() -> None:
+    app = BoostApp(logger_config=None)
+    worker = app.add_worker("consumer", "queue", activities=[MagicMock()])
+
+    result = CliRunner().invoke(app._root_typer, ["cron", "consumer"])
+
+    assert result.exit_code == 2
+    assert app.get_registered_workers() == [worker]
+    assert app._registered_cron_workers == []
+
+
+@pytest.mark.parametrize("command", [["run", "scheduled"], ["run", "all"], ["cron", "scheduled"]])
+def test_cli_cron_registration_is_explicit_and_consumers_never_start_workflows(command: list[str]) -> None:
+    app = BoostApp(logger_config=None, shutdown_timeout=2)
+
+    async def runner() -> None:
+        pass
+
+    worker = app.add_worker("scheduled", "queue", activities=[runner], cron_schedule="0 * * * *", cron_runner=runner)
+    client = MagicMock(start_workflow=AsyncMock())
+    sdk = MagicMock(run=AsyncMock(), shutdown=AsyncMock())
+    finished: asyncio.Event | None = None
+
+    async def build() -> None:
+        nonlocal finished
+        finished = asyncio.Event()
+        worker._client = client
+        worker._worker = sdk
+
+    async def serve() -> None:
+        assert finished is not None
+        if command == ["run", "all"]:
+            app.stop()
+        elif command[0] == "run":
+            worker.request_stop()
+        await finished.wait()
+
+    async def shutdown() -> None:
+        assert finished is not None
+        finished.set()
+
+    def registered(*_args: object, **_kwargs: object) -> MagicMock:
+        worker.request_stop()
+        return MagicMock(id=worker.cron_workflow_id, result_run_id="registered-run")
+
+    sdk.run.side_effect = serve
+    sdk.shutdown.side_effect = shutdown
+    client.start_workflow.side_effect = registered
+
+    with patch.object(worker, "_build_worker", side_effect=build) as build_worker:
+        result = CliRunner().invoke(app._root_typer, command)
+
+    assert result.exit_code == 0, result.exception
+    assert result.exception is None
+    build_worker.assert_awaited_once()
+    sdk.run.assert_awaited_once()
+    sdk.shutdown.assert_awaited_once()
+    assert worker.state == "stopped"
+    if command[0] == "cron":
+        client.start_workflow.assert_awaited_once()
+        assert client.start_workflow.call_args.args == (runner,)
+        assert client.start_workflow.call_args.kwargs["cron_schedule"] == "0 * * * *"
+    else:
+        client.start_workflow.assert_not_awaited()
+
+
 class TestBoostApp:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("env_enabled", [False, True])

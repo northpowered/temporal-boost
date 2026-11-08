@@ -1,7 +1,9 @@
 import asyncio
 import logging
+import threading
 from collections.abc import Callable, Mapping
-from typing import Any, cast
+from concurrent.futures import CancelledError as FutureCancelledError
+from typing import Any, Literal, cast
 from urllib.parse import quote
 
 from temporalio.client import Client, WorkflowHandle
@@ -40,6 +42,10 @@ class TemporalBoostWorker(BaseBoostWorker):
         **worker_kwargs: Any,
     ) -> None:
         self.name = worker_name
+        if cron_schedule is not None and not cron_schedule.strip():
+            raise ValueError("cron_schedule must be a non-empty, non-whitespace string")
+        if (cron_schedule is None) != (cron_runner is None):
+            raise ValueError("cron_schedule and cron_runner must be provided together or both omitted")
         if cron_workflow_id is not None and not cron_workflow_id.strip():
             raise ValueError("cron_workflow_id must not be empty or whitespace-only")
         self._cron_workflow_id = (
@@ -118,9 +124,13 @@ class TemporalBoostWorker(BaseBoostWorker):
 
     @property
     def temporal_cron_runner(self) -> MethodAsyncNoParam[Any, Any]:
-        if not self._cron_runner:
+        if self._cron_runner is None:
             raise RuntimeError("Cron runner is not configured. Provide a valid cron_runner.")
         return self._cron_runner
+
+    def _require_cron_configuration(self) -> None:
+        if not self._cron_schedule.strip() or self._cron_runner is None:
+            raise RuntimeError("CRON execution requires both cron_schedule and cron_runner")
 
     @property
     def temporal_client_runtime(self) -> Runtime:
@@ -216,6 +226,7 @@ class TemporalBoostWorker(BaseBoostWorker):
 
     async def _register_cron(self) -> WorkflowHandle[Any, Any]:
         """Atomically start or reuse an active CRON chain; reject a closed ID."""
+        self._require_cron_configuration()
         handle = await self.temporal_client.start_workflow(
             self.temporal_cron_runner,
             id=self.cron_workflow_id,
@@ -234,9 +245,7 @@ class TemporalBoostWorker(BaseBoostWorker):
         return handle
 
     async def _run_with_cron(self) -> None:
-        await self._build_worker()
-        async with self.temporal_worker:
-            await self._register_cron()
+        self._require_cron_configuration()
         await self._run_lifecycle(with_cron=True)
 
     async def _run_lifecycle(self, *, with_cron: bool) -> None:
@@ -285,20 +294,15 @@ class TemporalBoostWorker(BaseBoostWorker):
         tasks: list[asyncio.Task[Any]] = [self._sdk_task, stop_task]
         if with_cron:
             self._cron_future = asyncio.get_running_loop().create_future()
-            self._cron_task = asyncio.create_task(self._register_cron())
+            self._cron_task = asyncio.create_task(self._register_cron_and_wait())
             tasks.append(self._cron_task)
         await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in (self._sdk_task, self._cron_task):
             if task is not None and task.done():
                 await task
 
-    async def _register_cron(self) -> None:
-        await self.temporal_client.start_workflow(
-            self.temporal_cron_runner,
-            id=str(uuid.uuid4()),
-            task_queue=self._worker_builder.task_queue,
-            cron_schedule=self._cron_schedule,
-        )
+    async def _register_cron_and_wait(self) -> None:
+        await self._register_cron()
         if self._cron_future is not None:
             await self._cron_future
 
@@ -399,6 +403,7 @@ class TemporalBoostWorker(BaseBoostWorker):
             self._state = "stopped"
 
     def run(self) -> None:
+        """Consume the task queue without registering a CRON workflow."""
         try:
             asyncio.run(self._run_worker())
         except Exception:
@@ -419,6 +424,8 @@ class TemporalBoostWorker(BaseBoostWorker):
         await asyncio.shield(owner)
 
     def cron(self) -> None:
+        """Register or reuse the CRON workflow and consume its task queue."""
+        self._require_cron_configuration()
         logger.info(
             f"Cron worker {self.name} started on {self._worker_builder.task_queue} queue "
             f"with schedule {self._cron_schedule}",

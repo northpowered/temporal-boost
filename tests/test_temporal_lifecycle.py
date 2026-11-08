@@ -292,7 +292,12 @@ async def test_cron_stop_completes_waiter_and_cancels_pending_registration() -> 
 async def test_cron_stop_after_registration_completes_waiter() -> None:
     with resources() as (worker, sdk, client, _):
         registered = asyncio.Event()
-        client.start_workflow.side_effect = lambda *_args, **_kwargs: registered.set()
+
+        def register(*_args: Any, **_kwargs: Any) -> MagicMock:
+            registered.set()
+            return MagicMock(id=worker.cron_workflow_id, result_run_id="registered-run")
+
+        client.start_workflow.side_effect = register
         task = asyncio.create_task(worker._run_with_cron())
         try:
             await asyncio.wait_for(registered.wait(), WAIT_TIMEOUT)

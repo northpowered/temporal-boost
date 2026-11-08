@@ -390,6 +390,7 @@ class TestTemporalBoostWorker:
             worker_name="test_worker",
             task_queue="test_queue",
             activities=[dummy_activity],
+            cron_schedule="0 0 * * *",
             cron_runner=cron_runner,
         )
 
@@ -543,3 +544,53 @@ class TestTemporalBoostWorker:
 
         assert "Worker 'test_worker' started" in caplog.text
         assert "test_queue" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("schedule", "with_runner"),
+    [("0 * * * *", False), (None, True), ("", True), (" ", True), ("", False), ("\t\n", False)],
+)
+def test_incomplete_or_empty_cron_configuration_is_rejected_before_building(
+    schedule: str | None, with_runner: bool
+) -> None:
+    async def runner() -> None:
+        pass
+
+    with patch("temporal_boost.workers.temporal.TemporalWorkerBuilder") as builder:
+        with pytest.raises(ValueError, match="cron_schedule.*cron_runner|cron_schedule.*non-empty"):
+            TemporalBoostWorker(
+                "cron_worker",
+                "queue",
+                activities=[MagicMock()],
+                cron_schedule=schedule,
+                cron_runner=runner if with_runner else None,
+            )
+
+    builder.assert_not_called()
+
+
+def test_manual_cron_without_configuration_fails_before_creating_loop_or_building() -> None:
+    worker = TemporalBoostWorker("consumer", "queue", activities=[MagicMock()])
+    with (
+        patch("temporal_boost.workers.temporal.asyncio.run") as run,
+        patch.object(worker, "_build_worker", new_callable=AsyncMock) as build,
+    ):
+        with pytest.raises(RuntimeError, match="cron_schedule.*cron_runner"):
+            worker.cron()
+
+    run.assert_not_called()
+    build.assert_not_called()
+    assert worker.state == "created"
+
+
+@pytest.mark.asyncio
+async def test_async_cron_without_configuration_fails_before_building() -> None:
+    worker = TemporalBoostWorker("consumer", "queue", activities=[MagicMock()])
+    with patch.object(worker, "_build_worker", new_callable=AsyncMock) as build:
+        with pytest.raises(RuntimeError, match="cron_schedule.*cron_runner"):
+            await worker._run_with_cron()
+        with pytest.raises(RuntimeError, match="cron_schedule.*cron_runner"):
+            await worker._register_cron()
+
+    build.assert_not_called()
+    assert worker.state == "created"

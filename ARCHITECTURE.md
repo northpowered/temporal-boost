@@ -169,10 +169,18 @@ Executors и другие ресурсы, переданные пользова�
 
 ### Режим CRON
 
+`cron_schedule` и `cron_runner` задаются парой либо оба опускаются. Неполная пара и явно пустое/пробельное
+расписание вызывают `ValueError` в конструкторе до создания builder, настройки client или изменения
+реестров/CLI `BoostApp`. Это одинаково для `add_worker()` и прямого конструктора. Синтаксис выражения
+проверяет SDK/server. Один `cron_workflow_id` не включает CRON-режим.
+Для исправления старых частичных конфигураций нужно добавить недостающий параметр или убрать оба.
+
 `cron <name>` вызывает `TemporalBoostWorker.cron()` → `asyncio.run(_run_with_cron())`:
 
-1. Собираются runtime, client и worker по обычной цепочке.
-2. SDK worker запускается через `async with self.temporal_worker`.
+1. До создания loop/ресурсов проверяется полная CRON-конфигурация; ручной вызов на consumer без неё
+   даёт `RuntimeError`. Async CRON entry point также проверяет конфигурацию до сборки.
+2. Общий `_run_lifecycle(with_cron=True)` собирает runtime/client/worker и запускает SDK `run()` task.
+   Создаются локальный `_cron_future` и task `_register_cron_and_wait()`.
 3. `_register_cron()` вызывает `client.start_workflow()` со стабильным `cron_workflow_id`,
    очередью этого worker и строкой `cron_schedule`. Default:
    `temporal-boost/cron/<percent-encoded task_queue>/<percent-encoded worker_name>`;
@@ -180,7 +188,9 @@ Executors и другие ресурсы, переданные пользова�
    `WorkflowIDConflictPolicy.USE_EXISTING` атомарно возвращает активную цепочку при повторном старте
    и гонке процессов. `WorkflowIDReusePolicy.REJECT_DUPLICATE` отклоняет закрытый ID через
    `WorkflowAlreadyStartedError`, пока сервер хранит историю. Лог содержит namespace, ID и run ID ответа.
-4. Метод ждёт незавершённый `_cron_future`; при отмене выходит из контекстного менеджера SDK worker.
+4. После регистрации CRON task ждёт `_cron_future`. Lifecycle наблюдает её, SDK task и stop event.
+   Stop завершает future, отменяет pending registration и выполняет общий cleanup SDK worker.
+   SDK async context manager в этом пути не используется.
 
 Это SDK `cron_schedule`, а не отдельный ресурс Temporal Schedule и не локальный планировщик.
 Аргументы workflow этим API не передаются; `cron_runner` типизирован как метод без параметров workflow.
