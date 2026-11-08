@@ -53,8 +53,9 @@
 Независимые исправления [TB-001](001-pydantic-converter-boolean-override.md), [TB-004](004-wire-graceful-shutdown-timeout.md), [TB-006](006-cron-workflow-idempotency.md) и [TB-008](008-cli-exit-codes.md) можно брать первыми.
 [TB-002](002-application-graceful-shutdown.md) задаёт общий контракт остановки; после него выполняются [TB-003](003-thread-worker-failure-propagation.md), [TB-013](013-faststream-managed-shutdown.md), [TB-014](014-asgi-lifecycle-and-event-loops.md)
 и вместе с [TB-008](008-cli-exit-codes.md) — [TB-009](009-multiprocess-supervision.md). Для metrics сначала нужно определить топологию в [TB-011](011-prometheus-multiple-runtimes.md),
-после чего решать судьбу multiprocess directory в [TB-028](028-prometheus-temp-directory-ownership.md). Исправление fallback [TB-012](012-telemetry-fallback-preservation.md)
-можно делать отдельно, не считая его решением полноты metrics.
+после чего решать судьбу multiprocess directory в [TB-028](028-prometheus-temp-directory-ownership.md).
+[TB-012](012-telemetry-fallback-preservation.md) отменена: выбранная в TB-011 политика пробрасывает
+ошибки инициализации runtime и исключает fallback с отключённой telemetry.
 
 Исправления тестов [TB-020](020-meaningful-cli-unit-tests.md) и [TB-021](021-isolate-runtime-tests-from-network.md) полезно делать рано. Ужесточение CI [TB-022](022-enforce-ci-quality-checks.md) должно
 сопровождаться устранением обнаруженных ошибок; нельзя просто скрыть их другими blanket-исключениями.
