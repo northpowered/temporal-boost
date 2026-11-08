@@ -162,6 +162,8 @@ SDK `shutdown()` вызывается не более одного раза пр
 Каждый `TemporalBoostWorker` по умолчанию создаёт свой runtime и client. Автоматического разделения
 одного runtime между воркерами нет. Отдельно используемый `TemporalClientBuilder` при отсутствии
 явного runtime берёт `Runtime.default()`; адаптер worker всегда передаёт собственный runtime.
+Для Prometheus каждый concurrent runtime должен иметь собственный endpoint; все endpoints всех
+процессов необходимо scrape. Общий runtime API и автоматическое назначение портов не реализованы.
 У `Client` и `Runtime` SDK 1.14.1 нет публичных `close()` / `shutdown()`; adapter не придумывает такие методы,
 а снимает свои ссылки, в том числе `worker_builder.set_client(None)` и `client_builder.set_runtime(None)`.
 SDK управляет освобождением своих native handles; внешние ссылки могут продлить их жизнь.
@@ -461,16 +463,31 @@ SDK telemetry настраивается отдельно в `TemporalRuntimeBui
 service name и prefix. Поддерживаются SDK `PrometheusConfig`, `OpenTelemetryConfig`, `MetricBuffer`.
 Явно переданный `metrics` имеет приоритет перед автоматическим `PrometheusConfig` из bind address.
 
-При `ValueError`, содержащем `Address already in use`, и заданном `prometheus_bind_address` builder
-повторяет создание runtime с пустым `TelemetryConfig()`. В этой ветке теряется вся пользовательская
-telemetry-конфигурация, включая tags и logging. Прочие `ValueError` пробрасываются.
-Если конфликтующий Prometheus задан только через `metrics=PrometheusConfig(...)`, а поле bind address
-builder равно `None`, эта fallback-ветка не срабатывает.
+Поддерживаемая топология TB-011 — отдельный SDK exporter для каждого runtime. В одном процессе два
+worker получают разные bind addresses; для нескольких процессов в одном network namespace нужны
+разные диапазоны портов. У pod/container с разными network addresses номера портов могут совпадать,
+но Prometheus/service discovery должны scrape каждый worker endpoint каждого pod, а не только один
+балансируемый адрес. Внешний `--workers N` повторяет конфигурацию и не распределяет metrics-порты.
+Пример `examples/example_metrics.py` задаёт два порта на процесс и показывает два отдельных запуска.
+Альтернатива на уровне SDK — явно настроенный `OpenTelemetryConfig` и внешний collector.
+
+`TemporalRuntimeBuilder.build()` больше не повторяет создание runtime с отключённой telemetry.
+Любой SDK `ValueError` пробрасывается исходным объектом. Для фактического `PrometheusConfig` ошибка
+логирует весь endpoint и рекомендацию отдельного endpoint каждому runtime; адрес не разбирается
+через `split(":")`, и ошибка не классифицируется по подстроке SDK message. Успешный bind логируется
+только для фактического Prometheus backend с его настоящим address, включая явный `metrics=` override.
+Port conflict теперь фатален для startup, coordinator/supervisor останавливают peers. Это намеренная
+миграция с прежнего режима частичных метрик; fallback-задача TB-012 заменена этой политикой.
+`global_tags` в locked SDK экспортируются как resource metadata в `target_info`, а не как labels
+каждого counter. Native worker metrics имеют task queue labels; Prometheus `instance` различает endpoints.
 
 Перед многопроцессным запуском CLI создаёт или проверяет `PROMETHEUS_MULTIPROC_DIR`.
 Это отдельная переменная от `TEMPORAL_PROMETHEUS_BIND_ADDRESS`. В коде нет объединения SDK-метрик
 процессов в общий exporter; наличие каталога само по себе не решает конфликт порта нескольких runtimes.
 Автоматической очистки временного каталога также нет.
+SDK runtime строится лениво в процессе worker и не переносится через fork. На cleanup снимаются
+ссылки; внешний runtime/meter может продлить жизнь native handles и exporter. Общий владелец runtime
+или shared listening socket в пакете не вводится.
 
 ## 9. Где документация расходится с кодом
 
@@ -481,8 +498,6 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 | Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
 | Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal и custom managed workers с отдельным `BoostApp.shutdown_timeout`; FastStream/ASGI ещё не подключены. SDK activity grace period задаётся отдельно |
-| Автоматически общий runtime в [advanced_usage.md](docs/advanced_usage.md) | Каждый `TemporalBoostWorker` создаёт свой runtime |
-| Пример custom runtime в [advanced_usage.md](docs/advanced_usage.md) | Построенный отдельно runtime не влияет на client без `client_builder.set_runtime(runtime)` до `build()` |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
 | `TestAsyncRuntime` в [example_app.py](examples/example_app.py) | У класса нет обязательного `shutdown()`; как есть он абстрактен и не зарегистрирован в приложении |
 
@@ -517,9 +532,18 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 ## 11. Проверки и ограничения тестов
 
 Основные тесты используют `unittest.mock`, `AsyncMock` и `pytest-asyncio`; подключения client и SDK worker
-подменяются. Temporal Server для этой suite не требуется. Однако часть `test_temporal_runtime.py`
-создаёт настоящий SDK runtime и открывает Prometheus-порты `9090`/`9091`: нужны доступные порты и разрешение
-на локальный bind. В ограниченной песочнице возможен `Operation not permitted`.
+подменяются. Temporal Server для базовой suite не требуется. `test_temporal_runtime.py` изолирован
+от сети через подмену SDK Runtime. Явные exporter integration tests используют временные порты;
+для них нужно разрешение на локальный bind. В ограниченной песочнице возможен `Operation not permitted`.
+
+`tests/test_metrics_topology.py` проверяет отдельное владение runtime, передачу именно этого runtime
+в `Client.connect()`, эффективный metrics backend, отсутствие fallback и сохранение исходных ошибок.
+Subprocess-тесты читают настоящие SDK counters и `target_info` от двух worker runtimes на разных
+потоках одного процесса и от двух таких процессов: проверяются все два/четыре endpoints и суммы.
+Дубликаты endpoint внутри процесса и между процессами фатальны; уже работающие exporters продолжают
+отдаваться. Opt-in `TEMPORAL_BOOST_INTEGRATION=1` запускает ephemeral Temporal dev server и два процесса
+с двумя настоящими SDK workers в каждом, исполняет workflows/activities для четырёх очередей и читает
+custom counter и native activity latency с каждого endpoint. Live SDK runtime между процессами не передаётся.
 
 Покрыты регистрация, env parsers, builders, часть свойств и настройки lifecycle, ASGI registry и logging.
 `tests/test_cli.py` проверяет внутренний/external CLI, реальный script и установленную entry point

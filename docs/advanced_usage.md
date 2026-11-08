@@ -5,6 +5,7 @@ This guide covers advanced patterns, customization options, and techniques for p
 ## Table of Contents
 
 - [Custom Runtime Configuration](#custom-runtime-configuration)
+- [Metrics Across Workers and Processes](#metrics-across-workers-and-processes)
 - [Worker Customization](#worker-customization)
 - [Interceptors](#interceptors)
 - [Custom Logging](#custom-logging)
@@ -139,12 +140,93 @@ worker_builder = TemporalWorkerBuilder(
     max_concurrent_workflow_tasks=100,
 )
 
-# Create worker
-client = await client_builder.build()
+# Fragment inside an async function: build and attach the runtime before connecting
 runtime = runtime_builder.build()
+client_builder.set_runtime(runtime)
+client = await client_builder.build()
 worker_builder.set_client(client)
 worker = worker_builder.build()
 ```
+
+## Metrics Across Workers and Processes
+
+Each `TemporalBoostWorker` owns an independent SDK runtime and client. There is **no automatic
+runtime sharing**. A Prometheus exporter belongs to that runtime and binds its own listening socket.
+The supported topology is a distinct endpoint for every concurrently running worker runtime, scraped
+individually by Prometheus. SDK `OpenTelemetryConfig` can instead send each runtime's metrics to an
+external collector configured by your deployment.
+
+| Deployment | Exporter endpoints to scrape |
+| --- | --- |
+| Two workers in one process | Two distinct addresses, for example `:9100` and `:9101` |
+| Two processes, each running two workers on one host | Four distinct addresses, for example `:9100` through `:9103` |
+| Two pods/containers, each running two workers | Both ports in each pod/container, for example `pod-a:9100`, `pod-a:9101`, `pod-b:9100`, `pod-b:9101` |
+
+Configure each worker before starting it or accessing `temporal_client_runtime`. This fragment assumes
+`payments` and `notifications` were returned by `app.add_worker(...)`:
+
+```python
+payments.configure_temporal_runtime(
+    prometheus_bind_address="0.0.0.0:9100",
+    global_tags={"boost_worker": "payments"},
+)
+notifications.configure_temporal_runtime(
+    prometheus_bind_address="0.0.0.0:9101",
+    global_tags={"boost_worker": "notifications"},
+)
+```
+
+The default `TEMPORAL_PROMETHEUS_BIND_ADDRESS` is applied to each worker, so one fixed address is
+appropriate for a single runtime. Override it per worker when starting more than one. For processes
+sharing a network address, allocate separate port ranges. The external `--workers N` launcher repeats
+the application configuration; it does not allocate metrics ports or aggregate SDK metrics. Prefer
+separate processes with explicit port ranges, or pods with separate network addresses. Scrape each
+worker endpoint in every replica using static targets or service discovery.
+
+The runnable [metrics example](https://github.com/northpowered/temporal-boost/blob/main/examples/example_metrics.py)
+has two workers. With a reachable Temporal server, start two processes in separate terminals:
+
+```bash
+METRICS_BASE_PORT=9100 uv run python examples/example_metrics.py run all
+METRICS_BASE_PORT=9102 uv run python examples/example_metrics.py run all
+```
+
+`METRICS_BASE_PORT` is an environment variable implemented by this example. It is not a Temporal-boost
+configuration option. A Prometheus server on the same host can scrape all four exporters:
+
+```yaml
+scrape_configs:
+  - job_name: temporal-workers
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:9100", "127.0.0.1:9101", "127.0.0.1:9102", "127.0.0.1:9103"]
+```
+
+Keep Prometheus's `instance` label to distinguish endpoints before aggregating across replicas.
+Native worker metrics carry task queue labels. In the locked SDK, `global_tags` appear as resource
+metadata in `target_info`; they are not automatically labels on every counter. Scrape `target_info`
+alongside the metrics, and join it on `job`/`instance` when resource metadata is needed.
+
+**Ownership and failure:** runtimes are built lazily in the worker's process. The worker passes its
+runtime to its own client. Cleanup releases worker/client/runtime references; the SDK manages native
+handles and provides no public `Runtime.close()` in the locked version. External runtime or metric
+meter references can extend the exporter's lifetime. Do not build a live SDK runtime in a parent and
+transfer it to a child: SDK runtimes do not work across forks. There is no shared-runtime API here.
+
+An exporter initialization failure now propagates and fails worker startup, including a bind conflict.
+The log names the actual configured Prometheus endpoint; telemetry is never retried with metrics
+disabled. `run all` then stops peer workers, and the external supervisor propagates the failure.
+Configure distinct endpoints rather than relying on the first runtime that happens to bind.
+
+**Migration:** older releases could continue with metrics disabled after a port conflict, leaving a
+partially observed service. Such deployments now fail startup. Give every runtime a unique endpoint
+or use an external telemetry collector. An explicit `metrics=PrometheusConfig(...)` takes priority over
+`prometheus_bind_address`, and follows the same failure policy.
+
+`PROMETHEUS_MULTIPROC_DIR` is unrelated to the SDK exporter. It is used by Python's `prometheus_client`
+multiprocess mode when that client is installed and configured separately. Temporal's SDK exporter
+does not write there, and Temporal-boost does not combine SDK metrics through it. The launcher's legacy
+directory setup is not an aggregator; its cleanup/removal is tracked separately in TB-028.
 
 ## Interceptors
 
@@ -462,23 +544,11 @@ worker = app.add_worker(
 
 ### Connection Pooling
 
-Temporal SDK handles connection pooling automatically, but you can optimize:
-
-```python
-# Multiple workers share the same runtime (default)
-# For better resource usage, configure shared runtime
-
-runtime_builder = TemporalRuntimeBuilder(
-    prometheus_bind_address="0.0.0.0:9090",
-)
-
-runtime = runtime_builder.build()
-
-# Use same runtime for multiple workers
-worker1 = app.add_worker("worker1", "queue1", activities=[...])
-worker1.configure_temporal_client(...)
-# Runtime is shared automatically
-```
+SDK clients manage their connections internally. Temporal-boost workers create independent clients
+and runtimes; configuring a builder or creating a standalone runtime does not share it with those
+workers. For standalone builders, call `client_builder.set_runtime(runtime)` before `await build()`.
+For multiple Temporal-boost workers, follow the
+[metrics endpoint topology](#metrics-across-workers-and-processes).
 
 ### Activity Result Caching
 

@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 class TemporalRuntimeBuilder:
+    """Build an independent SDK runtime, owning its configured metrics exporter.
+
+    Use distinct Prometheus endpoints for concurrent runtimes and scrape each
+    endpoint. Runtimes and listening sockets are never shared automatically.
+    """
+
     def __init__(  # noqa: PLR0913
         self,
         *,
@@ -43,8 +49,14 @@ class TemporalRuntimeBuilder:
         self._prometheus_durations_as_seconds = prometheus_durations_as_seconds
 
     def build(self) -> Runtime:
-        if self._metrics is None and self._prometheus_bind_address is not None:
-            self._metrics = PrometheusConfig(
+        """Create a runtime without degrading telemetry on initialization failure.
+
+        Raises:
+            ValueError: If SDK initialization fails, including a metrics bind conflict.
+        """
+        metrics = self._metrics
+        if metrics is None and self._prometheus_bind_address is not None:
+            metrics = PrometheusConfig(
                 bind_address=self._prometheus_bind_address,
                 counters_total_suffix=self._prometheus_counters_total_suffix or False,
                 unit_suffix=self._prometheus_unit_suffix or False,
@@ -53,26 +65,27 @@ class TemporalRuntimeBuilder:
 
         telemetry_config = TelemetryConfig(
             logging=self._logging,
-            metrics=self._metrics,
+            metrics=metrics,
             global_tags=self._global_tags,
             attach_service_name=self._attach_service_name,
             metric_prefix=self._metric_prefix,
         )
         try:
             runtime = Runtime(telemetry=telemetry_config)
-            if self._prometheus_bind_address:
-                process_id = multiprocessing.current_process().name
-                logger.info(f"Process {process_id}: Metrics server bound to {self._prometheus_bind_address}")
-            return runtime
-        except ValueError as err:
-            err_msg = str(err)
-            if "Address already in use" in err_msg and self._prometheus_bind_address:
-                _, port_str = self._prometheus_bind_address.split(":")
-                process_id = multiprocessing.current_process().name
-                logger.warning(
-                    f"Process {process_id}: Prometheus exporter port[{port_str}] is already in use. "
-                    "Disabling metrics for this process",
+        except ValueError:
+            if isinstance(metrics, PrometheusConfig):
+                logger.exception(
+                    "Process %s: Could not initialize runtime with Prometheus endpoint %s. "
+                    "Each runtime needs a distinct endpoint; scrape every worker/process endpoint. "
+                    "Refusing to disable telemetry and report incomplete metrics.",
+                    multiprocessing.current_process().name,
+                    metrics.bind_address,
                 )
-                telemetry_config_no_metrics = TelemetryConfig()
-                return Runtime(telemetry=telemetry_config_no_metrics)
             raise
+        if isinstance(metrics, PrometheusConfig):
+            logger.info(
+                "Process %s: Prometheus exporter bound to %s",
+                multiprocessing.current_process().name,
+                metrics.bind_address,
+            )
+        return runtime
