@@ -1309,12 +1309,28 @@ see <a href="../configuration/#temporal_graceful_shutdown_timeout">configuration
 </span></code></pre></div>
 <h3 id="boostapprun"><code>BoostApp.run()</code></h3>
 <p>Run the application CLI.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
 </span></code></pre></div>
+<p><code>args</code> is one list of CLI arguments. Omission or <code>None</code> uses <code>sys.argv[1:]</code>; <code>[]</code> stays empty and triggers
+the configured no-command help/usage behavior (code 2). Separate positional arguments and a single
+command string are unsupported: use <code>app.run(["run", "worker_name"])</code>.</p>
+<p>By default Typer raises <code>SystemExit</code>: help and successful commands use 0; unknown commands, missing
+arguments, and invalid values use 2. Explicit nonzero exits are preserved. Unhandled worker errors
+propagate and produce a nonzero process status. In <code>run all</code>, a worker's <code>SystemExit(0)</code> or
+<code>SystemExit(None)</code> is converted to <code>RuntimeError</code> at the CLI boundary so coordinator failure cannot
+report success; a direct <code>run_all_workers()</code> still raises the original exception.</p>
+<p>Options such as <code>standalone_mode=False</code> and <code>prog_name="service"</code> are forwarded to Typer.
+In non-standalone mode, <code>run()</code> returns the command's value and propagates parsing/worker exceptions
+(for example, <code>click.UsageError</code> or <code>RuntimeError</code>). Help returns 0. Explicit callback exits follow
+Typer's semantics: a <code>SystemExit</code> raised directly by a callback still propagates. The return value is
+not a general exit-status API; use the default standalone mode at a process entry point.</p>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </span></code></pre></div>
+<p>For embedding, call <code>app.run(["exec", "check"], standalone_mode=False)</code> after registering <code>check</code>.
+Migration: callers that previously relied on <code>run()</code> swallowing <code>SystemExit</code> must now catch it
+explicitly or choose non-standalone mode and handle exceptions.</p>
 <h3 id="boostapprun_all_workers-and-boostappstop"><code>BoostApp.run_all_workers()</code> and <code>BoostApp.stop()</code></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">run_all_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
@@ -1332,7 +1348,8 @@ application shutdown is a <code>RuntimeError</code>; finite workers must call <c
 use an individual command. A normal return or <code>asyncio.CancelledError</code> / <code>concurrent.futures.CancelledError</code>
 during application shutdown is accepted. Cancellation before stop and all other exceptions (including
 <code>SystemExit</code> / <code>KeyboardInterrupt</code>) propagate as failures. The same ordering preserves startup and
-stop-request failures. Full CLI exit-code handling remains tracked in TB-008/TB-009.</p>
+stop-request failures. The CLI converts a failure with a success <code>SystemExit</code> code as described above.
+Aggregation of child exit codes by the external multi-process supervisor remains tracked in TB-009.</p>
 <p>Workers must opt into managed stopping. <code>TemporalBoostWorker</code> supports this contract;
 FastStream and ASGI adapter integration remains pending. See
 <a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> for guarantees and limitations.</p>
