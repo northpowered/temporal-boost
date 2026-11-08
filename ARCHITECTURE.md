@@ -215,8 +215,15 @@ uv run python main.py exec migrate_db
 ```
 
 Программно аргументы передаются единым списком: `app.run(["run", "activity_worker"])`.
-Метод делегирует вызов Typer, перехватывает `SystemExit` и только логирует код: вызывающая программа
-не получает этот exit code автоматически. Вызов `app.run("run", "activity_worker")` не эквивалентен списку.
+`run(args: list[str] | None = None, **kwargs)` передаёт список в Typer без подавления `SystemExit`.
+Обычный режим сохраняет код 0 для help/успеха, 2 для usage errors и ненулевые коды ошибок worker;
+`KeyboardInterrupt`, достигший Typer 0.16, даёт 130. `None` читает `sys.argv[1:]`, явный `[]` остаётся
+пустым и даёт help/usage с кодом 2. Расширение argv в Windows делегировано Typer/Click.
+Раздельные позиционные аргументы и строка команды не поддерживаются.
+`standalone_mode=False` возвращает результат команды и пробрасывает parsing/worker errors;
+help возвращает 0, явно поднятый callback `SystemExit` сохраняется. Результат не является универсальным
+exit code. При переходе со старого подавления исключений нужно явно перехватывать `SystemExit` либо
+использовать non-standalone mode и обрабатывать ошибки.
 
 Установленная entry point `temporal-boost = temporal_boost.cli.runner:cli_app` импортирует объект приложения
 и передаёт ему список аргументов. В текущем дереве Typer всего одна команда, поэтому внешний уровень
@@ -225,12 +232,15 @@ uv run python main.py exec migrate_db
 ```bash
 uv run temporal-boost service.main:app run all
 uv run temporal-boost --workers 3 service.main:app run activity_worker
+uv run temporal-boost service.main:app -- --help
 ```
 
 Здесь `run` после `service.main:app` относится к CLI самого приложения. Дополнительный `run` перед путём
 приложения не требуется. `import_app_object()` поддерживает `module:attribute.nested`; при неудаче импорта
 пробует добавить текущий или родительский каталог в `sys.path`. Строгой проверки типа `BoostApp` нет:
 runner вызывает `.run(arguments)` у импортированного объекта.
+Разделитель `--` нужен для передачи options внутреннему CLI, а не самому launcher.
+В default single-process режиме скрипт и установленная entry point сохраняют одинаковые exit codes.
 
 | Режим | Модель исполнения | Поведение при завершении |
 | --- | --- | --- |
@@ -269,9 +279,10 @@ daemon-потоки могут продолжать работу до выход
 или отдельная команда `run <name>`. Возврат после stop — штатное завершение. `asyncio.CancelledError`
 и `concurrent.futures.CancelledError` штатны только после запроса stop; до него они пробрасываются.
 Остальные исключения, включая `SystemExit` / `KeyboardInterrupt`, фатальны и во время shutdown.
-Поведение внешнего CLI/кодов завершения остаётся в TB-008/TB-009: `BoostApp.run()` всё ещё перехватывает
-`SystemExit`, а supervisor не передаёт код дочернего процесса. Внутренняя команда Typer `run all`
-проверена через `CliRunner` на ненулевой код при обычной ошибке worker.
+`run_all_workers()` сохраняет исходное исключение; CLI-обёртка `_run_all_workers_cli()` преобразует
+worker `SystemExit(0)` / `SystemExit(None)` в `RuntimeError`, чтобы фатальная ошибка coordinator
+не завершала CLI успешно. Ненулевой `SystemExit` сохраняется. `BoostApp.run()` больше не подавляет
+exit codes; агрегация supervisor нескольких процессов остаётся TB-009.
 
 `BaseBoostWorker.request_stop()` по умолчанию возвращает `False` с диагностикой coordinator о неподдержанном
 stop. Новая база `AsyncBoostWorker` реализует opt-in: подкласс вызывает `super().__init__()`, определяет
@@ -446,7 +457,7 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 | Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/prometheus.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/advanced_usage.md` |
 | ASGI backend | `workers/asgi_registry.py`, соответствующий адаптер, `workers/__init__.py` | `tests/test_asgi_registry.py`, `pyproject.toml` extras, `examples/example_fastapi.py` |
 | FastStream | `workers/faststream_worker.py`, `boost_app.py` | `docs/faststream_integration.md`, `examples/example_*faststream*.py` |
-| Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | Нужны отдельные тесты этих модулей; CLI проверить через `--help` и `CliRunner` |
+| Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; supervision нескольких процессов — TB-009 |
 
 При добавлении нового ASGI backend реализуйте `BaseAsgiWorker`, зарегистрируйте класс с проверкой
 зависимостей, обеспечьте импорт модуля для выполнения декоратора, добавьте enum/extra при необходимости.
@@ -468,7 +479,10 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 на локальный bind. В ограниченной песочнице возможен `Operation not permitted`.
 
 Покрыты регистрация, env parsers, builders, часть свойств и настройки lifecycle, ASGI registry и logging.
-Отдельных тестов внешнего CLI, процессов, FastStream и реального запуска ASGI-адаптеров нет.
+`tests/test_cli.py` проверяет внутренний/external CLI, реальный script и установленную entry point
+через subprocess без сервисов: help, пустые/неверные аргументы, выбранную команду, callback result,
+ошибки worker, явный exit code и interrupt. Supervision нескольких процессов, FastStream и реальный
+запуск ASGI-адаптеров этими тестами не проверяются.
 CRON-регистрация покрыта unit-тестами аргументов, ошибок и локальной отмены. Opt-in
 `TEMPORAL_BOOST_INTEGRATION=1 uv run pytest tests/test_cron_integration.py` запускает настоящий
 Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позволяет указать готовый бинарник),
@@ -481,7 +495,8 @@ Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позво�
 отмены до/после stop и внутренний CLI. Искусственные отказы проверяются с
 `-W error::pytest.PytestUnhandledThreadExceptionWarning`. Suite не доказывает graceful shutdown реальных адаптеров.
 
-В `tests/test_boost_app.py` два метода названы `test_run_with_args`: Python оставляет только второй.
+В `tests/test_boost_app.py` прежние дублирующиеся `test_run_with_args` заменены раздельными проверками
+списка аргументов и `sys.argv`, с фактическим запуском только выбранного callback и ожидаемым `SystemExit`.
 Тест `test_run_all_workers_with_workers` теперь проверяет нормальный возврат mock worker;
 искусственный `KeyboardInterrupt` и соответствующее `PytestUnhandledThreadExceptionWarning` удалены в TB-002.
 

@@ -180,8 +180,24 @@ app.add_faststream_worker("message_worker", faststream_app)
 Run the application CLI.
 
 ```python
-run(*args: Any, **kwargs: Any) -> None
+run(args: list[str] | None = None, **kwargs: Any) -> Any
 ```
+
+`args` is one list of CLI arguments. Omission or `None` uses `sys.argv[1:]`; `[]` stays empty and triggers
+the configured no-command help/usage behavior (code 2). Separate positional arguments and a single
+command string are unsupported: use `app.run(["run", "worker_name"])`.
+
+By default Typer raises `SystemExit`: help and successful commands use 0; unknown commands, missing
+arguments, and invalid values use 2. Explicit nonzero exits are preserved. Unhandled worker errors
+propagate and produce a nonzero process status. In `run all`, a worker's `SystemExit(0)` or
+`SystemExit(None)` is converted to `RuntimeError` at the CLI boundary so coordinator failure cannot
+report success; a direct `run_all_workers()` still raises the original exception.
+
+Options such as `standalone_mode=False` and `prog_name="service"` are forwarded to Typer.
+In non-standalone mode, `run()` returns the command's value and propagates parsing/worker exceptions
+(for example, `click.UsageError` or `RuntimeError`). Help returns 0. Explicit callback exits follow
+Typer's semantics: a `SystemExit` raised directly by a callback still propagates. The return value is
+not a general exit-status API; use the default standalone mode at a process entry point.
 
 **Example:**
 
@@ -189,6 +205,10 @@ run(*args: Any, **kwargs: Any) -> None
 if __name__ == "__main__":
     app.run()
 ```
+
+For embedding, call `app.run(["exec", "check"], standalone_mode=False)` after registering `check`.
+Migration: callers that previously relied on `run()` swallowing `SystemExit` must now catch it
+explicitly or choose non-standalone mode and handle exceptions.
 
 ### `BoostApp.run_all_workers()` and `BoostApp.stop()`
 
@@ -211,7 +231,8 @@ application shutdown is a `RuntimeError`; finite workers must call `app.stop()` 
 use an individual command. A normal return or `asyncio.CancelledError` / `concurrent.futures.CancelledError`
 during application shutdown is accepted. Cancellation before stop and all other exceptions (including
 `SystemExit` / `KeyboardInterrupt`) propagate as failures. The same ordering preserves startup and
-stop-request failures. Full CLI exit-code handling remains tracked in TB-008/TB-009.
+stop-request failures. The CLI converts a failure with a success `SystemExit` code as described above.
+Aggregation of child exit codes by the external multi-process supervisor remains tracked in TB-009.
 
 Workers must opt into managed stopping. `TemporalBoostWorker` supports this contract;
 FastStream and ASGI adapter integration remains pending. See

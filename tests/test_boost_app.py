@@ -567,30 +567,30 @@ class TestBoostApp:
         assert result.exit_code == 1
         assert result.exception is failure
 
-    def test_run_with_args(self):
-        app = BoostApp()
-        with patch.object(app._root_typer, "__call__", return_value=None) as mock_run:
-            try:
-                app.run("test", "args")
-            except SystemExit:
-                pass
-            mock_run.assert_called_once()
+    def test_run_with_argument_list_dispatches_selected_worker(self) -> None:
+        app = BoostApp(logger_config=None)
+        worker = app.add_worker("selected", "queue", activities=[MagicMock()])
+        other = app.add_worker("other", "queue", activities=[MagicMock()])
 
-    def test_run_with_args(self):
-        app = BoostApp()
+        with (
+            patch.object(worker, "_run_worker", new_callable=AsyncMock) as selected_run,
+            patch.object(other, "_run_worker", new_callable=AsyncMock) as other_run,
+        ):
+            with pytest.raises(SystemExit) as raised:
+                app.run(["run", "selected"])
 
-        def dummy_activity():
-            pass
+        assert raised.value.code == 0
+        selected_run.assert_awaited_once()
+        other_run.assert_not_awaited()
 
-        app.add_worker(
-            worker_name="test_worker",
-            task_queue="test_queue",
-            activities=[dummy_activity],
-        )
+    def test_run_without_arguments_uses_sys_argv(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        app = BoostApp(logger_config=None)
+        worker = app.add_worker("selected", "queue", activities=[MagicMock()])
+        monkeypatch.setattr(sys, "argv", ["main.py", "run", "selected"])
 
-        with patch.object(app._root_typer, "__call__", return_value=None) as mock_run:
-            try:
-                app.run("run", "test_worker")
-            except (SystemExit, Exception):
-                pass
-            assert mock_run.called or len(app.get_registered_workers()) == 1
+        with patch.object(worker, "_run_worker", new_callable=AsyncMock) as selected_run:
+            with pytest.raises(SystemExit) as raised:
+                app.run()
+
+        assert raised.value.code == 0
+        selected_run.assert_awaited_once()

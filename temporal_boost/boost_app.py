@@ -2,14 +2,12 @@ import json
 import logging
 import logging.config
 import math
-import os
 import sys
 import threading
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, ClassVar
 
-import click
 import typer
 import yaml
 from temporalio.types import MethodAsyncNoParam
@@ -74,7 +72,7 @@ class BoostApp:
         self._root_typer.add_typer(self._cron_typer, no_args_is_help=True)
         self._root_typer.add_typer(self._exec_typer, no_args_is_help=True)
 
-        self._run_typer.command(name="all")(self.run_all_workers)
+        self._run_typer.command(name="all")(self._run_all_workers_cli)
 
     def add_worker(  # noqa: PLR0913
         self,
@@ -222,6 +220,22 @@ class BoostApp:
         finally:
             self._run_lock.release()
 
+    def _run_all_workers_cli(self) -> None:
+        """Run all consumers without registering CRON workflows.
+
+        Raises:
+            RuntimeError: If a worker fails with a success exit code.
+            SystemExit: If a worker requests a nonzero exit code.
+        """
+        try:
+            self.run_all_workers()
+        except SystemExit as exc:
+            # The coordinator treats every worker exception as a failure. A
+            # worker's SystemExit(0) must not turn that failure into CLI success.
+            if exc.code is None or exc.code == 0:
+                raise RuntimeError("A worker raised SystemExit with a success code during run all") from exc
+            raise
+
     def stop(self) -> None:
         """Request that the current run_all_workers() stop; safe from any thread.
 
@@ -232,13 +246,22 @@ class BoostApp:
         if coordinator is not None:
             coordinator.request_stop()
 
-    def run(self, *args: Any, **kwargs: Any) -> None:
-        typer_args = list(args)
-        if not args:
-            typer_args = sys.argv[1:]
+    def run(self, args: list[str] | None = None, **kwargs: Any) -> Any:
+        """Invoke the CLI, preserving exits; use standalone_mode=False for embedding.
 
-            if os.name == "nt":
-                typer_args = click.utils._expand_args(typer_args)  # noqa: SLF001
+        Args:
+            args: One argument list, or None to use sys.argv[1:]. An empty list stays empty.
+            **kwargs: Options forwarded to Typer, including standalone_mode and prog_name.
+
+        Returns:
+            The command result when standalone_mode=False; otherwise Typer raises SystemExit.
+
+        Raises:
+            TypeError: If arguments are passed as a string instead of a list.
+        """
+        if isinstance(args, str):
+            raise TypeError("CLI arguments must be passed as one list of strings")
+        typer_args = sys.argv[1:] if args is None else list(args)
 
         if len(typer_args) > 1:
             logger.info(f"Application '{self._name}' is starting. Selected worker: '{typer_args[1]}'")
@@ -246,10 +269,9 @@ class BoostApp:
             logger.info(f"Application '{self._name}' is starting. No specific worker selected.")
 
         try:
-            self._root_typer(*args, **kwargs)
-        except SystemExit as exc:
-            logger.warning(f"Exit with code: {exc.code}")
-        except:
+            # Leave argv reading/Windows expansion to Click when args is None.
+            return self._root_typer(args=None if args is None else typer_args, **kwargs)
+        except Exception:
             logger.exception("Error during application run")
             raise
 
