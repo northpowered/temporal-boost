@@ -225,8 +225,10 @@ grace period (30 seconds by default). Previously this setting was ignored and th
 zero unless a value was passed explicitly through worker kwargs.
 
 The application coordinator has a separate budget, `BoostApp(shutdown_timeout=30.0)`, for joining all
-worker threads; external process supervisors have their own deadlines. This setting changes neither
-budget and does not initiate shutdown. The Temporal adapter participates in managed stopping through
+worker threads. The external launcher's `--shutdown-timeout` (default 30 seconds) sets a separate shared
+child-process grace period, followed by up to 5 seconds after terminate and 5 seconds after kill.
+Give the outer process budget enough time for the inner coordinator and SDK cleanup. This setting changes
+neither budget and does not initiate shutdown. The Temporal adapter participates in managed stopping through
 `request_stop()`; its SDK cleanup still depends on activities respecting cancellation.
 See [Graceful Shutdown](running_application.md#graceful-shutdown) for current guarantees and limitations.
 

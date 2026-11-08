@@ -232,7 +232,7 @@ use an individual command. A normal return or `asyncio.CancelledError` / `concur
 during application shutdown is accepted. Cancellation before stop and all other exceptions (including
 `SystemExit` / `KeyboardInterrupt`) propagate as failures. The same ordering preserves startup and
 stop-request failures. The CLI converts a failure with a success `SystemExit` code as described above.
-Aggregation of child exit codes by the external multi-process supervisor remains tracked in TB-009.
+The external multi-process supervisor propagates the first observed child failure after stopping its peers.
 
 Workers must opt into managed stopping. `TemporalBoostWorker` supports this contract;
 FastStream and ASGI adapter integration remains pending. See
@@ -258,6 +258,40 @@ get_registered_workers() -> list[BaseBoostWorker]
 **Returns:**
 
 - `list[BaseBoostWorker]`: List of registered workers.
+
+## CLI Process Runner
+
+The external launcher supports `--workers N --shutdown-timeout SECONDS` before the application path.
+The shutdown timeout applies when `--workers > 1`, defaults to 30 seconds, and must be finite and non-negative.
+
+```python
+from temporal_boost.cli.process_runner import run_multiprocess
+
+run_multiprocess(
+    app_path: str,
+    number_of_processes: int,
+    arguments: list[str],
+    *,
+    shutdown_timeout: float = 30.0,
+) -> None
+```
+
+Starts the same application command in each child. It observes every child independently, stops peers
+on the first nonzero child exit, joins terminated children, and closes process handles. No automatic
+restart occurs. Ordinary completion returns `None` once all children succeed. Failure raises `SystemExit`
+with the first observed positive child status; signal termination `-N` maps to `128 + N`.
+Startup/cleanup exceptions propagate without replacing an earlier failure. A failure carrying
+`SystemExit(0)` or `SystemExit(None)` becomes `RuntimeError`. Invalid process counts or timeout values
+raise `ValueError` before processes are created.
+
+The parent first requests managed stopping through dedicated one-way pipes and child watchers, then
+closes the stop endpoints. One grace deadline
+covers all children, followed by terminate (up to 5 seconds) and kill (up to 5 seconds).
+Main-thread invocation temporarily handles SIGINT/SIGTERM and restores the previous handlers; after
+cleanup the parent exits with 130/143 unless a failure determined the result. Repeated signals keep the
+first request and its deadlines. This timeout is independent of the application and SDK budgets.
+See [Multi-process Supervision](running_application.md#multi-process-supervision) for command examples,
+managed worker requirements, and migration.
 
 ## Worker Stop Contract
 

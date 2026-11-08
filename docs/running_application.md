@@ -167,8 +167,9 @@ The outer launcher has one Typer command, so there is no extra `run` before `ser
 `BoostApp.run()` preserves Typer's `SystemExit`. In `run all`, every worker exception is a coordinator
 failure, so even a worker's `SystemExit(0)` or `SystemExit(None)` produces a CLI error with code 1.
 Graceful application stop still completes normally. These guarantees apply to scripts and the default
-single-process launcher; propagation of child failures to a parent using `--workers > 1` is tracked
-separately in TB-009.
+single-process launcher. With `--workers > 1`, the supervisor preserves the first observed child failure
+after stopping its peers; see [Multi-process Supervision](#multi-process-supervision) for signal codes
+and shutdown deadlines.
 
 Pass one list when calling from Python. Omitting it (or passing `None`) reads `sys.argv[1:]`; an explicit
 empty list remains empty. Do not use `app.run("run", "payment_worker")` or a single command string.
@@ -531,6 +532,56 @@ pm2 start "python3 main.py cron daily_cron" --name cron-worker
 pm2 save
 ```
 
+### Multi-process Supervision
+
+Scale a selected Temporal consumer with the external launcher:
+
+```bash
+uv run temporal-boost --workers 3 --shutdown-timeout 40 service.main:app run activity_worker
+```
+
+Each child imports the application and runs the same argument list. The parent checks every child
+at intervals of up to 50 ms. A nonzero exit from any child stops the peers, even if an earlier child
+is still running. The first observed child failure determines the parent status: positive exit codes
+are preserved; termination by signal N becomes `128 + N`. Startup exceptions also initiate cleanup
+and propagate. Later cleanup failures are logged without replacing an earlier failure. A successful
+finite child is joined while its peers continue; the launcher returns 0 once every child succeeds.
+There is no automatic restart.
+
+On failure or parent SIGINT/SIGTERM, the parent sends a stop message through each child's dedicated
+one-way pipe and closes its endpoint. A child-side watcher calls
+`app.stop()` for `run all`, or the selected worker's thread-safe `request_stop()` for `run <name>` and
+`cron <name>`. Stops arriving before CLI dispatch skip execution; application stop is retried during
+coordinator startup. Custom workers must implement the managed stop contract to complete cooperatively.
+Unmanaged adapters and long `exec` callbacks can require forced termination.
+
+`--shutdown-timeout` is a finite, non-negative number of seconds (default **30**). It sets one shared
+cooperative grace period for all children; zero permits immediate escalation. After it expires, the
+parent calls `terminate()` for survivors, waits up to **5 seconds** for all of them, then calls `kill()`
+and waits up to **5 more seconds**. Each phase has one deadline, rather than a timeout per process.
+Started children are joined and process handles are closed, including after a partial startup failure.
+Children created by application code remain the application's responsibility during managed cleanup.
+
+Signal handling is installed when the supervisor runs in the main thread and restored afterwards.
+Parent SIGINT returns **130** and SIGTERM returns **143** after cleanup, unless a child/startup/cleanup
+failure has already determined the outcome. Repeated signals retain the original request and deadlines.
+Children ignore inherited SIGINT until their application installs its own handlers; the parent owns
+the stop request. Send shutdown signals to the supervisor parent to use this cooperative path.
+
+The process grace period is independent of `BoostApp(shutdown_timeout=...)` and the SDK activity grace
+period. Give the outer process budget enough time for child coordination and SDK cleanup; for example,
+use 40 seconds around a 30-second application budget, and allow another 10 seconds for forced phases
+in the deployment's final kill deadline. Programmatic callers can pass
+`run_multiprocess(path, count, arguments, shutdown_timeout=40)` from
+`temporal_boost.cli.process_runner`; ordinary completion returns `None`, while failures/signals propagate.
+
+**Migration:** the parent previously logged failed children and could return 0 or remain blocked on a
+healthy earlier child. It now exits nonzero after coordinated cleanup. Startup failure also stops
+children already launched. Deployments should configure their grace budget and implement `request_stop()`
+for custom workers instead of relying on immediate termination. `run all` repeats every registration
+in every process; ASGI socket sharing remains a separate concern (TB-010). This change releases process
+resources; ownership of the Prometheus multiprocess directory remains tracked in TB-028.
+
 ### Graceful Shutdown
 
 `app.run_all_workers()` (also `python main.py run all`) coordinates cooperative shutdown.
@@ -568,7 +619,8 @@ exceptions, including `KeyboardInterrupt` and `SystemExit`, remain failures even
 call `app.stop()` before returning to request normal application completion, or use its individual
 `run <name>` command. A worker-local stop alone does not request application shutdown. The coordinator
 propagates failures, and `BoostApp.run()` preserves CLI exits. The `run all` CLI also rejects a worker's
-success `SystemExit` code as a failure. External multi-process supervision remains tracked in TB-009.
+success `SystemExit` code as a failure. The external supervisor propagates the child's nonzero status
+after stopping the remaining processes.
 
 Workers participate by implementing `BaseBoostWorker.request_stop() -> bool`: a thread-safe,
 non-blocking, repeatable request that also handles startup. Return `True` when supported.
@@ -592,7 +644,8 @@ should also use the non-blocking request rather than awaiting their own shutdown
 FastStream, Uvicorn, Hypercorn, and Granian do not yet implement this managed stop contract (TB-013/TB-014).
 Their existing cleanup paths may reach the coordinator's timeout. Individual `run <name>` and
 `cron <name>` commands use adapter lifecycle directly; the application coordinator's signal handlers
-apply to `run all`. The external CLI's multiple-process supervisor has its own behavior (TB-009).
+apply to `run all`. The external CLI also coordinates selected workers through the
+[child stop watcher](#multi-process-supervision), with its own process deadline.
 Stopping a local CRON runner does not cancel or delete the server-side CRON workflow (TB-006).
 
 The application budget is independent of the SDK's activity grace period. The worker builder now passes
