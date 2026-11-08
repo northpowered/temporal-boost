@@ -533,6 +533,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#managed-shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      Managed Shutdown
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#message-broker-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       Message Broker Configuration
@@ -882,6 +891,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#managed-shutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      Managed Shutdown
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#message-broker-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       Message Broker Configuration
@@ -1111,9 +1129,31 @@
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="s2">&quot;message_processor&quot;</span><span class="p">,</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">faststream_app</span><span class="p">,</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">log_level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>  <span class="c1"># Custom log level</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="c1"># Additional FastStream options</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">region</span><span class="o">=</span><span class="s2">&quot;west&quot;</span><span class="p">,</span>  <span class="c1"># Passed to startup hooks and the lifespan context</span>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="p">)</span>
 </span></code></pre></div>
+<h3 id="managed-shutdown">Managed Shutdown</h3>
+<p>FastStream workers support <code>app.stop()</code> when launched through <code>run all</code>. The coordinator requests
+stop and waits up to <code>BoostApp(shutdown_timeout=...)</code> for cleanup. You can also retain the worker
+returned by <code>add_faststream_worker()</code> and call its thread-safe <code>worker.request_stop()</code>, including
+during startup. Repeated requests are safe.</p>
+<p>The adapter uses FastStream's public <code>start()</code> and <code>stop()</code> methods and its lifespan context on
+one owning event loop. Pending startup is cancelled and joined before shutdown hooks and broker
+cleanup run. Startup and cleanup failures propagate to the caller; a cleanup failure does not
+replace an earlier startup failure. If a shutdown hook fails before the broker closes, the adapter
+also attempts the broker's public <code>stop()</code> method.</p>
+<p>Async <code>worker.shutdown()</code> waits for cleanup on the owning loop and is harmless before or after
+a run. From another thread or loop, or inside a lifecycle hook, use <code>worker.request_stop()</code>.
+Cancellation of one shutdown waiter does not cancel cleanup. A broker or hook that never finishes
+can exceed the coordinator's shutdown budget.</p>
+<p>The lifecycle and option forwarding are verified against FastStream <strong>0.5.48</strong>, the lockfile version,
+using an in-memory broker. Its existing <code>run(log_level, options)</code> signature accepts the positional
+options mapping. The adapter now manages the lifecycle directly because <code>FastStream.run()</code> installs
+signal handlers that cannot be installed in a <code>run all</code> worker thread. Startup options still reach
+startup hooks and the lifespan context. Code using <code>FastStream.exit()</code> or overriding <code>FastStream.run()</code>
+should move its stop requests to <code>worker.request_stop()</code> and initialization/cleanup to lifecycle hooks.
+For an individual worker running on the main thread, the adapter handles SIGINT/SIGTERM and restores
+the previous handlers after cleanup.</p>
 <h3 id="message-broker-configuration">Message Broker Configuration</h3>
 <p>Configure broker connection:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Redis with authentication</span>
