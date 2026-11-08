@@ -538,6 +538,9 @@ SDK runtime строится лениво в процессе worker и не п�
 
 `tests/test_metrics_topology.py` проверяет отдельное владение runtime, передачу именно этого runtime
 в `Client.connect()`, эффективный metrics backend, отсутствие fallback и сохранение исходных ошибок.
+Аудит TB-012 дополнительно проверяет идентичность custom logging и остальные telemetry fields при
+отказе, явный Prometheus без default bind address, override адреса, диагностику IPv4/hostname/IPv6
+и ошибки OTEL/MetricBuffer без ложного сообщения о Prometheus exporter.
 Subprocess-тесты читают настоящие SDK counters и `target_info` от двух worker runtimes на разных
 потоках одного процесса и от двух таких процессов: проверяются все два/четыре endpoints и суммы.
 Дубликаты endpoint внутри процесса и между процессами фатальны; уже работающие exporters продолжают

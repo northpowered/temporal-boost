@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from temporalio.runtime import MetricBuffer, OpenTelemetryConfig, PrometheusConfig, Runtime
+from temporalio.runtime import LoggingConfig, MetricBuffer, OpenTelemetryConfig, PrometheusConfig, Runtime
 from temporalio.testing import WorkflowEnvironment
 
 from temporal_boost.temporal.runtime import TemporalRuntimeBuilder
@@ -30,13 +30,16 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize("address", ["127.0.0.1:9090", "localhost:9090", "[::1]:9090"])
-@pytest.mark.parametrize("explicit", [False, True])
+@pytest.mark.parametrize("source", ["bind-address", "metrics-only", "metrics-override"])
 def test_prometheus_failure_preserves_cause_and_does_not_retry_without_metrics(
-    address: str, explicit: bool, caplog: pytest.LogCaptureFixture
+    address: str, source: str, caplog: pytest.LogCaptureFixture
 ) -> None:
+    logging_config = LoggingConfig(filter="ERROR")
+    bind_address = {"bind-address": address, "metrics-only": None, "metrics-override": "ignored:9999"}[source]
     builder = TemporalRuntimeBuilder(
-        metrics=PrometheusConfig(address) if explicit else None,
-        prometheus_bind_address="ignored:9999" if explicit else address,
+        logging=logging_config,
+        metrics=None if source == "bind-address" else PrometheusConfig(address),
+        prometheus_bind_address=bind_address,
         global_tags={"worker": "second"},
         attach_service_name=False,
         metric_prefix="custom_",
@@ -48,6 +51,7 @@ def test_prometheus_failure_preserves_cause_and_does_not_retry_without_metrics(
     assert raised.value is failure
     create.assert_called_once()
     telemetry = create.call_args.kwargs["telemetry"]
+    assert telemetry.logging is logging_config
     assert telemetry.metrics.bind_address == address
     assert telemetry.global_tags == {"worker": "second"}
     assert telemetry.attach_service_name is False
@@ -69,6 +73,47 @@ def test_non_prometheus_backend_does_not_claim_to_bind_prometheus(
     assert runtime is create.return_value
     assert create.call_args.kwargs["telemetry"].metrics is metrics
     assert "bound" not in caplog.text
+
+
+@pytest.mark.parametrize("metrics", [OpenTelemetryConfig("http://collector:4317"), MetricBuffer(100)])
+def test_other_metrics_backend_failure_does_not_claim_prometheus_conflict(
+    metrics: OpenTelemetryConfig | MetricBuffer, caplog: pytest.LogCaptureFixture
+) -> None:
+    failure = ValueError("Address already in use")
+    builder = TemporalRuntimeBuilder(metrics=metrics, prometheus_bind_address="ignored:9090")
+    with caplog.at_level(logging.INFO), patch("temporal_boost.temporal.runtime.Runtime", side_effect=failure) as create:
+        with pytest.raises(ValueError, match="Address already in use") as raised:
+            builder.build()
+    assert raised.value is failure
+    create.assert_called_once()
+    assert create.call_args.kwargs["telemetry"].metrics is metrics
+    assert "Prometheus" not in caplog.text
+    assert "ignored:9090" not in caplog.text
+
+
+@pytest.mark.parametrize("address", ["127.0.0.1:9090", "[::1]:9090"])
+def test_prometheus_success_logs_effective_endpoint_only(address: str, caplog: pytest.LogCaptureFixture) -> None:
+    metrics = PrometheusConfig(address)
+    builder = TemporalRuntimeBuilder(metrics=metrics, prometheus_bind_address="ignored:9999")
+    with caplog.at_level(logging.INFO), patch("temporal_boost.temporal.runtime.Runtime") as create:
+        runtime = builder.build()
+    create.assert_called_once()
+    assert runtime is create.return_value
+    assert create.call_args.kwargs["telemetry"].metrics is metrics
+    assert f"Prometheus exporter bound to {address}" in caplog.text
+    assert "ignored:9999" not in caplog.text
+
+
+def test_unrelated_error_with_prometheus_preserves_original_diagnostic(caplog: pytest.LogCaptureFixture) -> None:
+    failure = ValueError("invalid logging filter")
+    with patch("temporal_boost.temporal.runtime.Runtime", side_effect=failure) as create:
+        with pytest.raises(ValueError, match="invalid logging filter") as raised:
+            TemporalRuntimeBuilder(metrics=PrometheusConfig("[::1]:9090"), prometheus_bind_address=None).build()
+    assert raised.value is failure
+    create.assert_called_once()
+    assert "invalid logging filter" in caplog.text
+    assert "Address already in use" not in caplog.text
+    assert "exporter bound" not in caplog.text
 
 
 def test_unrelated_runtime_error_is_not_reclassified_as_port_conflict() -> None:
