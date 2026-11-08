@@ -250,7 +250,9 @@ runner вызывает `.run(arguments)` у импортированного о
 | Внешний CLI, `--workers > 1` | Несколько `multiprocessing.Process`, каждый запускает тот же набор команд | Supervisor наблюдает всех детей, при первом отказе останавливает peers и пробрасывает ненулевой код после cleanup |
 
 Количество процессов не распределяет регистрации: `--workers 3 ... run all` запускает весь набор
-в каждом из трёх процессов. Для ASGI это может создавать конфликт одного HTTP-порта.
+в каждом из трёх процессов, если в нём нет ASGI. Команды, выбирающие ASGI при внешнем числе процессов
+больше одного, отклоняются до запуска worker с usage code 2: общий listening socket не поддержан.
+`run <temporal-name>`, `cron`, `exec` и help допустимы даже при зарегистрированном HTTP-сервере.
 `_ProcessSupervisor` опрашивает exit codes всех детей раз в 50 мс и делает неблокирующий `join(0)`
 завершённых процессов. Первый замеченный ненулевой код определяет результат родителя: положительный
 сохраняется, отрицательный signal exit `-N` отображается в `128 + N`. Успешные finite children не
@@ -421,6 +423,21 @@ converter по умолчанию SDK. Настройки относятся к 
 Путь приложения строкой передаётся самому серверу; общего импортера ASGI-приложений в адаптерах нет.
 Поддержку строки и конкретных kwargs нужно проверять для выбранного backend.
 
+Внешний process runner передаёт число процессов в child target и ограничивает его контекстом CLI
+через `cli/process_context.py` (`ContextVar`, reset в `finally`). `_run_all_workers_cli()` проверяет
+фактический список worker до coordinator; callback выбранного ASGI проверяется до `worker.run()`.
+Обёртка сохраняет сигнатуру callback через `functools.wraps`, поэтому разбор аргументов и help остаются
+за Typer. Проверка не разбирает argv повторно и не импортирует приложение в родителе.
+Определяется `isinstance(worker, BaseAsgiWorker)`, поэтому защищены все backend и custom ASGI через
+`add_async_runtime()`, без зависимости от неиспользуемого `_registered_asgi_workers`.
+`--workers > 1 ... run all` с ASGI и выбор ASGI дают диагностический code 2 в child; supervisor
+пробрасывает его после cleanup. `--workers 1` допустим, включая `run all`; наличие ASGI само по себе
+не запрещает выбор Temporal, CRON, exec или help. Backend kwargs не включают shared-socket режим.
+Произвольный exec/import-time запуск серверов и внутренний process manager backend остаются отдельной
+ответственностью приложения. Deployment-примеры разделяют HTTP и consumers; HTTP-контейнеры/поды
+масштабируются с отдельными network addresses за балансировщиком. Это защита TB-010; управление
+жизненным циклом ASGI-адаптеров по-прежнему относится к TB-014.
+
 ### FastStream
 
 FastStream и AnyIO импортируются при `run()`. Проверяется `isinstance(app, FastStream)`; неверный тип
@@ -512,7 +529,12 @@ builder равно `None`, эта fallback-ветка не срабатывае�
 Реальные subprocess без сервисов доказывают stop первого при отказе второго, cleanup при втором start
 failure, SIGINT/SIGTERM для `run all` и выбранного worker, kill stubborn children после grace и aggregation
 exit codes через установленную entry point. POSIX signal tests запускаются отдельно от тестового процесса;
-после возврата проверяются отсутствие live children и освобождение PID. Реальные FastStream/ASGI здесь не проверены.
+после возврата проверяются отсутствие live children и освобождение PID.
+`tests/test_asgi_multiprocess.py` проверяет выбор команды, все ASGI backend и custom registration,
+help/usage, reset контекста; subprocess с двумя процессами доказывает code 2 до bind/старта peers,
+безопасный выбор Temporal/CRON/exec и single-process bind на временном порту. Для проверки политики
+используется `BaseAsgiWorker` с настоящим socket и Temporal subclass без соединений; реальный lifecycle
+сторонних FastStream/ASGI серверов этими тестами не проверяется.
 CRON-регистрация покрыта unit-тестами аргументов, ошибок и локальной отмены. Opt-in
 `TEMPORAL_BOOST_INTEGRATION=1 uv run pytest tests/test_cron_integration.py` запускает настоящий
 Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позволяет указать готовый бинарник),

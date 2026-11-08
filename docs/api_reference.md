@@ -284,6 +284,13 @@ Startup/cleanup exceptions propagate without replacing an earlier failure. A fai
 `SystemExit(0)` or `SystemExit(None)` becomes `RuntimeError`. Invalid process counts or timeout values
 raise `ValueError` before processes are created.
 
+For `BoostApp`, a command selecting ASGI with `number_of_processes > 1` raises a usage error in the
+child before workers start; the parent propagates exit code 2. This includes `run all` with any
+`BaseAsgiWorker` and `run <asgi-name>`, across all backends. Selecting a Temporal worker, CRON, exec,
+or help remains allowed even if the application registers ASGI. The check uses the actual command
+callback after parsing, and never imports the application in the parent. There is no shared-socket
+mode. See [ASGI and External Processes](running_application.md#asgi-and-external-processes).
+
 The parent first requests managed stopping through dedicated one-way pipes and child watchers, then
 closes the stop endpoints. One grace deadline
 covers all children, followed by terminate (up to 5 seconds) and kill (up to 5 seconds).

@@ -7,6 +7,10 @@ This example demonstrates:
 - Querying workflow status
 
 Run with: python3 example_fastapi.py run all
+For separate deployments (uvicorn extra required):
+  uv run temporal-boost --workers 1 examples.example_fastapi:app run api_worker
+  uv run temporal-boost --workers 3 examples.example_fastapi:app run order_worker
+External --workers > 1 rejects run all or run api_worker because ASGI sockets are not shared.
 Access API at: http://localhost:8000/docs
 """
 
