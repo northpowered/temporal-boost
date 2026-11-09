@@ -237,8 +237,8 @@ during application shutdown is accepted. Cancellation before stop and all other 
 stop-request failures. The CLI converts a failure with a success `SystemExit` code as described above.
 The external multi-process supervisor propagates the first observed child failure after stopping its peers.
 
-Workers must opt into managed stopping. `TemporalBoostWorker` supports this contract;
-FastStream and ASGI adapter integration remains pending. See
+Workers must opt into managed stopping. Temporal, FastStream, and built-in ASGI workers support this
+contract; custom workers provide `request_stop()` or inherit `AsyncBoostWorker`. See
 [Graceful Shutdown](running_application.md#graceful-shutdown) for guarantees and limitations.
 
 ### `BoostApp.add_async_runtime()`
@@ -248,7 +248,29 @@ add_async_runtime(worker_name: str, boost_worker: BaseBoostWorker) -> None
 ```
 
 Register a custom worker's `run()` under a CLI command and include it in `run all`.
-Set the worker's `name` to `worker_name` before registration.
+`boost_worker` follows the `BaseBoostWorker` contract: implement synchronous `run()` and asynchronous
+`shutdown()`. For managed stopping, also implement the thread-safe `request_stop()` contract, or
+inherit `AsyncBoostWorker` as shown in the [custom worker guide](advanced_usage.md#custom-worker-shutdown).
+
+Registration assigns `boost_worker.name = worker_name`, replacing any previous name. This is the
+canonical name for `run <worker_name>`, `get_registered_workers()`, logs, and `worker-<worker_name>`
+threads in `run all`. The callback retains its CLI parameters; `run all` calls `run()` with no arguments.
+Keep the registered name unchanged and use a separate instance for each app registration.
+
+All worker registration methods share one namespace. Reserved names (`run`, `cron`, `exec`, `all`),
+duplicate names across worker types, and a second registration of the same object in one app raise
+`RuntimeError` before changing its name or adding a CLI command. Registration returns `None`.
+
+A pre-created `TemporalBoostWorker` keeps its client/runtime configuration, debug flag, and existing
+`cron_workflow_id`; this method does not apply `BoostApp` Temporal settings or register a `cron`
+command. This preserves its previous configuration behavior. To inherit app settings and register
+CRON commands, use `add_worker()`; otherwise configure the pre-created worker explicitly before
+resource initialization.
+
+**Migration:** A registration alias now becomes the worker's name. Code that needs the old name for
+application-specific data should store it separately. Multiple aliases for one worker instance are
+rejected; create distinct worker instances. The unused private CRON/ASGI registration lists have been
+removed; use `get_registered_workers()` to inspect registered workers.
 
 ### `BoostApp.get_registered_workers()`
 
@@ -260,7 +282,8 @@ get_registered_workers() -> list[BaseBoostWorker]
 
 **Returns:**
 
-- `list[BaseBoostWorker]`: List of registered workers.
+- `list[BaseBoostWorker]`: A shallow copy of the single worker registry. Objects retain their identity
+  and canonical registration names; modifying the returned list does not change registration.
 
 ## CLI Process Runner
 

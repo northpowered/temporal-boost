@@ -13,6 +13,12 @@ This directory contains comprehensive examples demonstrating various features an
 
 ### Advanced Patterns
 
+- **`example_custom_worker.py`** - Custom worker registration and managed shutdown
+  - `BaseBoostWorker` typing with the `AsyncBoostWorker` lifecycle
+  - Registration assigns the worker name; no external services required
+  - Run with: `uv run python examples/example_custom_worker.py run all`
+  - Press Ctrl+C to stop and complete cleanup
+
 - **`example_cron.py`** - CRON worker example
   - Scheduled workflow execution
   - Daily report generation

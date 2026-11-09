@@ -62,8 +62,6 @@ class BoostApp:
         self._debug_mode = debug_mode
 
         self._registered_workers: list[BaseBoostWorker] = []
-        self._registered_cron_workers: list[BaseBoostWorker] = []
-        self._registered_asgi_workers: list[BaseAsgiWorker] = []
 
         self._root_typer = typer.Typer(name=self._name, no_args_is_help=True)
         self._run_typer = typer.Typer(name="run")
@@ -89,12 +87,7 @@ class BoostApp:
         cron_workflow_id: str | None = None,
         **worker_kwargs: Any,
     ) -> TemporalBoostWorker:
-        if worker_name in self._RESERVED_NAMES:
-            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
-
-        for registered_worker in self._registered_workers:
-            if worker_name == getattr(registered_worker, "name", None):
-                raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
+        self._validate_worker_registration(worker_name)
 
         worker = TemporalBoostWorker(
             worker_name=worker_name,
@@ -114,13 +107,11 @@ class BoostApp:
             use_pydantic_data_converter=self._global_use_pydantic,
         )
 
-        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
+        self._register_worker(worker_name, worker)
 
         if cron_schedule is not None and cron_runner is not None:
             self._cron_typer.command(name=worker_name)(worker.cron)
-            self._registered_cron_workers.append(worker)
 
-        self._registered_workers.append(worker)
         return worker
 
     def add_asgi_worker(  # noqa: PLR0913
@@ -134,12 +125,7 @@ class BoostApp:
         asgi_worker_type: ASGIWorkerType = ASGIWorkerType.auto,
         **asgi_worker_kwargs: Any,
     ) -> None:
-        if worker_name in self._RESERVED_NAMES:
-            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
-
-        for registered_worker in self._registered_workers:
-            if worker_name == registered_worker.name:
-                raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
+        self._validate_worker_registration(worker_name)
 
         AsgiWorkerClass = get_asgi_worker_class(asgi_worker_type)  # noqa: N806
         worker = AsgiWorkerClass(
@@ -151,10 +137,7 @@ class BoostApp:
             **asgi_worker_kwargs,
         )
 
-        worker.name = worker_name
-
-        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
-        self._registered_workers.append(worker)
+        self._register_worker(worker_name, worker)
 
     def add_faststream_worker(
         self,
@@ -164,12 +147,7 @@ class BoostApp:
         log_level: str | int | None = None,
         **faststream_kwargs: Any,
     ) -> FastStreamBoostWorker:
-        if worker_name in self._RESERVED_NAMES:
-            raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
-
-        for registered_worker in self._registered_workers:
-            if worker_name == registered_worker.name:
-                raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
+        self._validate_worker_registration(worker_name)
 
         worker = FastStreamBoostWorker(
             app=faststream_app,
@@ -177,25 +155,31 @@ class BoostApp:
             **faststream_kwargs,
         )
 
-        worker.name = worker_name
-
-        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
-        self._registered_workers.append(worker)
+        self._register_worker(worker_name, worker)
         return worker
 
     def add_exec_method_sync(self, name: str, callback: Callable[..., Any]) -> None:
         self._exec_typer.command(name=name)(callback)
 
     def add_async_runtime(self, worker_name: str, boost_worker: BaseBoostWorker) -> None:
+        """Register an existing worker, assigning its canonical name without reconfiguring it."""
+        self._register_worker(worker_name, boost_worker)
+
+    def _validate_worker_registration(self, worker_name: str, worker: BaseBoostWorker | None = None) -> None:
         if worker_name in self._RESERVED_NAMES:
             raise RuntimeError(f"Worker name '{worker_name}' is reserved and cannot be used.")
 
         for registered_worker in self._registered_workers:
             if worker_name == registered_worker.name:
                 raise RuntimeError(f"Worker name '{worker_name}' is already registered.")
+            if registered_worker is worker:
+                raise RuntimeError(f"Worker object is already registered as '{registered_worker.name}'.")
 
-        self._run_typer.command(name=worker_name)(self._worker_run_command(boost_worker))
-        self._registered_workers.append(boost_worker)
+    def _register_worker(self, worker_name: str, worker: BaseBoostWorker) -> None:
+        self._validate_worker_registration(worker_name, worker)
+        worker.name = worker_name
+        self._run_typer.command(name=worker_name)(self._worker_run_command(worker))
+        self._registered_workers.append(worker)
 
     def _worker_run_command(self, worker: BaseBoostWorker) -> Callable[..., Any]:
         run = worker.run

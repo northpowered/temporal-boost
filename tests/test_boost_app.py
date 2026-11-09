@@ -14,9 +14,138 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.converter import DataConverter
 from typer.testing import CliRunner
 
+from temporal_boost import BaseBoostWorker
 from temporal_boost.boost_app import BoostApp
 from temporal_boost.temporal import config
 from temporal_boost.workers.temporal import TemporalBoostWorker
+
+
+class RegistrationWorker(BaseBoostWorker):
+    def __init__(self, name: str = "internal", app: BoostApp | None = None) -> None:
+        self.name = name
+        self.app = app
+        self.calls: list[tuple[str, str, str]] = []
+        self.shutdown_calls = 0
+
+    def run(self, label: str = "default") -> None:
+        self.calls.append((self.name, threading.current_thread().name, label))
+        if self.app is not None:
+            self.app.stop()
+        asyncio.run(self.shutdown())
+
+    def request_stop(self) -> bool:
+        return True
+
+    async def shutdown(self) -> None:
+        self.shutdown_calls += 1
+
+
+@pytest.mark.parametrize("command", [["run", "alias", "--label", "selected"], ["run", "all"]])
+def test_custom_registration_uses_alias_in_cli_registry_and_threads(command: list[str]) -> None:
+    app = BoostApp(logger_config=None)
+    worker = RegistrationWorker(app=app)
+    app.add_async_runtime("alias", worker)
+
+    result = CliRunner().invoke(app._root_typer, command)
+
+    assert result.exit_code == 0, result.exception
+    assert app.get_registered_workers() == [worker]
+    assert worker.name == "alias"
+    expected_thread = "worker-alias" if command[-1] == "all" else threading.current_thread().name
+    expected_label = "default" if command[-1] == "all" else "selected"
+    assert worker.calls == [("alias", expected_thread, expected_label)]
+    assert worker.shutdown_calls == 1
+    missing = CliRunner().invoke(app._root_typer, ["run", "internal"])
+    assert missing.exit_code == 2
+    assert "No such command" in missing.output
+
+
+def register_worker_kind(app: BoostApp, kind: str, name: str) -> BaseBoostWorker:
+    if kind == "temporal":
+        return app.add_worker(name, "queue", activities=[MagicMock()])
+    if kind == "asgi":
+        worker_class = MagicMock(return_value=RegistrationWorker())
+        with patch("temporal_boost.boost_app.get_asgi_worker_class", return_value=worker_class):
+            app.add_asgi_worker(name, None, "127.0.0.1", 8000)
+        return app.get_registered_workers()[-1]
+    if kind == "faststream":
+        with patch("temporal_boost.boost_app.FastStreamBoostWorker", return_value=RegistrationWorker()):
+            return app.add_faststream_worker(name, None)
+    worker = RegistrationWorker()
+    app.add_async_runtime(name, worker)
+    return worker
+
+
+WORKER_KINDS = ["temporal", "asgi", "faststream", "custom"]
+
+
+@pytest.mark.parametrize("first_kind", WORKER_KINDS)
+@pytest.mark.parametrize("second_kind", WORKER_KINDS)
+def test_worker_names_are_unique_across_all_registration_methods(first_kind: str, second_kind: str) -> None:
+    app = BoostApp(logger_config=None)
+    first = register_worker_kind(app, first_kind, "alias")
+    with pytest.raises(RuntimeError, match="already registered"):
+        register_worker_kind(app, second_kind, "alias")
+    assert app.get_registered_workers() == [first]
+    assert len(app._run_typer.registered_commands) == 2  # run all and the original command
+
+
+@pytest.mark.parametrize("kind", WORKER_KINDS)
+@pytest.mark.parametrize("name", ["run", "cron", "exec", "all"])
+def test_all_worker_registration_methods_reject_reserved_names(kind: str, name: str) -> None:
+    app = BoostApp(logger_config=None)
+    with pytest.raises(RuntimeError, match="reserved"):
+        register_worker_kind(app, kind, name)
+    assert app.get_registered_workers() == []
+    assert len(app._run_typer.registered_commands) == 1
+
+
+@pytest.mark.parametrize("kind", WORKER_KINDS)
+@pytest.mark.parametrize("alias", ["original", "second"])
+def test_same_worker_object_cannot_be_registered_twice(kind: str, alias: str) -> None:
+    app = BoostApp(logger_config=None)
+    worker = register_worker_kind(app, kind, "original")
+    with pytest.raises(RuntimeError, match="already registered"):
+        app.add_async_runtime(alias, worker)
+    assert worker.name == "original"
+    assert app.get_registered_workers() == [worker]
+    assert len(app._run_typer.registered_commands) == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("preconfigured", [False, True])
+async def test_precreated_temporal_registration_preserves_configuration(
+    monkeypatch: pytest.MonkeyPatch, preconfigured: bool
+) -> None:
+    monkeypatch.setattr(config, "TARGET_HOST", "env.example:7233")
+    monkeypatch.setattr(config, "CLIENT_NAMESPACE", "env-namespace")
+    monkeypatch.setattr(config, "USE_PYDANTIC_DATA_CONVERTER", False)
+    app = BoostApp(
+        temporal_endpoint="app.example:7233", temporal_namespace="app-namespace", use_pydantic=True, logger_config=None
+    )
+    worker = TemporalBoostWorker("internal", "queue", activities=[MagicMock()])
+    if preconfigured:
+        worker.configure_temporal_client(target_host="worker.example:7233", namespace="worker-namespace")
+    original_builder = worker._client_builder
+    original_cron_id = worker.cron_workflow_id
+    app.add_async_runtime("alias", worker)
+    assert worker._client_builder is original_builder
+    assert worker.cron_workflow_id == original_cron_id
+    assert worker.name == "alias"
+
+    with (
+        patch("temporal_boost.temporal.runtime.TemporalRuntimeBuilder.build", return_value=MagicMock()),
+        patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect,
+        patch.object(worker._worker_builder, "build"),
+    ):
+        await worker._build_worker()
+
+    expected_host = "worker.example:7233" if preconfigured else "env.example:7233"
+    expected_namespace = "worker-namespace" if preconfigured else "env-namespace"
+    assert connect.call_args.kwargs["target_host"] == expected_host
+    assert connect.call_args.kwargs["namespace"] == expected_namespace
+    assert "data_converter" not in connect.call_args.kwargs
+    assert app._cron_typer.registered_commands == []
 
 
 @pytest.mark.parametrize(
@@ -43,7 +172,6 @@ def test_invalid_cron_registration_has_no_partial_app_or_connection_side_effects
 
     configure.assert_not_called()
     assert app.get_registered_workers() == []
-    assert app._registered_cron_workers == []
     result = CliRunner().invoke(app._root_typer, ["run", "invalid_cron"])
     assert result.exit_code == 2
     assert "No such command" in result.output
@@ -57,7 +185,6 @@ def test_consumer_registration_has_no_cron_cli_command() -> None:
 
     assert result.exit_code == 2
     assert app.get_registered_workers() == [worker]
-    assert app._registered_cron_workers == []
 
 
 @pytest.mark.parametrize("command", [["run", "scheduled"], ["run", "all"], ["cron", "scheduled"]])
@@ -161,8 +288,6 @@ class TestBoostApp:
         assert app._global_use_pydantic is None
         assert app._debug_mode is False
         assert app._registered_workers == []
-        assert app._registered_cron_workers == []
-        assert app._registered_asgi_workers == []
 
     def test_init_with_custom_name(self):
         app = BoostApp(name="test_app")
@@ -358,8 +483,10 @@ class TestBoostApp:
             cron_runner=cron_runner,
         )
 
-        assert worker in app._registered_cron_workers
-        assert len(app._registered_cron_workers) == 1
+        assert app.get_registered_workers() == [worker]
+        result = CliRunner().invoke(app._root_typer, ["cron", "test_worker", "--help"])
+        assert result.exit_code == 0, result.exception
+        assert "test_worker" in result.output
 
     def test_add_asgi_worker_success(self):
         app = BoostApp()
