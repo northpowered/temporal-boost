@@ -1436,7 +1436,9 @@ See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 <h2 id="temporalboostworker">TemporalBoostWorker</h2>
 <p>Temporal worker class.</p>
 <h3 id="temporalboostworkerconfigure_temporal_client"><code>TemporalBoostWorker.configure_temporal_client()</code></h3>
-<p>Configure Temporal client for the worker.</p>
+<p>Configure the Temporal client before initialization or after the previous run has finished cleanup.
+Raises <code>RuntimeError</code> once initialization starts, or while a lifecycle is building, running, or stopping.
+The call never reconnects a live client or changes its SDK worker. Rejected calls leave builders unchanged.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">configure_temporal_client</span><span class="p">(</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="o">*</span><span class="p">,</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1472,6 +1474,10 @@ See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 distinct Prometheus endpoints; runtimes are not shared automatically. Each process must expose every
 worker's endpoint for scraping. See
 <a href="../advanced_usage/#metrics-across-workers-and-processes">Metrics Across Workers and Processes</a>.</p>
+<p>Raises <code>RuntimeError</code> after a runtime has been created or during an active lifecycle. Reading
+<code>temporal_client_runtime</code> creates the runtime and fixes these settings, including before <code>run()</code>.
+After run cleanup releases resources, this method configures the next run. It never replaces a live
+runtime. See <a href="../configuration/#when-configuration-becomes-fixed">configuration lifetime</a>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">configure_temporal_runtime</span><span class="p">(</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="o">*</span><span class="p">,</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">logging</span><span class="p">:</span> <span class="n">LoggingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1584,11 +1590,16 @@ grace period; <code>BoostApp.shutdown_timeout</code> bounds the coordinator's wa
 </tr>
 </tbody>
 </table>
-<p>Early stop or failure may skip <code>running</code>. Setup options should be configured before a run.</p>
+<p>Early stop or failure may skip <code>running</code>. Configure options before initialization and before a run.
+<code>created</code> does not imply the runtime is absent: the lazy runtime property can initialize it without
+starting a lifecycle. After <code>stopped</code>, configuration is available again until the next initialization.</p>
 <h3 id="properties">Properties</h3>
 <ul>
 <li><code>temporal_client</code> (Client): Get Temporal client instance.</li>
 <li><code>temporal_worker</code> (Worker): Get Temporal worker instance.</li>
+<li><code>temporal_client_runtime</code> (Runtime): Lazily create/cache the runtime and fix its configuration;
+  this can open a metrics port. Reading it again returns the same object until run cleanup. A read
+  during cleanup raises if no runtime exists, so it cannot initialize resources during shutdown.</li>
 <li><code>temporal_cron_runner</code> (MethodAsyncNoParam): Get CRON runner method.</li>
 <li><code>cron_workflow_id</code> (str): Read-only resolved CRON workflow ID.</li>
 <li><code>state</code>: Current lifecycle state. Client and SDK worker properties raise after cleanup until rebuilt.</li>
