@@ -20,6 +20,7 @@ from tests.test_cron_workflow_idempotency import CronProbe, make_worker
 
 
 pytestmark = [
+    pytest.mark.integration,
     pytest.mark.asyncio,
     pytest.mark.skipif(
         os.getenv("TEMPORAL_BOOST_INTEGRATION") != "1", reason="requires opt-in real Temporal dev server"

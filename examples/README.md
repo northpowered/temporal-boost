@@ -214,3 +214,11 @@ if __name__ == "__main__":
 - [Examples Guide](https://northpowered.github.io/temporal-boost/examples/)
 - [API Reference](https://northpowered.github.io/temporal-boost/api_reference/)
 
+
+The comprehensive example also registers `custom_runtime` using the same managed service worker.
+Run it alone with `uv run python -m examples.example_app run custom_runtime` (Hypercorn extra
+required for the comprehensive module). Ctrl+C requests shutdown and sets the worker's stop event.
+The standalone custom worker example needs no external services or optional dependencies.
+
+`uv run python -m examples.example_runtime` demonstrates building and attaching an SDK runtime
+before connecting the client. It requires a local Temporal server; Ctrl+C shuts down the worker.

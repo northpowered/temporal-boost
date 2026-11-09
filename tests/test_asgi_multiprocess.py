@@ -197,6 +197,7 @@ def launch_cli(arguments: list[str], workers: int, directory: Path, port: int) -
 
 
 @pytest.mark.parametrize("arguments", [["run", "all"], ["run", "http"]])
+@pytest.mark.integration
 def test_real_two_process_asgi_launch_fails_before_any_bind(
     tmp_path: Path, unused_tcp_port: int, arguments: list[str]
 ) -> None:
@@ -217,6 +218,7 @@ def test_real_two_process_asgi_launch_fails_before_any_bind(
         (["exec", "mark", "--target", "all"], "exec-all"),
     ],
 )
+@pytest.mark.integration
 def test_real_two_process_safe_selection_does_not_start_registered_http(
     tmp_path: Path, unused_tcp_port: int, arguments: list[str], role: str
 ) -> None:
@@ -226,6 +228,7 @@ def test_real_two_process_safe_selection_does_not_start_registered_http(
     assert len(list(tmp_path.iterdir())) == 2
 
 
+@pytest.mark.integration
 def test_real_replicated_http_help_is_allowed(tmp_path: Path, unused_tcp_port: int) -> None:
     result = launch_cli(["run", "http", "--help"], 2, tmp_path, unused_tcp_port)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -233,6 +236,7 @@ def test_real_replicated_http_help_is_allowed(tmp_path: Path, unused_tcp_port: i
     assert list(tmp_path.iterdir()) == []
 
 
+@pytest.mark.integration
 def test_real_single_process_http_can_bind_temporary_port(tmp_path: Path, unused_tcp_port: int) -> None:
     result = launch_cli(["run", "http"], 1, tmp_path, unused_tcp_port)
     assert result.returncode == 0, result.stdout + result.stderr

@@ -711,6 +711,13 @@ def build() -> Runtime
 
 ### `ASGIWorkerType`
 
+`auto` selects the first available built-in in this fixed order: **Uvicorn → Granian → Hypercorn**.
+A backend is registered only when its required optional packages import successfully.
+Explicit selection bypasses this priority. When only custom backends are available, `auto` selects
+the lexically smallest key. Registering the same class/key again is idempotent; a different class
+under an existing key raises `ValueError`, including attempts to replace a built-in.
+
+
 ASGI worker server types.
 
 - `auto`: Auto-detect available server

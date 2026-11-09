@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch
+from itertools import combinations, permutations
+from unittest.mock import patch
 
 import pytest
 
@@ -127,7 +128,7 @@ class TestGetASGIWorkerClass:
             with patch.object(asgi_worker_registry, "get") as mock_get:
                 mock_get.return_value = MockASGIWorker
                 worker_class = get_asgi_worker_class(ASGIWorkerType.auto)
-                mock_get.assert_called_once_with("hypercorn")
+                mock_get.assert_called_once_with("granian")
                 assert worker_class == MockASGIWorker
 
     def test_get_auto_with_no_workers(self):
@@ -137,3 +138,51 @@ class TestGetASGIWorkerClass:
             with pytest.raises(RuntimeError, match="No ASGI worker implementation is available"):
                 get_asgi_worker_class(ASGIWorkerType.auto)
 
+
+
+BUILTINS = ("uvicorn", "granian", "hypercorn")
+ORDERS = [order for size in range(1, 4) for subset in combinations(BUILTINS, size) for order in permutations(subset)]
+
+
+@pytest.mark.parametrize("order", ORDERS)
+def test_auto_priority_is_independent_of_registration_order(order, monkeypatch):
+    registry = ASGIWorkerRegistry()
+    classes = {key: type(f"Worker_{key}", (MockASGIWorker,), {}) for key in order}
+    for key in order:
+        registry.register(key)(classes[key])
+    monkeypatch.setattr("temporal_boost.workers.asgi_registry.asgi_worker_registry", registry)
+    expected = next(key for key in BUILTINS if key in order)
+    assert get_asgi_worker_class(ASGIWorkerType.auto) is classes[expected]
+    for key in order:
+        assert get_asgi_worker_class(ASGIWorkerType(key)) is classes[key]
+
+
+@pytest.mark.parametrize("order", [("zeta", "alpha"), ("alpha", "zeta")])
+def test_custom_fallback_is_lexical(order, monkeypatch):
+    registry = ASGIWorkerRegistry()
+    classes = {key: type(key, (MockASGIWorker,), {}) for key in order}
+    for key in order:
+        registry.register(key)(classes[key])
+    monkeypatch.setattr("temporal_boost.workers.asgi_registry.asgi_worker_registry", registry)
+    assert get_asgi_worker_class(ASGIWorkerType.auto) is classes["alpha"]
+    registry.register("hypercorn")(MockASGIWorker)
+    assert get_asgi_worker_class(ASGIWorkerType.auto) is MockASGIWorker
+
+
+@pytest.mark.parametrize("key", ["uvicorn", "granian", "hypercorn", "custom"])
+def test_duplicate_registration_is_idempotent_but_cannot_replace(key):
+    registry = ASGIWorkerRegistry()
+    registry.register(key)(MockASGIWorker)
+    assert registry.register(key)(MockASGIWorker) is MockASGIWorker
+    replacement = type("Replacement", (MockASGIWorker,), {})
+    with pytest.raises(ValueError, match="already registered"):
+        registry.register(key)(replacement)
+    assert registry.get(key) is MockASGIWorker
+
+
+@pytest.mark.parametrize("key", BUILTINS)
+def test_missing_optional_dependency_does_not_register_backend(key):
+    registry = ASGIWorkerRegistry()
+    with patch("builtins.__import__", side_effect=ImportError("optional backend missing")):
+        assert registry.register(key, packages=[key])(MockASGIWorker) is MockASGIWorker
+    assert registry.available_keys() == []

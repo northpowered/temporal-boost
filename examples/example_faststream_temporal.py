@@ -13,6 +13,7 @@ Requires Redis: docker run -p 6379:6379 redis:latest
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 from faststream import FastStream
 from faststream.redis import RedisBroker
@@ -27,20 +28,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Temporal-boost app
+HIGH_PRIORITY_THRESHOLD = 5
+
 app = BoostApp(name="faststream-temporal-example")
 
 
 # Pydantic models for messages
 class OrderMessage(BaseModel):
     """Order message from queue."""
+
     order_id: str
     customer_id: str
-    items: list[dict]
+    items: list[dict[str, Any]]
     total: float
 
 
 class TaskMessage(BaseModel):
     """Task message from queue."""
+
     task_id: str
     description: str
     priority: int
@@ -48,14 +53,14 @@ class TaskMessage(BaseModel):
 
 # Temporal activities
 @activity.defn(name="process_order")
-async def process_order(order_data: dict) -> dict:
+async def process_order(order_data: dict[str, Any]) -> dict[str, Any]:
     """Process an order."""
     logger.info(f"Processing order {order_data['order_id']}")
     return {"status": "processed", "order_id": order_data["order_id"]}
 
 
 @activity.defn(name="process_task")
-async def process_task(task_data: dict) -> dict:
+async def process_task(task_data: dict[str, Any]) -> dict[str, Any]:
     """Process a task."""
     logger.info(f"Processing task {task_data['task_id']}")
     return {"status": "completed", "task_id": task_data["task_id"]}
@@ -67,7 +72,7 @@ class OrderWorkflow:
     """Order processing workflow."""
 
     @workflow.run
-    async def run(self, order_data: dict) -> dict:
+    async def run(self, order_data: dict[str, Any]) -> dict[str, Any]:
         """Process order."""
         return await workflow.execute_activity(
             process_order,
@@ -100,8 +105,8 @@ async def handle_order(message: OrderMessage) -> None:
 
         logger.info(f"Started Temporal workflow {workflow_id} for order {message.order_id}")
 
-    except Exception as e:
-        logger.exception(f"Failed to start workflow for order {message.order_id}: {e}")
+    except Exception:
+        logger.exception("Failed to start workflow for order {message.order_id}")
         raise
 
 
@@ -115,15 +120,15 @@ async def handle_task(message: TaskMessage) -> None:
         await Client.connect("localhost:7233")
 
         # For high-priority tasks, execute activity directly
-        if message.priority > 5:
+        if message.priority > HIGH_PRIORITY_THRESHOLD:
             logger.info(f"Executing high-priority task {message.task_id} directly")
             # In a real scenario, you might want to use a workflow for complex tasks
             # For now, we'll just log it
         else:
             logger.info(f"Task {message.task_id} queued for processing")
 
-    except Exception as e:
-        logger.exception(f"Failed to process task {message.task_id}: {e}")
+    except Exception:
+        logger.exception("Failed to process task {message.task_id}")
         raise
 
 

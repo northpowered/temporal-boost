@@ -22,6 +22,9 @@ class ASGIWorkerRegistry:
                     __import__(package)
             except ImportError:
                 return cls
+            existing = self._data.get(key)
+            if existing is not None and existing is not cls:
+                raise ValueError(f"ASGI worker implementation {key!r} is already registered")
             self._data[key] = cls
             return cls
 
@@ -47,13 +50,18 @@ class ASGIWorkerType(str, Enum):
     auto = "auto"
 
 
+# Preserve the historical effective order, independently of module import order.
+ASGI_AUTO_PRIORITY = ("uvicorn", "granian", "hypercorn")
+
+
 def get_asgi_worker_class(worker_type: ASGIWorkerType) -> type[BaseAsgiWorker]:
     if worker_type == ASGIWorkerType.auto:
-        if ASGIWorkerType.uvicorn.value in asgi_worker_registry.available_keys():
-            return asgi_worker_registry.get(ASGIWorkerType.uvicorn.value)
-
-        available = asgi_worker_registry.available_keys()
+        available = set(asgi_worker_registry.available_keys())
+        for key in ASGI_AUTO_PRIORITY:
+            if key in available:
+                return asgi_worker_registry.get(key)
         if not available:
             raise RuntimeError("No ASGI worker implementation is available.")
-        return asgi_worker_registry.get(available[0])
+        # Custom backends have a stable, lexical fallback after all built-ins.
+        return asgi_worker_registry.get(min(available))
     return asgi_worker_registry.get(worker_type.value)

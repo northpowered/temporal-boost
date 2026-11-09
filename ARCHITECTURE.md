@@ -51,7 +51,6 @@ activities, signals и queries через `temporalio`. ASGI и FastStream от�
 | [temporal_boost/cli/runner.py](temporal_boost/cli/runner.py) | Установленная команда `temporal-boost` |
 | [temporal_boost/cli/importer.py](temporal_boost/cli/importer.py) | Импорт объекта по пути `module:attribute`, включая вложенные атрибуты |
 | [temporal_boost/cli/process_runner.py](temporal_boost/cli/process_runner.py) | Запуск приложения в одном или нескольких процессах |
-| [temporal_boost/cli/prometheus.py](temporal_boost/cli/prometheus.py) | Подготовка `PROMETHEUS_MULTIPROC_DIR` перед многопроцессным запуском |
 
 Направление зависимостей: приложение → адаптеры → builders → Temporal SDK.
 Модуль `temporal/` не зависит от `BoostApp`; builders можно использовать самостоятельно.
@@ -596,10 +595,10 @@ Port conflict теперь фатален для startup, coordinator/supervisor
 `global_tags` в locked SDK экспортируются как resource metadata в `target_info`, а не как labels
 каждого counter. Native worker metrics имеют task queue labels; Prometheus `instance` различает endpoints.
 
-Перед многопроцессным запуском CLI создаёт или проверяет `PROMETHEUS_MULTIPROC_DIR`.
-Это отдельная переменная от `TEMPORAL_PROMETHEUS_BIND_ADDRESS`. В коде нет объединения SDK-метрик
-процессов в общий exporter; наличие каталога само по себе не решает конфликт порта нескольких runtimes.
-Автоматической очистки временного каталога также нет.
+В TB-028 удалена автоматическая настройка `PROMETHEUS_MULTIPROC_DIR`: SDK exporter не использует
+этот каталог. CLI не создаёт временные каталоги, не меняет environment и не валидирует/удаляет
+пользовательские пути. Если Python prometheus_client используется приложением отдельно, владение
+его каталогом и валидация пути остаются у приложения. SDK metrics собираются с отдельных endpoints.
 SDK runtime строится лениво в процессе worker и не переносится через fork. На cleanup снимаются
 ссылки; внешний runtime/meter может продлить жизнь native handles и exporter. Общий владелец runtime
 или shared listening socket в пакете не вводится.
@@ -627,7 +626,7 @@ SDK runtime строится лениво в процессе worker и не п�
 | Client, TLS, identity, converter | `temporal/client.py`, `workers/temporal.py`, `temporal/config.py` | `tests/test_temporal_client.py`, `tests/test_temporal_worker.py`, `docs/configuration.md` |
 | Worker options, concurrency, interceptors | `temporal/worker.py`, `workers/temporal.py` | `tests/test_temporal_worker.py`, `docs/configuration.md`, `docs/advanced_usage.md` |
 | CRON или Temporal lifecycle | `workers/temporal.py`, `boost_app.py` | `tests/test_temporal_worker.py`, `tests/test_boost_app.py`, `examples/example_cron.py` |
-| Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/prometheus.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/advanced_usage.md` |
+| Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/advanced_usage.md` |
 | ASGI backend | `workers/asgi_registry.py`, соответствующий адаптер, `workers/__init__.py` | `tests/test_asgi_registry.py`, `pyproject.toml` extras, `examples/example_fastapi.py` |
 | FastStream | `workers/faststream_worker.py`, `boost_app.py` | `docs/faststream_integration.md`, `examples/example_*faststream*.py` |
 | Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; `tests/test_cli_importer.py`: временные модули, диагностика и sys.path; `tests/test_process_runner.py`: supervision doubles и настоящие процессы |
@@ -727,3 +726,24 @@ MkDocs публикует содержимое `docs/` по [mkdocs.yml](mkdocs.
 При изменении связей модулей, порядка запуска или семантики настроек обновляйте соответствующий раздел
 этого документа вместе с кодом и тестами. Для поиска внешней документации зависимостей используйте Context7
 согласно правилам репозитория.
+
+
+## Исправления TB-020–TB-028
+
+CLI-тесты проверяют выбранный callback, передачу argv и отсутствие dispatch при usage error.
+Unit suite по умолчанию исключает marker `integration` и запрещает Python listening sockets;
+реальные HTTP/SDK exporters запускаются отдельной группой на временных loopback-портах.
+CI обязательно проверяет package/examples через Ruff `--no-fix`, format, mypy, импорт/компиляцию
+примеров и strict MkDocs без публикации. Для CLI добавлен настоящий Windows job.
+
+Самостоятельный runtime пример передаёт построенный runtime в client builder до Client.connect,
+затем создаёт worker и останавливает его через async context. Автоматического shared runtime нет.
+Комплексный пример регистрирует ServiceWorker с наблюдаемым stop event и shutdown().
+Прямое использование Click и `_expand_args` уже удалено в TB-008; runtime импорты Interceptor
+переведены на публичный temporalio.worker. Минимальная проверяемая SDK версия — 1.14.1, совпадает
+с locked SDK; искусственной верхней границы нет.
+
+ASGI auto использует фиксированный порядок Uvicorn → Granian → Hypercorn независимо от импортов.
+После built-ins fallback выбирает лексикографически первый custom key. Один class/key можно
+регистрировать повторно; замена класса существующего ключа вызывает ValueError. Backend доступен
+только при успешном импорте всех optional packages.

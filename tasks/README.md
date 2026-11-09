@@ -2,7 +2,7 @@
 
 Бэклог составлен по коду версии `2.0.2`, тестам и локальной документации, разобранным в
 [ARCHITECTURE.md](../ARCHITECTURE.md). Каждая проблема хранится в отдельном файле с постоянным ID `TB-NNN`.
-Всего **28 задач**: P1 — 8, P2 — 16, P3 — 4. Актуальные статусы и результаты проверок указаны в карточках;
+Всего **29 задач**: P1 — 8, P2 — 17, P3 — 4. Актуальные статусы и результаты проверок указаны в карточках;
 создание карточки не означает, что исправление уже выполнено.
 
 ## Приоритеты и типы
@@ -47,6 +47,7 @@
 | [TB-026](026-remove-private-sdk-cli-apis.md) | P2 | Совместимость | Устранить зависимость от приватных API SDK и Click | — |
 | [TB-027](027-explicit-asgi-auto-priority.md) | P3 | Доработка | Сделать приоритет автоматического ASGI backend явным | — |
 | [TB-028](028-prometheus-temp-directory-ownership.md) | P3 | Технический долг | Определить необходимость и cleanup Prometheus multiprocess directory | [TB-011](011-prometheus-multiple-runtimes.md) |
+| [TB-029](029-zensical-documentation-portal.md) | P2 | Доработка документации | Перенести портал на Zensical с EN/RU и оформлением Temporal | — |
 
 ## Порядок работы
 
@@ -79,3 +80,24 @@
 «Зависит от» означает порядок выполнения; «Связанные задачи» — общий контекст и границу ответственности,
 а не дополнительную блокировку. ID и имена существующих карточек сохраняются для стабильных ссылок.
 
+
+
+## Проверка серии TB-020–TB-028
+
+По явному указанию пользователя pytest запускался после реализации всей серии, а не после каждой
+карточки. Локальная проверка: macOS, Python 3.13.9, Temporal SDK 1.14.1 (одновременно minimum и locked).
+
+- `UV_CACHE_DIR=/tmp/temporal-boost-uv-cache uv run --offline --no-sync pytest tests/ --cov=temporal_boost --cov-report=term --tb=short`: **774 passed, 1 skipped, 54 deselected**, sandbox без bind.
+- `COVERAGE_FILE=/tmp/tb-020-028-integration.coverage UV_CACHE_DIR=/tmp/temporal-boost-uv-cache uv run --offline --no-sync pytest tests/ -m integration --cov=temporal_boost --cov-report=term --tb=short`: **52 passed, 2 skipped, 775 deselected**, вне sandbox с локальными временными портами.
+- Группы не пересекаются: **826 passed, 3 skipped**, совмещённое coverage — **97%**. Skips: настоящий Windows и два opt-in Temporal Server сценария. Одно upstream FastStream deprecation warning.
+- `uv run --offline --no-sync ruff check --no-fix temporal_boost/ examples/` — успешно.
+- `uv run --offline --no-sync ruff format --check temporal_boost/ examples/` — 42 файла, успешно.
+- `uv run --offline --no-sync mypy temporal_boost/ examples/` — 42 файла, успешно.
+- `uv run --offline --no-sync mkdocs build --strict` — успешно; прежние INFO о относительных ссылках FastStream не стали ошибками.
+- Все **18 examples** скомпилированы через py_compile(doraise=True) и импортированы с all extras.
+- `uv lock`, `uv sync --locked --all-extras`, wheel build и установка wheel только с базовыми locked dependencies в отдельный venv — успешно; импорт с `-I`, CLI callback и console `--help` работают без extras/dev tools.
+- Negative fixtures для mypy/Ruff/format/import/compile вернули exit 1; Ruff --no-fix не менял fixture. Временные fixtures удалены. Mutation-проверка CLI отвергает успех без dispatch.
+
+TB-020–TB-025, TB-027 и TB-028 закрыты. В TB-026 код и локальная проверка готовы, но настоящий
+Windows job ещё не выполнен: карточка остаётся in_progress до результата CI. Windows не имитировался
+через подмену os.name. Задачи вне этой серии не меняют статус из-за этого прогона.

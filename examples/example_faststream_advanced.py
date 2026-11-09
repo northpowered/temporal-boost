@@ -13,6 +13,7 @@ Requires Redis: docker run -p 6379:6379 redis:latest
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 from faststream import FastStream
 from faststream.redis import RedisBroker
@@ -32,6 +33,7 @@ app = BoostApp(name="faststream-advanced-example")
 # Message models
 class EmailMessage(BaseModel):
     """Email notification message."""
+
     to: str
     subject: str
     body: str
@@ -40,15 +42,16 @@ class EmailMessage(BaseModel):
 
 class NotificationMessage(BaseModel):
     """Notification message."""
+
     notification_id: str
     user_id: str
     type: str
-    content: dict
+    content: dict[str, Any]
 
 
 # Temporal activities
 @activity.defn(name="send_email")
-async def send_email(email_data: dict) -> dict:
+async def send_email(email_data: dict[str, Any]) -> dict[str, Any]:
     """Send an email."""
     logger.info(f"Sending email to {email_data['to']}: {email_data['subject']}")
     # Simulate email sending
@@ -56,7 +59,7 @@ async def send_email(email_data: dict) -> dict:
 
 
 @activity.defn(name="send_notification")
-async def send_notification(notification_data: dict) -> dict:
+async def send_notification(notification_data: dict[str, Any]) -> dict[str, Any]:
     """Send a notification."""
     logger.info(f"Sending notification {notification_data['notification_id']}")
     return {"status": "sent", "notification_id": notification_data["notification_id"]}
@@ -68,10 +71,10 @@ class NotificationWorkflow:
     """Notification processing workflow."""
 
     @workflow.run
-    async def run(self, notification_data: dict) -> dict:
+    async def run(self, notification_data: dict[str, Any]) -> dict[str, Any]:
         """Process notification."""
         # Send notification
-        result = await workflow.execute_activity(
+        result: dict[str, Any] = await workflow.execute_activity(
             send_notification,
             notification_data,
             task_queue="notification_queue",
@@ -95,7 +98,7 @@ broker = RedisBroker("redis://localhost:6379")
 faststream_app = FastStream(broker)
 
 
-@broker.subscriber("emails", priority=True)
+@broker.subscriber("emails")
 async def handle_email(message: EmailMessage) -> None:
     """Handle email messages with priority."""
     logger.info(f"Processing email: {message.subject} to {message.to}")
@@ -124,8 +127,8 @@ async def handle_email(message: EmailMessage) -> None:
 
         logger.info(f"Started workflow {workflow_id} for email")
 
-    except Exception as e:
-        logger.exception(f"Failed to process email: {e}")
+    except Exception:
+        logger.exception("Failed to process email")
         # In production, you might want to publish to a dead-letter queue
         raise
 
@@ -147,8 +150,8 @@ async def handle_notification(message: NotificationMessage) -> None:
 
         logger.info(f"Started workflow {workflow_id} for notification")
 
-    except Exception as e:
-        logger.exception(f"Failed to process notification: {e}")
+    except Exception:
+        logger.exception("Failed to process notification")
         raise
 
 

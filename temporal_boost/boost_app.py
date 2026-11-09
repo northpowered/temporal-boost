@@ -12,7 +12,7 @@ from typing import Any, ClassVar
 import typer
 import yaml
 from temporalio.types import MethodAsyncNoParam
-from temporalio.worker._interceptor import Interceptor
+from temporalio.worker import Interceptor
 
 from temporal_boost.cli.process_context import validate_asgi_processes
 from temporal_boost.common import DEFAULT_LOGGING_CONFIG

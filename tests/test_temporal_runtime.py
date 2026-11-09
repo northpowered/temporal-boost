@@ -59,23 +59,26 @@ class TestTemporalRuntimeBuilder:
         builder = TemporalRuntimeBuilder(prometheus_durations_as_seconds=True)
         assert builder._prometheus_durations_as_seconds is True
 
-    def test_build_without_metrics(self) -> None:
-        builder = TemporalRuntimeBuilder()
+    def test_build_without_metrics(self, mock_runtime: MagicMock) -> None:
+        builder = TemporalRuntimeBuilder(prometheus_bind_address=None)
         runtime = builder.build()
-        assert runtime is not None
+        assert runtime is mock_runtime.return_value
+        assert mock_runtime.call_args.kwargs["telemetry"].metrics is None
 
-    def test_build_with_prometheus_config(self) -> None:
+    def test_build_with_prometheus_config(self, mock_runtime: MagicMock) -> None:
         builder = TemporalRuntimeBuilder(prometheus_bind_address="0.0.0.0:9090")
         runtime = builder.build()
-        assert runtime is not None
+        assert runtime is mock_runtime.return_value
+        assert mock_runtime.call_args.kwargs["telemetry"].metrics.bind_address == "0.0.0.0:9090"
 
-    def test_build_with_custom_metrics(self) -> None:
+    def test_build_with_custom_metrics(self, mock_runtime: MagicMock) -> None:
         metrics_config = PrometheusConfig(bind_address="0.0.0.0:9091")
         builder = TemporalRuntimeBuilder(metrics=metrics_config)
         runtime = builder.build()
-        assert runtime is not None
+        assert runtime is mock_runtime.return_value
+        assert mock_runtime.call_args.kwargs["telemetry"].metrics is metrics_config
 
-    def test_build_with_all_prometheus_options(self) -> None:
+    def test_build_with_all_prometheus_options(self, mock_runtime: MagicMock) -> None:
         builder = TemporalRuntimeBuilder(
             prometheus_bind_address="0.0.0.0:9090",
             prometheus_counters_total_suffix=True,
@@ -83,17 +86,24 @@ class TestTemporalRuntimeBuilder:
             prometheus_durations_as_seconds=True,
         )
         runtime = builder.build()
-        assert runtime is not None
+        assert runtime is mock_runtime.return_value
+        metrics = mock_runtime.call_args.kwargs["telemetry"].metrics
+        assert metrics.bind_address == "0.0.0.0:9090"
+        assert metrics.counters_total_suffix is True
+        assert metrics.unit_suffix is True
+        assert metrics.durations_as_seconds is True
 
-    def test_build_with_global_tags(self) -> None:
+    def test_build_with_global_tags(self, mock_runtime: MagicMock) -> None:
         builder = TemporalRuntimeBuilder(global_tags={"service": "test"})
         runtime = builder.build()
-        assert runtime is not None
+        assert runtime is mock_runtime.return_value
+        assert mock_runtime.call_args.kwargs["telemetry"].global_tags == {"service": "test"}
 
-    def test_build_with_metric_prefix(self) -> None:
+    def test_build_with_metric_prefix(self, mock_runtime: MagicMock) -> None:
         builder = TemporalRuntimeBuilder(metric_prefix="test_prefix")
         runtime = builder.build()
-        assert runtime is not None
+        assert runtime is mock_runtime.return_value
+        assert mock_runtime.call_args.kwargs["telemetry"].metric_prefix == "test_prefix"
 
     def test_build_with_address_in_use_error(self, caplog: pytest.LogCaptureFixture) -> None:
         builder = TemporalRuntimeBuilder(prometheus_bind_address="0.0.0.0:9093")

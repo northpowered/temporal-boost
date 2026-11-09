@@ -18,6 +18,7 @@ Run every registered consumer without creating schedules:
 
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from temporalio import activity, workflow
 
@@ -31,7 +32,7 @@ app = BoostApp(name="cron-example")
 
 
 @activity.defn(name="generate_report")
-async def generate_report() -> dict:
+async def generate_report() -> dict[str, Any]:
     """Generate a daily report."""
     logger.info("Generating daily report...")
     # Simulate report generation

@@ -112,43 +112,52 @@ worker.configure_temporal_runtime(
 
 ### Worker Builder Pattern
 
-Use builders directly for maximum control:
+Use builders directly for explicit runtime ownership. The runnable example
+[`example_runtime.py`](https://github.com/northpowered/temporal-boost/blob/main/examples/example_runtime.py)
+contains this complete async lifecycle:
 
 ```python
+import asyncio
+
+from temporalio import activity
+
 from temporal_boost.temporal.client import TemporalClientBuilder
 from temporal_boost.temporal.runtime import TemporalRuntimeBuilder
 from temporal_boost.temporal.worker import TemporalWorkerBuilder
-from temporal_boost.workers.temporal import TemporalBoostWorker
 
-# Build custom client
-client_builder = TemporalClientBuilder(
-    target_host="custom-host:7233",
-    namespace="custom-namespace",
-    use_pydantic_data_converter=True,
-)
 
-# Build custom runtime
-runtime_builder = TemporalRuntimeBuilder(
-    prometheus_bind_address="0.0.0.0:9090",
-    global_tags={"custom": "tag"},
-)
+@activity.defn
+async def greet(name: str) -> str:
+    return f"Hello, {name}!"
 
-# Build custom worker
-worker_builder = TemporalWorkerBuilder(
-    task_queue="custom_queue",
-    max_concurrent_activities=200,
-    max_concurrent_workflow_tasks=100,
-)
 
-# Fragment inside an async function: build and attach the runtime before connecting
-runtime = runtime_builder.build()
-client_builder.set_runtime(runtime)
-client = await client_builder.build()
-worker_builder.set_client(client)
-worker = worker_builder.build()
+async def run_worker() -> None:
+    runtime = TemporalRuntimeBuilder(prometheus_bind_address="127.0.0.1:9090").build()
+    client_builder = TemporalClientBuilder(target_host="localhost:7233", namespace="default")
+    client_builder.set_runtime(runtime)
+    client = await client_builder.build()
+    worker_builder = TemporalWorkerBuilder(task_queue="custom_queue")
+    worker_builder.set_client(client)
+    worker_builder.set_activities([greet])
+    worker = worker_builder.build()
+    async with worker:
+        # Keep serving until cancelled; the context shuts down the SDK worker.
+        await asyncio.Event().wait()
 ```
 
+The caller keeps the runtime alive while its client and worker use it. The supported SDK has no
+public runtime `close()` method: after worker shutdown, release references to the worker, client,
+builders, and runtime. An external reference can keep its exporter alive. This standalone example
+creates one runtime; `BoostApp` workers each create their own runtime.
+
 ## Metrics Across Workers and Processes
+
+The CLI no longer creates, validates, or changes `PROMETHEUS_MULTIPROC_DIR`. Temporal SDK
+exporters do not consume the Python Prometheus client's multiprocess directory. If another part
+of your application uses that variable, your application owns its path, validation, and cleanup;
+the CLI leaves directories, regular files, missing paths, and the environment untouched.
+Upgrading removes the old automatic temporary directory allocation; configure and scrape SDK
+exporter endpoints explicitly as described below.
 
 Each `TemporalBoostWorker` owns an independent SDK runtime and client. There is **no automatic
 runtime sharing**. A Prometheus exporter belongs to that runtime and binds its own listening socket.
@@ -226,7 +235,7 @@ or use an external telemetry collector. An explicit `metrics=PrometheusConfig(..
 `PROMETHEUS_MULTIPROC_DIR` is unrelated to the SDK exporter. It is used by Python's `prometheus_client`
 multiprocess mode when that client is installed and configured separately. Temporal's SDK exporter
 does not write there, and Temporal-boost does not combine SDK metrics through it. The launcher's legacy
-directory setup is not an aggregator; its cleanup/removal is tracked separately in TB-028.
+automatic directory setup has been removed; any directory used by the application remains application-owned.
 
 ## Interceptors
 
@@ -235,69 +244,62 @@ Interceptors allow you to add cross-cutting concerns like logging, metrics, or a
 ### Creating an Interceptor
 
 ```python
-from temporalio.worker import ExecuteActivityInput, ExecuteWorkflowInput
-from temporalio.worker.interceptor import (
+import logging
+from typing import Any
+
+from temporalio.worker import (
     ActivityInboundInterceptor,
-    ActivityInterceptor,
+    ExecuteActivityInput,
+    ExecuteWorkflowInput,
+    Interceptor,
     WorkflowInboundInterceptor,
-    WorkflowInterceptor,
+    WorkflowInterceptorClassInput,
 )
 
-class LoggingActivityInterceptor(ActivityInterceptor):
-    def intercept_activity(
-        self, next: ActivityInboundInterceptor
-    ) -> ActivityInboundInterceptor:
-        return LoggingActivityInboundInterceptor(next)
 
 class LoggingActivityInboundInterceptor(ActivityInboundInterceptor):
-    def __init__(self, next_inbound: ActivityInboundInterceptor):
-        self._next = next_inbound
-
     async def execute_activity(self, input: ExecuteActivityInput) -> Any:
-        logger.info(f"Executing activity: {input.func}")
-        try:
-            result = await self._next.execute_activity(input)
-            logger.info(f"Activity completed: {input.func}")
-            return result
-        except Exception as e:
-            logger.error(f"Activity failed: {input.func}, error: {e}")
-            raise
+        logging.getLogger(__name__).info("Executing activity: %s", input.fn.__name__)
+        return await super().execute_activity(input)
 
-class LoggingWorkflowInterceptor(WorkflowInterceptor):
-    def intercept_workflow(
-        self, next: WorkflowInboundInterceptor
-    ) -> WorkflowInboundInterceptor:
-        return LoggingWorkflowInboundInterceptor(next)
 
 class LoggingWorkflowInboundInterceptor(WorkflowInboundInterceptor):
-    def __init__(self, next_inbound: WorkflowInboundInterceptor):
-        self._next = next_inbound
+    async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
+        # Use workflow.logger for replay-aware logging inside workflow code.
+        from temporalio import workflow
+        workflow.logger.info("Executing workflow: %s", input.type.__name__)
+        return await super().execute_workflow(input)
 
-    def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
-        logger.info(f"Executing workflow: {input.workflow_class}")
-        return self._next.execute_workflow(input)
+
+class LoggingInterceptor(Interceptor):
+    def intercept_activity(self, next: ActivityInboundInterceptor) -> ActivityInboundInterceptor:
+        return LoggingActivityInboundInterceptor(next)
+
+    def workflow_interceptor_class(
+        self, input: WorkflowInterceptorClassInput
+    ) -> type[WorkflowInboundInterceptor]:
+        return LoggingWorkflowInboundInterceptor
 ```
 
 ### Using Interceptors
 
+This registration fragment assumes `app`, `my_activity`, and `my_workflow` already exist:
+
 ```python
-from temporalio.worker._interceptor import Interceptor
-
-app = BoostApp("interceptor-example")
-
-interceptor = Interceptor(
-    activity_interceptor=LoggingActivityInterceptor(),
-    workflow_interceptor=LoggingWorkflowInterceptor(),
-)
-
 worker = app.add_worker(
     "logged_worker",
     "logged_queue",
     activities=[my_activity],
     workflows=[my_workflow],
-    interceptors=[interceptor],
+    interceptors=[LoggingInterceptor()],
 )
 ```
+
+Interceptor types use public exports from `temporalio.worker`. The minimum supported SDK is
+1.14.1, matching the checked lockfile baseline; newer versions are allowed without an arbitrary
+upper bound. The base CLI uses Typer's public invocation API. Explicit `BoostApp.run([...])`
+arguments are passed literally; `run()` delegates native argument handling, including Windows
+expansion, to Typer/Click. Embedders can pass `windows_expand_args=False` to disable that expansion.
 
 ## Custom Logging
 

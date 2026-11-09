@@ -476,7 +476,7 @@ app.add_asgi_worker(
     fastapi_app,
     host="0.0.0.0",
     port=8000,
-    asgi_worker_type=ASGIWorkerType.auto,  # Auto-detect available server
+    asgi_worker_type=ASGIWorkerType.auto,  # Priority: Uvicorn, Granian, Hypercorn
 )
 ```
 

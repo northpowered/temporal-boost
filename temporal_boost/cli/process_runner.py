@@ -10,7 +10,6 @@ from typing import Any
 
 from temporal_boost.cli.importer import import_app_object
 from temporal_boost.cli.process_context import multiprocess_execution
-from temporal_boost.cli.prometheus import setup_prometheus_multiproc_dir
 
 
 logger = logging.getLogger(__name__)
@@ -251,5 +250,4 @@ def run_multiprocess(
         raise ValueError("number_of_processes must be positive")
     if not math.isfinite(shutdown_timeout) or shutdown_timeout < 0:
         raise ValueError("shutdown_timeout must be a finite, non-negative number of seconds")
-    setup_prometheus_multiproc_dir()
     _ProcessSupervisor(app_path, number_of_processes, list(arguments), shutdown_timeout).run()

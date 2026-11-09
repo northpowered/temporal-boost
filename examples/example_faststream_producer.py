@@ -11,8 +11,9 @@ Usage:
   python3 example_faststream_producer.py send_task <task_id> <description> <priority>
 """
 
+import argparse
 import asyncio
-import sys
+from typing import Any
 
 from faststream import FastStream
 from faststream.redis import RedisBroker
@@ -23,7 +24,7 @@ from pydantic import BaseModel
 class OrderMessage(BaseModel):
     order_id: str
     customer_id: str
-    items: list[dict]
+    items: list[dict[str, Any]]
     total: float
 
 
@@ -63,30 +64,21 @@ async def send_task(task_id: str, description: str, priority: int) -> None:
 
 async def main() -> None:
     """Main CLI handler."""
-    if len(sys.argv) < 2:
-        sys.exit(1)
-
-    command = sys.argv[1]
-
-    if command == "send_order":
-        if len(sys.argv) < 4:
-            sys.exit(1)
-
-        order_id = sys.argv[2]
-        customer_id = sys.argv[3]
-        await send_order(order_id, customer_id)
-
-    elif command == "send_task":
-        if len(sys.argv) < 5:
-            sys.exit(1)
-
-        task_id = sys.argv[2]
-        description = sys.argv[3]
-        priority = int(sys.argv[4])
-        await send_task(task_id, description, priority)
-
-    else:
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    order = commands.add_parser("send_order")
+    order.add_argument("order_id")
+    order.add_argument("customer_id")
+    task = commands.add_parser("send_task")
+    task.add_argument("task_id")
+    task.add_argument("description")
+    task.add_argument("priority", type=int)
+    args = parser.parse_args()
+    async with broker:
+        if args.command == "send_order":
+            await send_order(args.order_id, args.customer_id)
+        else:
+            await send_task(args.task_id, args.description, args.priority)
 
 
 if __name__ == "__main__":
