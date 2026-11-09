@@ -81,7 +81,6 @@ class Harness:
         self.tick_action: Callable[[], None] | None = None
         self.pipes: list[tuple[MagicMock, MagicMock]] = []
         monkeypatch.setattr(process_runner, "Process", self.make_process)
-        monkeypatch.setattr(process_runner, "setup_prometheus_multiproc_dir", lambda: None)
         monkeypatch.setattr(process_runner, "Pipe", self.make_pipe)
         monkeypatch.setattr(process_runner, "TERMINATE_TIMEOUT", 0.2, raising=False)
         monkeypatch.setattr(process_runner, "KILL_TIMEOUT", 0.2, raising=False)
@@ -572,3 +571,43 @@ def test_installed_cli_aggregates_real_child_exit_codes(tmp_path: Path, argument
     with launched(command, tmp_path) as process:
         stdout, stderr = process.communicate(timeout=10)
         assert process.returncode == exit_code, (stdout, stderr)
+
+
+@pytest.mark.parametrize("configured_path", ["unset", "directory", "file", "missing"])
+@pytest.mark.parametrize("start_fails", [False, True])
+def test_repeated_process_runs_do_not_manage_prometheus_directories(
+    monkeypatch, tmp_path, configured_path, start_fails
+):
+    directory = tmp_path / "user-metrics"
+    directory.mkdir()
+    data = directory / "owned-by-user.db"
+    data.write_text("keep")
+    file_path = tmp_path / "plain-file"
+    file_path.write_text("keep-file")
+    missing = tmp_path / "not-created"
+    paths = {"directory": directory, "file": file_path, "missing": missing}
+    if configured_path == "unset":
+        monkeypatch.delenv("PROMETHEUS_MULTIPROC_DIR", raising=False)
+    else:
+        monkeypatch.setenv("PROMETHEUS_MULTIPROC_DIR", str(paths[configured_path]))
+    before_environment = dict(os.environ)
+    before_files = sorted(tmp_path.rglob("*"))
+    with patch("tempfile.mkdtemp", side_effect=AssertionError("No managed Prometheus directories")):
+        for _ in range(2):
+            children = [ProcessDouble(0), ProcessDouble(0)]
+            failure = RuntimeError("process could not start")
+            if start_fails:
+                children[1].start_error = failure
+            harness = Harness(monkeypatch, children)
+            if start_fails:
+                with pytest.raises(RuntimeError) as raised:
+                    harness.run()
+                assert raised.value is failure
+            else:
+                harness.run()
+            harness.assert_clean()
+    assert dict(os.environ) == before_environment
+    assert sorted(tmp_path.rglob("*")) == before_files
+    assert data.read_text() == "keep"
+    assert file_path.read_text() == "keep-file"
+    assert not missing.exists()

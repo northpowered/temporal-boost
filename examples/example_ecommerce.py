@@ -12,6 +12,7 @@ Run with: python3 example_ecommerce.py run all
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 from pydantic import BaseModel
 from temporalio import activity, workflow
@@ -29,7 +30,7 @@ app = BoostApp(name="ecommerce-example", use_pydantic=True)
 class Order(BaseModel):
     order_id: str
     customer_id: str
-    items: list[dict]
+    items: list[dict[str, Any]]
     total: float
 
 
@@ -41,7 +42,7 @@ class PaymentResult(BaseModel):
 
 # Activities
 @activity.defn(name="validate_inventory")
-async def validate_inventory(order: Order) -> dict:
+async def validate_inventory(order: Order) -> dict[str, Any]:
     """Validate that all items are in stock."""
     logger.info(f"Validating inventory for order {order.order_id}")
     # Simulate inventory check
@@ -61,7 +62,7 @@ async def process_payment(order: Order) -> PaymentResult:
 
 
 @activity.defn(name="fulfill_order")
-async def fulfill_order(order: Order) -> dict:
+async def fulfill_order(order: Order) -> dict[str, Any]:
     """Fulfill the order (packaging, shipping, etc.)."""
     logger.info(f"Fulfilling order {order.order_id}")
     # Simulate order fulfillment
@@ -73,7 +74,7 @@ async def fulfill_order(order: Order) -> dict:
 
 
 @activity.defn(name="send_notification")
-async def send_notification(order_id: str, status: str, message: str = "") -> dict:
+async def send_notification(order_id: str, status: str, message: str = "") -> dict[str, Any]:
     """Send notification to customer."""
     logger.info(f"Sending {status} notification for order {order_id}")
     # Simulate sending notification
@@ -86,7 +87,7 @@ class OrderProcessingWorkflow:
     """Complete order processing workflow."""
 
     @workflow.run
-    async def run(self, order: Order) -> dict:
+    async def run(self, order: Order) -> dict[str, Any]:
         """Process order through all steps."""
         logger.info(f"Starting order processing for {order.order_id}")
 
@@ -102,9 +103,7 @@ class OrderProcessingWorkflow:
             if not validation["valid"]:
                 await workflow.execute_activity(
                     send_notification,
-                    order.order_id,
-                    "failed",
-                    "Items out of stock",
+                    args=[order.order_id, "failed", "Items out of stock"],
                     task_queue="notification_queue",
                     start_to_close_timeout=timedelta(minutes=2),
                 )
@@ -121,9 +120,7 @@ class OrderProcessingWorkflow:
             if payment.status != "completed":
                 await workflow.execute_activity(
                     send_notification,
-                    order.order_id,
-                    "failed",
-                    "Payment failed",
+                    args=[order.order_id, "failed", "Payment failed"],
                     task_queue="notification_queue",
                     start_to_close_timeout=timedelta(minutes=2),
                 )
@@ -140,9 +137,7 @@ class OrderProcessingWorkflow:
             # Step 4: Send confirmation
             await workflow.execute_activity(
                 send_notification,
-                order.order_id,
-                "completed",
-                f"Order shipped! Tracking: {fulfillment['tracking_number']}",
+                args=[order.order_id, "completed", f"Order shipped! Tracking: {fulfillment['tracking_number']}"],
                 task_queue="notification_queue",
                 start_to_close_timeout=timedelta(minutes=2),
             )
@@ -155,12 +150,10 @@ class OrderProcessingWorkflow:
             }
 
         except Exception as e:
-            logger.exception(f"Order processing failed: {e}")
+            logger.exception("Order processing failed")
             await workflow.execute_activity(
                 send_notification,
-                order.order_id,
-                "failed",
-                f"Order processing error: {e!s}",
+                args=[order.order_id, "failed", f"Order processing error: {e!s}"],
                 task_queue="notification_queue",
                 start_to_close_timeout=timedelta(minutes=2),
             )

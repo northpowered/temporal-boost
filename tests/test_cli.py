@@ -49,7 +49,7 @@ def test_os_exit_status_matches_script_and_installed_entry_point(
     if launcher == "script":
         command = [sys.executable, str(Path(__file__).with_name("cli_exit_app.py"))]
     else:
-        command = [str(Path(sys.executable).with_name("temporal-boost")), "tests.cli_exit_app:app", "--"]
+        command = [str(Path(sys.executable).with_name("temporal-boost.exe" if sys.platform == "win32" else "temporal-boost")), "tests.cli_exit_app:app", "--"]
 
     result = subprocess.run(  # noqa: S603
         [*command, *arguments],

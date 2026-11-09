@@ -20,7 +20,7 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 
-from temporal_boost import ASGIWorkerType, BaseBoostWorker, BoostApp
+from temporal_boost import ASGIWorkerType, AsyncBoostWorker, BoostApp
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -39,6 +39,7 @@ app = BoostApp(
 @dataclass
 class TestModel:
     """Test data model."""
+
     foo: str
     bar: int
     spam: int = 3
@@ -118,19 +119,25 @@ class MyWorkflow:
 
 
 # Custom async runtime worker
-class TestAsyncRuntime(BaseBoostWorker):
-    """Custom worker with async runtime."""
+class TestAsyncRuntime(AsyncBoostWorker):
+    """Custom async worker with an observable stop event and managed shutdown."""
 
-    async def _test_async_runtime(self) -> None:
-        """Async runtime loop."""
-        while True:
-            await asyncio.sleep(1)
-            logger.debug("Async runtime tick")
+    def __init__(self) -> None:
+        super().__init__()
+        self.finished: asyncio.Event | None = None
 
-    def run(self) -> None:
-        """Run async runtime."""
-        asyncio.run(self._test_async_runtime())
+    async def run_async(self) -> None:
+        self.finished = asyncio.Event()
+        logger.info("Running %s", self.name)
+        await self.finished.wait()
 
+    async def shutdown(self) -> None:
+        if self.finished is not None:
+            self.finished.set()
+        logger.info("Stopped %s", self.name)
+
+
+app.add_async_runtime("custom_runtime", TestAsyncRuntime())
 
 # Register workers
 app.add_worker(

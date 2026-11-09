@@ -16,6 +16,7 @@ Access API at: http://localhost:8000/docs
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -35,7 +36,7 @@ app = BoostApp(name="fastapi-example")
 class OrderRequest(BaseModel):
     order_id: str
     customer_id: str
-    items: list[dict]
+    items: list[dict[str, Any]]
     total: float
 
 
@@ -46,7 +47,7 @@ class WorkflowResponse(BaseModel):
 
 # Temporal activities
 @activity.defn(name="process_order")
-async def process_order(order_data: dict) -> dict:
+async def process_order(order_data: dict[str, Any]) -> dict[str, Any]:
     """Process an order."""
     logger.info(f"Processing order {order_data['order_id']}")
     return {"status": "processed", "order_id": order_data["order_id"]}
@@ -61,11 +62,11 @@ class OrderWorkflow:
         self.status = "pending"
 
     @workflow.run
-    async def run(self, order_data: dict) -> dict:
+    async def run(self, order_data: dict[str, Any]) -> dict[str, Any]:
         """Process order."""
         self.status = "processing"
 
-        result = await workflow.execute_activity(
+        result: dict[str, Any] = await workflow.execute_activity(
             process_order,
             order_data,
             task_queue="order_queue",
@@ -76,7 +77,7 @@ class OrderWorkflow:
         return result
 
     @workflow.query(name="status")
-    def get_status(self) -> dict:
+    def get_status(self) -> dict[str, Any]:
         """Get workflow status."""
         return {"status": self.status}
 
@@ -86,38 +87,46 @@ fastapi_app = FastAPI(title="Temporal Order API", version="1.0.0")
 
 
 @fastapi_app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "healthy"}
 
 
-@fastapi_app.post("/orders", response_model=WorkflowResponse)
-async def create_order(order: OrderRequest):
-    """Create a new order via Temporal workflow."""
+@fastapi_app.post("/orders")
+async def create_order(order: OrderRequest) -> WorkflowResponse:
+    """Create a new order via Temporal workflow.
+
+    Raises:
+        HTTPException: If the Temporal request fails.
+    """
     try:
         client = await Client.connect("localhost:7233")
 
-        workflow_id = await client.start_workflow(
+        handle = await client.start_workflow(
             "OrderWorkflow",
             order.dict(),
             id=f"order-{order.order_id}",
             task_queue="order_queue",
         )
 
-        logger.info(f"Started workflow {workflow_id} for order {order.order_id}")
+        logger.info(f"Started workflow {handle.id} for order {order.order_id}")
 
         return WorkflowResponse(
-            workflow_id=workflow_id,
+            workflow_id=handle.id,
             status="started",
         )
     except Exception as e:
-        logger.exception(f"Failed to start workflow: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Failed to start workflow")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @fastapi_app.get("/orders/{workflow_id}/status")
-async def get_order_status(workflow_id: str):
-    """Get order workflow status."""
+async def get_order_status(workflow_id: str) -> dict[str, Any]:
+    """Get order workflow status.
+
+    Raises:
+        HTTPException: If the Temporal request fails.
+    """
     try:
         client = await Client.connect("localhost:7233")
 
@@ -126,13 +135,17 @@ async def get_order_status(workflow_id: str):
 
         return {"workflow_id": workflow_id, "status": status}
     except Exception as e:
-        logger.exception(f"Failed to query workflow: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Failed to query workflow")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @fastapi_app.get("/orders/{workflow_id}/result")
-async def get_order_result(workflow_id: str):
-    """Get order workflow result."""
+async def get_order_result(workflow_id: str) -> dict[str, Any]:
+    """Get order workflow result.
+
+    Raises:
+        HTTPException: If the Temporal request fails.
+    """
     try:
         client = await Client.connect("localhost:7233")
 
@@ -141,8 +154,8 @@ async def get_order_result(workflow_id: str):
 
         return {"workflow_id": workflow_id, "result": result}
     except Exception as e:
-        logger.exception(f"Failed to get workflow result: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Failed to get workflow result")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # Register Temporal worker

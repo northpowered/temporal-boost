@@ -5,6 +5,7 @@ This guide covers how to run Temporal-boost applications in development, testing
 ## Table of Contents
 
 - [Development](#development)
+- [Application Import Lookup](#application-import-lookup)
 - [CLI Exit Codes and Programmatic Invocation](#cli-exit-codes-and-programmatic-invocation)
 - [Production Deployment](#production-deployment)
 - [Docker Deployment](#docker-deployment)
@@ -150,6 +151,43 @@ When using the installed `temporal-boost` launcher, prepare the environment befo
 command: it imports the package before your app module. Changing environment variables after import
 does not refresh defaults. Explicit endpoint/namespace settings on the app and worker still override
 the imported environment; see [configuration priority](configuration.md#configuration-priority).
+
+## Application Import Lookup
+
+The installed launcher accepts `package.module:app`, including nested attributes such as
+`package.module:container.app`. Module and attribute components must be dotted Python identifiers;
+expressions such as `app()` are not evaluated.
+
+The importer searches in this order:
+
+1. Python's existing import path (`sys.path`, including installed packages and `PYTHONPATH`).
+2. The current working directory, if it is not already an entry.
+3. Its immediate parent, if it is not already an entry.
+
+Search stops at the first successfully imported target. A fallback is attempted only if the missing
+module is the target or one of its package prefixes. A missing dependency, syntax error, or exception
+raised by application initialization is propagated immediately with its original traceback; it does
+not cause another directory search. The traceback also prevents a `ModuleNotFoundError` raised by
+application/package code from being mistaken for a missing target, even if its `name` matches.
+If the target remains unavailable, the importer raises
+`ValueError: Could not import module ...`, chained from `ModuleNotFoundError`. Malformed strings and
+missing attributes have separate `ValueError` messages. Each nested attribute is read once.
+
+A failed call restores `sys.path` to its entry state, including when attribute resolution fails.
+On a successful fallback, only the directory used for that import is prepended and retained for
+deferred imports from the application. Unsuccessful candidates are removed. Normal-path success adds
+no directory. Python's usual module cache still applies; the importer does not unload modules or undo
+application initialization side effects. Run imports during application setup before worker threads.
+
+The fallback does not walk further ancestors or search arbitrary project directories. For a `src`
+layout, install the project or prepare `PYTHONPATH` before launching, for example from the project root:
+
+```bash
+PYTHONPATH="$PWD/src" uv run temporal-boost service.main:app run all
+```
+
+These lookup rules apply to the external launcher's app import. ASGI adapter application strings use
+their own loader and the normal Python import path.
 
 ## CLI Exit Codes and Programmatic Invocation
 

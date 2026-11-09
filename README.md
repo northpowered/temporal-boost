@@ -115,6 +115,14 @@ export TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS=300
 export TEMPORAL_PROMETHEUS_BIND_ADDRESS=0.0.0.0:9090
 ```
 
+## Development checks
+
+Install all optional integrations for the complete checks with `uv sync --locked --all-extras`.
+`uv run pytest tests/ --cov=temporal_boost --cov-report=term` runs unit tests without listening sockets.
+Run local HTTP/exporter tests separately with `uv run pytest tests/ -m integration`; they use loopback
+and temporary ports, and require permission to bind locally. Live Temporal server tests additionally
+require `TEMPORAL_BOOST_INTEGRATION=1`. Use `-m ""` to include both groups.
+
 ## Documentation
 
 - 📖 [Getting Started](https://northpowered.github.io/temporal-boost/) - Overview and installation

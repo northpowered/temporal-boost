@@ -12,6 +12,7 @@ Run with: python3 example_parallel.py run data_worker
 import asyncio
 import logging
 from datetime import timedelta
+from typing import Any
 
 from temporalio import activity, workflow
 
@@ -25,7 +26,7 @@ app = BoostApp(name="parallel-example")
 
 
 @activity.defn(name="fetch_user_data")
-async def fetch_user_data(user_id: str) -> dict:
+async def fetch_user_data(user_id: str) -> dict[str, Any]:
     """Fetch user data from external service."""
     logger.info(f"Fetching user data for {user_id}")
     # Simulate API call
@@ -34,7 +35,7 @@ async def fetch_user_data(user_id: str) -> dict:
 
 
 @activity.defn(name="fetch_order_data")
-async def fetch_order_data(order_id: str) -> dict:
+async def fetch_order_data(order_id: str) -> dict[str, Any]:
     """Fetch order data from database."""
     logger.info(f"Fetching order data for {order_id}")
     # Simulate database query
@@ -43,7 +44,7 @@ async def fetch_order_data(order_id: str) -> dict:
 
 
 @activity.defn(name="fetch_payment_data")
-async def fetch_payment_data(payment_id: str) -> dict:
+async def fetch_payment_data(payment_id: str) -> dict[str, Any]:
     """Fetch payment data from payment service."""
     logger.info(f"Fetching payment data for {payment_id}")
     # Simulate payment API call
@@ -56,7 +57,7 @@ class DataAggregationWorkflow:
     """Workflow that fetches data from multiple sources in parallel."""
 
     @workflow.run
-    async def run(self, user_id: str, order_id: str, payment_id: str) -> dict:
+    async def run(self, user_id: str, order_id: str, payment_id: str) -> dict[str, Any]:
         """Fetch and aggregate data from multiple sources."""
         logger.info(f"Starting data aggregation for user {user_id}")
 

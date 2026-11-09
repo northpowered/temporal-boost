@@ -4,8 +4,7 @@ from math import isfinite
 from typing import Any
 
 from temporalio.client import Client
-from temporalio.worker import Worker
-from temporalio.worker._interceptor import Interceptor
+from temporalio.worker import Interceptor, Worker
 
 from temporal_boost.temporal import config
 

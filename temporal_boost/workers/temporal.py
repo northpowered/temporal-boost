@@ -10,8 +10,7 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy, WorkflowIDReusePolicy
 from temporalio.runtime import LoggingConfig, MetricBuffer, OpenTelemetryConfig, PrometheusConfig, Runtime
 from temporalio.types import MethodAsyncNoParam
-from temporalio.worker import Worker
-from temporalio.worker._interceptor import Interceptor
+from temporalio.worker import Interceptor, Worker
 
 from temporal_boost.temporal import config
 from temporal_boost.temporal.client import TemporalClientBuilder

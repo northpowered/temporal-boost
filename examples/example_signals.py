@@ -11,6 +11,7 @@ Then send signals using the client script.
 """
 
 import logging
+from typing import Any
 
 from temporalio import workflow
 
@@ -34,7 +35,7 @@ class ApprovalWorkflow:
         self.request_id = ""
 
     @workflow.run
-    async def run(self, request_id: str) -> dict:
+    async def run(self, request_id: str) -> dict[str, Any]:
         """Wait for approval signal."""
         self.request_id = request_id
         logger.info(f"Approval workflow started for request: {request_id}")

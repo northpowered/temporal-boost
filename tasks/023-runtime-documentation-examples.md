@@ -1,6 +1,6 @@
 # TB-023. Исправить примеры построения и разделения runtime
 
-- **Статус:** backlog
+- **Статус:** done
 - **Приоритет:** P2
 - **Тип:** Документация
 
@@ -19,10 +19,10 @@
 
 ## Критерии приёмки
 
-- [ ] В примере настроенный runtime действительно передаётся в `Client.connect()`.
-- [ ] В документации нет утверждения о разделении runtime, которого не обеспечивает код.
-- [ ] Пример самодостаточен по импортам и async-контексту либо явно помечен как фрагмент.
-- [ ] Показанный lifecycle соответствует владению SDK-объектами.
+- [x] В примере настроенный runtime действительно передаётся в `Client.connect()`.
+- [x] В документации нет утверждения о разделении runtime, которого не обеспечивает код.
+- [x] Пример самодостаточен по импортам и async-контексту либо явно помечен как фрагмент.
+- [x] Показанный lifecycle соответствует владению SDK-объектами.
 
 ## Проверка
 
@@ -36,3 +36,18 @@
 
 Общий контекст: [ARCHITECTURE.md](../ARCHITECTURE.md). Правила выполнения: [README](README.md).
 
+
+## Результат выполнения
+
+В guide показан самодостаточный async lifecycle: runtime.build → client.set_runtime →
+await client.build → worker.set_client/build → async context worker. Такой же исполнимый пример
+добавлен в `examples/example_runtime.py`. Владение runtime и время жизни exporter описаны явно:
+shared runtime не создаётся автоматически, публичного Runtime.close в поддерживаемом SDK нет.
+API reference уже содержал корректный контракт после TB-011 и сверён с guide.
+
+`test_documented_runtime_is_attached_before_connecting` исполняет именно Markdown fragment с
+mocked Client.connect/Worker и проверяет runtime identity, client identity и выход из SDK worker
+context при отмене. Тест прошёл в общем unit-прогоне; strict MkDocs и импорт standalone примера прошли.
+
+Проверки выполнены после реализации всей серии 020–028 по явному указанию пользователя.
+Общие команды и итоги: [результат серии](README.md#проверка-серии-tb-020tb-028).

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Message model
 class TaskMessage(BaseModel):
     """Task message model."""
+
     task_id: str
     description: str
     priority: int

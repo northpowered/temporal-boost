@@ -258,6 +258,11 @@ class TestTemporalWorkerBuilder:
 
 
 class TestTemporalBoostWorker:
+    @pytest.fixture(autouse=True)
+    def mock_sdk_runtime(self) -> Iterator[MagicMock]:
+        with patch("temporal_boost.temporal.runtime.Runtime") as runtime:
+            yield runtime
+
     def test_app_forwards_zero_poll_ratio(self) -> None:
         app = BoostApp(logger_config=None)
         worker = app.add_worker("worker", "queue", activities=[MagicMock()], nonsticky_to_sticky_poll_ratio=0.0)
@@ -572,7 +577,7 @@ class TestTemporalBoostWorker:
         assert worker._runtime_builder._prometheus_bind_address == "0.0.0.0:9090"
         assert worker._runtime_builder._prometheus_counters_total_suffix is True
 
-    def test_temporal_client_runtime_property(self):
+    def test_temporal_client_runtime_property(self, mock_sdk_runtime: MagicMock) -> None:
         def dummy_activity():
             pass
 
@@ -583,7 +588,9 @@ class TestTemporalBoostWorker:
         )
 
         runtime = worker.temporal_client_runtime
-        assert runtime is not None
+        assert runtime is mock_sdk_runtime.return_value
+        assert worker.temporal_client_runtime is runtime
+        mock_sdk_runtime.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_build_worker(self):

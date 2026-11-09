@@ -1325,7 +1325,7 @@ requires-dist = [
     { name = "hypercorn", marker = "extra == 'hypercorn'" },
     { name = "pydantic" },
     { name = "pyyaml", specifier = ">=6.0.0,<7.0.0" },
-    { name = "temporalio" },
+    { name = "temporalio", specifier = ">=1.14.1" },
     { name = "typer", specifier = ">=0.16.0,<0.17.0" },
     { name = "uvicorn", marker = "extra == 'uvicorn'" },
 ]

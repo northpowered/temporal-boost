@@ -375,12 +375,14 @@ def smoke(backend: str, mode: str, target: str) -> None:
 
 
 @pytest.mark.parametrize("backend", ["uvicorn", "granian"])
+@pytest.mark.integration
 def test_real_backend_factory(backend: str) -> None:
     smoke(backend, "thread", "factory")
 
 
 @pytest.mark.parametrize("backend", list(BACKENDS))
 @pytest.mark.parametrize("mode", ["startup-failure", "shutdown-failure", "bind-failure"])
+@pytest.mark.integration
 def test_real_backend_lifespan_failure_is_fatal(backend: str, mode: str) -> None:
     smoke(backend, mode, "object")
 
@@ -388,5 +390,6 @@ def test_real_backend_lifespan_failure_is_fatal(backend: str, mode: str) -> None
 @pytest.mark.parametrize("backend", ["uvicorn", "hypercorn", "granian"])
 @pytest.mark.parametrize("mode", ["main", "thread", "coordinator", "SIGINT", "SIGTERM"])
 @pytest.mark.parametrize("target", ["object", "string"])
+@pytest.mark.integration
 def test_real_backend_http_lifespan_and_managed_stop(backend: str, mode: str, target: str) -> None:
     smoke(backend, mode, target)

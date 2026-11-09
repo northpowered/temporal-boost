@@ -214,6 +214,7 @@ def exporters(
 
 
 @pytest.mark.parametrize("process_count", [1, 2])
+@pytest.mark.integration
 def test_real_sdk_exporters_include_both_worker_runtimes_in_every_process(
     tmp_path: Path, unused_tcp_port_factory: Callable[[], int], process_count: int
 ) -> None:
@@ -235,6 +236,7 @@ def test_real_sdk_exporters_include_both_worker_runtimes_in_every_process(
         assert total == 3 * process_count
 
 
+@pytest.mark.integration
 def test_real_conflicting_runtime_cannot_continue_with_missing_metrics(
     tmp_path: Path, unused_tcp_port_factory: Callable[[], int]
 ) -> None:
@@ -256,6 +258,7 @@ def test_real_conflicting_runtime_cannot_continue_with_missing_metrics(
         assert all(metric_samples(scrape(port)) for port in ports)
 
 
+@pytest.mark.integration
 def test_real_duplicate_worker_endpoint_in_one_process_is_fatal(tmp_path: Path, unused_tcp_port: int) -> None:
     ready = tmp_path / "duplicate-ready"
     result = subprocess.run(  # noqa: S603
@@ -274,6 +277,7 @@ def test_real_duplicate_worker_endpoint_in_one_process_is_fatal(tmp_path: Path, 
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(os.getenv("TEMPORAL_BOOST_INTEGRATION") != "1", reason="requires opt-in real Temporal dev server")
+@pytest.mark.integration
 async def test_real_activities_export_metrics_from_two_workers_in_each_of_two_processes(
     tmp_path: Path, unused_tcp_port_factory: Callable[[], int]
 ) -> None:

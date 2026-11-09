@@ -721,3 +721,12 @@ class TestBoostApp:
 
         assert raised.value.code == 0
         selected_run.assert_awaited_once()
+
+    def test_run_unknown_worker_does_not_dispatch_any_registered_worker(self) -> None:
+        app = BoostApp(logger_config=None)
+        worker = app.add_worker("selected", "queue", activities=[MagicMock()])
+        with patch.object(worker, "_run_worker", new_callable=AsyncMock) as selected_run:
+            with pytest.raises(SystemExit) as raised:
+                app.run(["run", "unknown"])
+        assert raised.value.code == 2
+        selected_run.assert_not_awaited()

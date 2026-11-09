@@ -287,6 +287,16 @@ get_registered_workers() -> list[BaseBoostWorker]
 
 ## CLI Process Runner
 
+Application strings use `module:attribute.nested` with dotted identifiers. The importer first uses
+Python's normal import path, then tries the current directory and its immediate parent only for a
+missing target module/package. Missing dependencies and application exceptions propagate unchanged.
+Malformed strings, unavailable targets, and missing attributes produce distinct `ValueError`
+messages; target/attribute lookup errors retain their original exception as the cause.
+
+Failed calls restore `sys.path`; successful fallback imports retain only the directory that resolved
+the target for subsequent application imports. There is no recursive directory search or module-cache
+reset. See [application import lookup](running_application.md#application-import-lookup).
+
 The external launcher supports `--workers N --shutdown-timeout SECONDS` before the application path.
 The shutdown timeout applies when `--workers > 1`, defaults to 30 seconds, and must be finite and non-negative.
 
@@ -700,6 +710,13 @@ def build() -> Runtime
 ## Enums
 
 ### `ASGIWorkerType`
+
+`auto` selects the first available built-in in this fixed order: **Uvicorn → Granian → Hypercorn**.
+A backend is registered only when its required optional packages import successfully.
+Explicit selection bypasses this priority. When only custom backends are available, `auto` selects
+the lexically smallest key. Registering the same class/key again is idempotent; a different class
+under an existing key raises `ValueError`, including attempts to replace a built-in.
+
 
 ASGI worker server types.
 
