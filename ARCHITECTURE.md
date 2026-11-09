@@ -385,8 +385,21 @@ SDK activities, игнорирующие отмену, тоже могут пр�
 
 Парсер bool принимает `true`, `1`, `yes` без учёта регистра; остальные значения дают `False`.
 Ошибки преобразования int/float заменяются default. Проверки диапазонов на этом уровне нет.
-Числовые параметры `TemporalWorkerBuilder` используют `value or config.VALUE`: явный `0`, в том числе
-для `nonsticky_to_sticky_poll_ratio`, заменяется конфигурационным значением.
+Шесть числовых параметров `TemporalWorkerBuilder` используют env/default только при `value is None`.
+Выбранные concurrency и poll counts должны быть положительными `int`; ноль и отрицательные значения
+отклоняются через `ValueError`, float (даже `1.0`), bool и строки — через `TypeError` с именем параметра.
+Ratio принимает конечные неотрицательные `int`/`float`, включая `0.0`; верхней границы `1.0` нет.
+Отрицательные ratio и NaN/±inf дают `ValueError`, bool и нечисловые значения — `TypeError`.
+Валидация выполняется в конструкторе builder для выбранного явного значения или config-константы;
+корректный override может заменить некорректный config. `add_worker()` отклоняет ошибку до регистрации.
+
+Контракт проверен по Python SDK 1.14.1 и его SDK Core revision
+`24a3c23a6dc8842fddb5be3a52a534b863a01a7c`: fixed concurrency и simple poll counts положительны;
+дополнительные ограничения workflow concurrency/polls >= 2 при включённом cache проверяет SDK в `build()`.
+Сам Core ratio не валидирует и ограничивает минимум pollers единицей: `0.0` сохраняется при передаче,
+но не отключает non-sticky polling. Проверка конечного неотрицательного ratio — явная валидация framework,
+без произвольного верхнего лимита. Миграция TB-016: вместо нулевого count для выбора default нужно
+передать `None` или опустить параметр. Import-time env parsing и fallback для нечислового текста не менялись.
 
 `TemporalWorkerBuilder(graceful_shutdown_timeout: timedelta | None = None)` использует env-константу
 только при `None`. Явный `timedelta(0)` сохраняется; выбранная отрицательная длительность отклоняется

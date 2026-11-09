@@ -576,6 +576,18 @@ __init__(
 ) -> None
 ```
 
+For the six numeric options, omission or `None` selects the corresponding
+[environment/default setting](configuration.md#temporal_max_concurrent_workflow_tasks).
+Concurrency and poll counts must be positive integers. The polling ratio must be a finite,
+non-negative `int` or `float`; `0.0` is passed unchanged and values above `1.0` are accepted.
+Booleans, numeric strings, and other wrong types raise `TypeError`; invalid ranges raise `ValueError`
+at construction. Configured defaults undergo the same checks when selected. Zero counts now raise
+an error; use `None` or omit the argument to select configuration.
+
+Additional SDK constraints, such as workflow counts of at least two with caching enabled, are checked
+by the SDK during `build()`. A zero ratio does not disable non-sticky polling: the SDK retains its
+minimum poller count.
+
 ### `TemporalWorkerBuilder.build()`
 
 Build and return Temporal worker.
