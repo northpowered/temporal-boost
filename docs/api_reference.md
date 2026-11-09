@@ -26,8 +26,8 @@ BoostApp(
 **Parameters:**
 
 - `name` (str | None): Application name. Defaults to "temporal_generic_service".
-- `temporal_endpoint` (str | None): Override `TEMPORAL_TARGET_HOST` environment variable.
-- `temporal_namespace` (str | None): Override `TEMPORAL_NAMESPACE` environment variable.
+- `temporal_endpoint` (str | None): Override the imported `TEMPORAL_TARGET_HOST` value. `None` inherits it.
+- `temporal_namespace` (str | None): Override the imported `TEMPORAL_NAMESPACE` value. `None` inherits it.
 - `debug_mode` (bool): Enable debug mode. Defaults to False.
 - `use_pydantic` (bool | None): `None` inherits `TEMPORAL_USE_PYDANTIC_DATA_CONVERTER`; `True` enables
   Pydantic and `False` disables automatic Pydantic selection. An explicit client `data_converter` takes priority.
@@ -322,6 +322,10 @@ See the [example](advanced_usage.md#custom-worker-shutdown).
 
 Temporal worker class.
 
+Endpoint and namespace precedence is the last explicit worker configuration → `BoostApp` parameters →
+environment values captured at import → built-in defaults (`localhost:7233`, `default`). Each field is
+selected independently. See [configuration priority](configuration.md#configuration-priority).
+
 ### `TemporalBoostWorker.configure_temporal_client()`
 
 Configure the Temporal client before initialization or after the previous run has finished cleanup.
@@ -352,6 +356,11 @@ configure_temporal_client(
   Pydantic selection. `None` inherits the environment on initial configuration and leaves an existing
   builder unchanged. An explicit `data_converter` in `kwargs` takes priority.
 - `**kwargs`: Additional client options.
+
+On an existing builder, omitted fields and `None` keep their previous values. Explicit empty strings
+are passed to setters unchanged; they do not reset to environment defaults. Explicit `tls=False`
+overrides an imported `True` value. Configure before initialization; these options do not reconnect
+an active client.
 
 **Example:**
 
@@ -541,6 +550,12 @@ async def build() -> Client
 
 - `Client`: Temporal client instance.
 
+Constructor arguments for `target_host`, `namespace`, `api_key`, and `identity` override imported
+configuration when non-empty; `None` and empty strings fall back to config. Later setters replace
+stored values, including with empty strings. `tls=None` inherits imported config; `tls=False` overrides
+it. A standalone builder has no `BoostApp` configuration layer. Environment changes after package
+import are not read automatically by new builders.
+
 The constructor's `use_pydantic_data_converter` flag inherits the environment when `None`, enables
 Pydantic when `True`, and disables automatic selection when `False`. An explicit `data_converter`
 in constructor kwargs or `set_kwargs()` takes priority over the flag.
@@ -639,6 +654,13 @@ over `prometheus_bind_address`. Only the effective Prometheus endpoint is logged
 The caller owns the returned runtime; pass it to `TemporalClientBuilder.set_runtime()` before
 building a standalone client. Do not pass a live runtime between processes.
 
+The four `prometheus_*` argument defaults above are captured when the function is defined at import,
+as are those on `TemporalBoostWorker.configure_temporal_runtime()`. Changing the environment or
+`config.PROMETHEUS_*` afterward does not refresh omitted arguments. With `metrics=None`, explicitly
+passing `prometheus_bind_address=None` disables the implicit exporter; passing `False` or `None` for a
+suffix/duration flag yields `False`. Each worker runtime configuration call replaces the previous
+configuration and uses function defaults for omitted fields. See [runtime configuration](configuration.md#runtime-configuration).
+
 ```python
 def build() -> Runtime
 ```
@@ -665,7 +687,10 @@ ASGI worker server types.
 
 ## Configuration Constants
 
-All configuration is available in `temporal_boost.temporal.config`:
+Environment defaults are available as constants in `temporal_boost.temporal.config`. They are read
+once during the first package import; `.env` files are not loaded automatically. Prepare the
+environment before importing the package or starting the CLI. Later `os.environ` changes do not
+update these constants or configure existing SDK objects. See [environment loading](configuration.md#environment-loading).
 
 - `TARGET_HOST`: Temporal server address
 - `CLIENT_NAMESPACE`: Temporal namespace

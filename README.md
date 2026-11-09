@@ -95,7 +95,9 @@ python3 main.py run greeting_worker
 
 ## Configuration
 
-All configuration is handled via environment variables. See the [Configuration Guide](https://northpowered.github.io/temporal-boost/configuration/) for complete details.
+Environment variables supply defaults and must be set before importing the package. Explicit worker
+endpoint/namespace settings override app settings, which override the imported environment. `.env`
+files require an external loader before import. See the [Configuration Guide](https://northpowered.github.io/temporal-boost/configuration/) for field-specific rules.
 
 **Common settings:**
 

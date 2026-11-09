@@ -1,15 +1,31 @@
 # Configuration
 
-Temporal-boost uses environment variables for configuration, providing a flexible and 12-factor app compliant approach. This guide covers all available configuration options.
+Temporal-boost uses environment variables for defaults and provides explicit application and worker
+configuration. This guide covers the available options, their precedence, and when they are read.
 
 ## Table of Contents
 
+- [Environment Loading](#environment-loading)
 - [Temporal Client Configuration](#temporal-client-configuration)
 - [Worker Configuration](#worker-configuration)
 - [Prometheus Metrics Configuration](#prometheus-metrics-configuration)
 - [Runtime Configuration](#runtime-configuration)
 - [Configuration Priority](#configuration-priority)
 - [Configuration Examples](#configuration-examples)
+
+## Environment Loading
+
+`temporal_boost.temporal.config` reads environment variables once, when the package is first imported.
+Set the environment before importing `temporal_boost` or any module that imports it. Changing
+`os.environ` afterward does not update these constants, even for a newly constructed app or builder.
+To select different settings after import, pass explicit arguments or configure the worker before
+initialization; see [when configuration becomes fixed](#when-configuration-becomes-fixed).
+
+The package does not load `.env` files automatically. Load one before importing the package, or
+prepare the process environment externally. See the [startup example](#using-configuration-files).
+The installed `temporal-boost` command imports the package before importing your app module, so a
+`.env` loader inside that module is too late for the CLI's configuration defaults. Prepare its
+environment before starting the command.
 
 ## Temporal Client Configuration
 
@@ -321,6 +337,18 @@ export TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS=true
 
 Runtime configuration is done programmatically. See [Advanced Usage](advanced_usage.md) for details.
 
+The defaults for `prometheus_bind_address`, `prometheus_counters_total_suffix`,
+`prometheus_unit_suffix`, and `prometheus_durations_as_seconds` are captured when
+`TemporalRuntimeBuilder.__init__()` and `worker.configure_temporal_runtime()` are defined during
+import. Changing `os.environ` or even assigning new values to `config.PROMETHEUS_*` afterward does
+not change omitted arguments. Supply explicit runtime arguments to change them before runtime creation.
+
+Each `configure_temporal_runtime()` call replaces the runtime configuration; omitted fields return
+to their function defaults. An explicit `metrics` backend takes priority over the bind address.
+With `metrics=None`, passing `prometheus_bind_address=None` disables the implicit Prometheus exporter,
+even if the imported environment supplied an address. Explicit `False` or `None` for a Prometheus
+suffix/duration flag produces `False`; `None` does not re-read the environment.
+
 ## When Configuration Becomes Fixed
 
 Configure a Temporal worker before starting it. Settings become fixed at these points:
@@ -366,21 +394,44 @@ builds and do not alter objects already returned by `build()`.
 
 ## Configuration Priority
 
-Temporal client settings use this order (highest to lowest priority):
+Endpoint and namespace are selected independently in this order (highest to lowest priority):
 
-1. **Explicit worker configuration** via `configure_temporal_client()`
-2. **BoostApp initialization parameters**
-3. **Environment variables**
-4. **Default values**
+1. **Explicit worker configuration**: the last non-`None` `target_host` or `namespace` supplied to
+   `configure_temporal_client()` before client initialization.
+2. **BoostApp initialization parameters**: `temporal_endpoint` and `temporal_namespace`.
+3. **Imported environment values**: `TEMPORAL_TARGET_HOST` and `TEMPORAL_NAMESPACE`.
+4. **Built-in defaults**: `localhost:7233` and `default`.
 
-Example:
+When an existing worker's client builder is configured again, omitted fields and `None` leave its
+previous values unchanged. Setting only the namespace preserves the selected endpoint. A standalone
+`TemporalClientBuilder` has no app layer: constructor arguments override the imported configuration,
+and subsequent setters override its stored values for future builds.
+
+```bash
+export TEMPORAL_TARGET_HOST=temporal.prod:7233
+export TEMPORAL_NAMESPACE=production
+```
 
 ```python
-# Environment variable: TEMPORAL_TARGET_HOST=temporal.prod:7233
-# BoostApp parameter: temporal_endpoint="temporal.dev:7233"
-# Result: Uses "temporal.dev:7233" (explicit application parameter wins)
+from temporal_boost import BoostApp
+
+# The app endpoint wins over the environment; namespace still comes from the environment.
 app = BoostApp(temporal_endpoint="temporal.dev:7233")
+worker = app.add_worker("consumer", "queue", activities=[my_activity])
+# This worker connects to temporal.dev:7233 in the isolated namespace.
+worker.configure_temporal_client(namespace="isolated")
+worker.configure_temporal_client(target_host=None)  # Keeps temporal.dev:7233
 ```
+
+Other fields have their own selection rules:
+
+| Fields | Selection rule |
+| --- | --- |
+| Client string constructor arguments (`target_host`, `namespace`, `api_key`, `identity`) | `None` or an empty string falls back to imported config. Worker configuration and app endpoint/namespace updates use setters, which preserve an explicit empty string. Empty strings do not reset configuration and may be rejected by the SDK. |
+| `tls` | `None` on initial client configuration inherits imported config; explicit `False` overrides `True`. On an existing worker builder, `None` leaves the setting unchanged. |
+| Pydantic flag / `data_converter` | Explicit converter wins over the flag; the flag distinguishes `None`, `False`, and `True`. See [converter selection](#temporal_use_pydantic_data_converter). |
+| Worker counts, ratio, and activity grace period | Only `None` selects imported config. Zero is valid for ratio and grace period; counts must be positive. See [worker configuration](#worker-configuration). |
+| Prometheus defaults | Omitted arguments use defaults captured during import; explicit arguments follow the [runtime rules](#runtime-configuration). |
 
 ## Configuration Examples
 
@@ -440,18 +491,21 @@ TEMPORAL_MAX_ACTIVITY_TASK_POLLS=5
 
 ### Using Configuration Files
 
-Load from `.env` file:
+For direct script execution, install `python-dotenv` separately and load the file before any import
+of the package or your worker modules:
 
 ```python
 from dotenv import load_dotenv
-import os
 
-# Load .env file
-load_dotenv()
+load_dotenv(".env")  # Must run before importing temporal_boost
 
-# Access configuration
-host = os.getenv("TEMPORAL_TARGET_HOST", "localhost:7233")
+from temporal_boost import BoostApp
+
+app = BoostApp()
 ```
+
+By default, `load_dotenv()` preserves variables already present in the process environment. This
+controls how the environment is prepared; the explicit app/worker precedence above still applies.
 
 ### Configuration Validation
 
@@ -476,19 +530,34 @@ validate_config()
 app = BoostApp()
 ```
 
-### Dynamic Configuration
+### Startup Environment and Explicit Overrides
 
-Override configuration programmatically:
+Prepare environment defaults before the first package import in a fresh process:
 
 ```python
 import os
 
-# Override for testing
+# Set defaults before importing temporal_boost or your application modules.
 os.environ["TEMPORAL_TARGET_HOST"] = "localhost:7233"
 os.environ["TEMPORAL_NAMESPACE"] = "test"
 
+from temporal_boost import BoostApp
+
 app = BoostApp()
 ```
+
+If the package has already been imported, use explicit settings for a new app or a worker whose
+client has not been initialized:
+
+```python
+from temporal_boost import BoostApp
+
+app = BoostApp(temporal_endpoint="localhost:7233", temporal_namespace="test")
+worker = app.add_worker("consumer", "queue", activities=[my_activity])
+worker.configure_temporal_client(namespace="another-test")
+```
+
+These calls configure future resource creation. They do not update an active client or runtime.
 
 ### Configuration Tips
 
@@ -503,6 +572,8 @@ app = BoostApp()
 
 #### Pattern 1: Environment-Based
 
+Run this bootstrap before importing `temporal_boost` or your application modules:
+
 ```python
 import os
 
@@ -510,9 +581,16 @@ env = os.getenv("ENVIRONMENT", "development")
 if env == "production":
     os.environ.setdefault("TEMPORAL_TLS", "true")
     os.environ.setdefault("TEMPORAL_PROMETHEUS_BIND_ADDRESS", "0.0.0.0:9090")
+
+from temporal_boost import BoostApp
+
+app = BoostApp()
 ```
 
 #### Pattern 2: Configuration Class
+
+An application-owned settings class reads the environment independently. Pass its values explicitly
+to `BoostApp` or worker configuration; creating the settings object does not update package constants.
 
 ```python
 from dataclasses import dataclass
