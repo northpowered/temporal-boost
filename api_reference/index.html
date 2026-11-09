@@ -1371,21 +1371,40 @@ during application shutdown is accepted. Cancellation before stop and all other 
 <code>SystemExit</code> / <code>KeyboardInterrupt</code>) propagate as failures. The same ordering preserves startup and
 stop-request failures. The CLI converts a failure with a success <code>SystemExit</code> code as described above.
 The external multi-process supervisor propagates the first observed child failure after stopping its peers.</p>
-<p>Workers must opt into managed stopping. <code>TemporalBoostWorker</code> supports this contract;
-FastStream and ASGI adapter integration remains pending. See
+<p>Workers must opt into managed stopping. Temporal, FastStream, and built-in ASGI workers support this
+contract; custom workers provide <code>request_stop()</code> or inherit <code>AsyncBoostWorker</code>. See
 <a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> for guarantees and limitations.</p>
 <h3 id="boostappadd_async_runtime"><code>BoostApp.add_async_runtime()</code></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">add_async_runtime</span><span class="p">(</span><span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">boost_worker</span><span class="p">:</span> <span class="n">BaseBoostWorker</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <p>Register a custom worker's <code>run()</code> under a CLI command and include it in <code>run all</code>.
-Set the worker's <code>name</code> to <code>worker_name</code> before registration.</p>
+<code>boost_worker</code> follows the <code>BaseBoostWorker</code> contract: implement synchronous <code>run()</code> and asynchronous
+<code>shutdown()</code>. For managed stopping, also implement the thread-safe <code>request_stop()</code> contract, or
+inherit <code>AsyncBoostWorker</code> as shown in the <a href="../advanced_usage/#custom-worker-shutdown">custom worker guide</a>.</p>
+<p>Registration assigns <code>boost_worker.name = worker_name</code>, replacing any previous name. This is the
+canonical name for <code>run &lt;worker_name&gt;</code>, <code>get_registered_workers()</code>, logs, and <code>worker-&lt;worker_name&gt;</code>
+threads in <code>run all</code>. The callback retains its CLI parameters; <code>run all</code> calls <code>run()</code> with no arguments.
+Keep the registered name unchanged and use a separate instance for each app registration.</p>
+<p>All worker registration methods share one namespace. Reserved names (<code>run</code>, <code>cron</code>, <code>exec</code>, <code>all</code>),
+duplicate names across worker types, and a second registration of the same object in one app raise
+<code>RuntimeError</code> before changing its name or adding a CLI command. Registration returns <code>None</code>.</p>
+<p>A pre-created <code>TemporalBoostWorker</code> keeps its client/runtime configuration, debug flag, and existing
+<code>cron_workflow_id</code>; this method does not apply <code>BoostApp</code> Temporal settings or register a <code>cron</code>
+command. This preserves its previous configuration behavior. To inherit app settings and register
+CRON commands, use <code>add_worker()</code>; otherwise configure the pre-created worker explicitly before
+resource initialization.</p>
+<p><strong>Migration:</strong> A registration alias now becomes the worker's name. Code that needs the old name for
+application-specific data should store it separately. Multiple aliases for one worker instance are
+rejected; create distinct worker instances. The unused private CRON/ASGI registration lists have been
+removed; use <code>get_registered_workers()</code> to inspect registered workers.</p>
 <h3 id="boostappget_registered_workers"><code>BoostApp.get_registered_workers()</code></h3>
 <p>Get list of all registered workers.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">get_registered_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseBoostWorker</span><span class="p">]</span>
 </span></code></pre></div>
 <p><strong>Returns:</strong></p>
 <ul>
-<li><code>list[BaseBoostWorker]</code>: List of registered workers.</li>
+<li><code>list[BaseBoostWorker]</code>: A shallow copy of the single worker registry. Objects retain their identity
+  and canonical registration names; modifying the returned list does not change registration.</li>
 </ul>
 <h2 id="cli-process-runner">CLI Process Runner</h2>
 <p>The external launcher supports <code>--workers N --shutdown-timeout SECONDS</code> before the application path.
