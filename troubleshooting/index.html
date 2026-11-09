@@ -652,6 +652,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#application-import-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Import Errors
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration-issues" class="md-nav__link">
     <span class="md-ellipsis">
       Configuration Issues
@@ -1022,6 +1031,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-import-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Import Errors
+    </span>
+  </a>
   
 </li>
       
@@ -1581,6 +1599,47 @@
 </span></code></pre></div></p>
 </li>
 </ol>
+<h2 id="application-import-errors">Application Import Errors</h2>
+<p>The external launcher distinguishes these failures:</p>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Meaning</th>
+<th>Next step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Import string ... must be in format ...</code></td>
+<td>Malformed <code>module:attribute</code> path</td>
+<td>Use <code>package.module:app</code> or <code>package.module:container.app</code>, without expressions.</td>
+</tr>
+<tr>
+<td><code>Could not import module ...</code> with a chained <code>ModuleNotFoundError</code></td>
+<td>The requested module or a package prefix is unavailable</td>
+<td>Check the module name and launch directory; install the project or set <code>PYTHONPATH</code> for a <code>src</code> layout.</td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError: No module named ...</code> naming a dependency</td>
+<td>The application was found, but one of its imports failed</td>
+<td>Install or correct that dependency using the original traceback. The importer does not retry other directories.</td>
+</tr>
+<tr>
+<td><code>Attribute ... not found in module ...</code></td>
+<td>The module loaded, but the dotted attribute path failed</td>
+<td>Check the exported app object and nested attribute names. The original <code>AttributeError</code> is retained as the cause.</td>
+</tr>
+<tr>
+<td><code>SyntaxError</code>, <code>ImportError</code>, or another application exception</td>
+<td>Python failed while executing application code</td>
+<td>Fix the reported source error; directory fallback does not handle application initialization errors.</td>
+</tr>
+</tbody>
+</table>
+<p>A failed import restores <code>sys.path</code>. A successful fallback retains only the directory that resolved
+the app so later application imports work. See <a href="../running_application/#application-import-lookup">application import lookup</a>
+for the bounded current-directory/parent search and module-cache behavior.</p>
 <h2 id="configuration-issues">Configuration Issues</h2>
 <h3 id="environment-variables-not-loading">Environment Variables Not Loading</h3>
 <p><strong>Symptoms:</strong>

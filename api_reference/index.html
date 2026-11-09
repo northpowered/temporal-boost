@@ -1407,6 +1407,14 @@ removed; use <code>get_registered_workers()</code> to inspect registered workers
   and canonical registration names; modifying the returned list does not change registration.</li>
 </ul>
 <h2 id="cli-process-runner">CLI Process Runner</h2>
+<p>Application strings use <code>module:attribute.nested</code> with dotted identifiers. The importer first uses
+Python's normal import path, then tries the current directory and its immediate parent only for a
+missing target module/package. Missing dependencies and application exceptions propagate unchanged.
+Malformed strings, unavailable targets, and missing attributes produce distinct <code>ValueError</code>
+messages; target/attribute lookup errors retain their original exception as the cause.</p>
+<p>Failed calls restore <code>sys.path</code>; successful fallback imports retain only the directory that resolved
+the target for subsequent application imports. There is no recursive directory search or module-cache
+reset. See <a href="../running_application/#application-import-lookup">application import lookup</a>.</p>
 <p>The external launcher supports <code>--workers N --shutdown-timeout SECONDS</code> before the application path.
 The shutdown timeout applies when <code>--workers &gt; 1</code>, defaults to 30 seconds, and must be finite and non-negative.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.cli.process_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_multiprocess</span>
@@ -1749,6 +1757,11 @@ configuration and uses function defaults for omitted fields. See <a href="../con
 </ul>
 <h2 id="enums">Enums</h2>
 <h3 id="asgiworkertype"><code>ASGIWorkerType</code></h3>
+<p><code>auto</code> selects the first available built-in in this fixed order: <strong>Uvicorn → Granian → Hypercorn</strong>.
+A backend is registered only when its required optional packages import successfully.
+Explicit selection bypasses this priority. When only custom backends are available, <code>auto</code> selects
+the lexically smallest key. Registering the same class/key again is idempotent; a different class
+under an existing key raises <code>ValueError</code>, including attempts to replace a built-in.</p>
 <p>ASGI worker server types.</p>
 <ul>
 <li><code>auto</code>: Auto-detect available server</li>
