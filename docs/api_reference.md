@@ -324,7 +324,9 @@ Temporal worker class.
 
 ### `TemporalBoostWorker.configure_temporal_client()`
 
-Configure Temporal client for the worker.
+Configure the Temporal client before initialization or after the previous run has finished cleanup.
+Raises `RuntimeError` once initialization starts, or while a lifecycle is building, running, or stopping.
+The call never reconnects a live client or changes its SDK worker. Rejected calls leave builders unchanged.
 
 ```python
 configure_temporal_client(
@@ -367,6 +369,11 @@ Configure an independent, worker-owned Temporal runtime before first use. Concur
 distinct Prometheus endpoints; runtimes are not shared automatically. Each process must expose every
 worker's endpoint for scraping. See
 [Metrics Across Workers and Processes](advanced_usage.md#metrics-across-workers-and-processes).
+
+Raises `RuntimeError` after a runtime has been created or during an active lifecycle. Reading
+`temporal_client_runtime` creates the runtime and fixes these settings, including before `run()`.
+After run cleanup releases resources, this method configures the next run. It never replaces a live
+runtime. See [configuration lifetime](configuration.md#when-configuration-becomes-fixed).
 
 ```python
 configure_temporal_runtime(
@@ -488,12 +495,17 @@ The read-only `state` property reports:
 | `stopping` | Cancelling startup/CRON work and waiting for SDK cleanup |
 | `stopped` | Adapter and builder resource references released; another run is allowed |
 
-Early stop or failure may skip `running`. Setup options should be configured before a run.
+Early stop or failure may skip `running`. Configure options before initialization and before a run.
+`created` does not imply the runtime is absent: the lazy runtime property can initialize it without
+starting a lifecycle. After `stopped`, configuration is available again until the next initialization.
 
 ### Properties
 
 - `temporal_client` (Client): Get Temporal client instance.
 - `temporal_worker` (Worker): Get Temporal worker instance.
+- `temporal_client_runtime` (Runtime): Lazily create/cache the runtime and fix its configuration;
+  this can open a metrics port. Reading it again returns the same object until run cleanup. A read
+  during cleanup raises if no runtime exists, so it cannot initialize resources during shutdown.
 - `temporal_cron_runner` (MethodAsyncNoParam): Get CRON runner method.
 - `cron_workflow_id` (str): Read-only resolved CRON workflow ID.
 - `state`: Current lifecycle state. Client and SDK worker properties raise after cleanup until rebuilt.

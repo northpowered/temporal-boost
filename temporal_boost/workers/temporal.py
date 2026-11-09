@@ -3,7 +3,7 @@ import logging
 import threading
 from collections.abc import Callable, Mapping
 from concurrent.futures import CancelledError as FutureCancelledError
-from typing import Any, Literal, cast
+from typing import Any, Literal
 from urllib.parse import quote
 
 from temporalio.client import Client, WorkflowHandle
@@ -81,6 +81,7 @@ class TemporalBoostWorker(BaseBoostWorker):
 
         self._cron_future: asyncio.Future[Any] | None = None
         self._lifecycle_lock = threading.Lock()
+        self._initializing_resources = False
         self._state: _WorkerState = "created"
         self._loop: asyncio.AbstractEventLoop | None = None
         self._owner_task: asyncio.Task[Any] | None = None
@@ -134,13 +135,33 @@ class TemporalBoostWorker(BaseBoostWorker):
 
     @property
     def temporal_client_runtime(self) -> Runtime:
-        if not self._runtime_builder:
-            self.configure_temporal_runtime()
+        """Create/cache the runtime, freezing its configuration until run cleanup.
 
-        if not self._runtime:
-            self._runtime = cast("TemporalRuntimeBuilder", self._runtime_builder).build()
+        Raises:
+            RuntimeError: If cleanup is in progress and no runtime remains.
+        """
+        with self._lifecycle_lock:
+            if self._runtime is None:
+                if self._state == "stopping":
+                    raise RuntimeError("Cannot initialize a Temporal runtime during cleanup")
+                if self._runtime_builder is None:
+                    self._runtime_builder = TemporalRuntimeBuilder()
+                self._runtime = self._runtime_builder.build()
+            return self._runtime
 
-        return self._runtime
+    def _require_configurable(self, component: Literal["client", "runtime"]) -> None:
+        # The caller holds _lifecycle_lock, including during builder mutations.
+        initialized = self._client is not None or self._worker is not None
+        if (
+            self._state in {"building", "running", "stopping"}
+            or self._initializing_resources
+            or initialized
+            or (component == "runtime" and self._runtime is not None)
+        ):
+            raise RuntimeError(
+                f"Cannot configure Temporal {component} after initialization or during a run. "
+                "Configure before initialization or after the run has finished cleanup."
+            )
 
     def configure_temporal_client(  # noqa: PLR0913
         self,
@@ -153,37 +174,40 @@ class TemporalBoostWorker(BaseBoostWorker):
         use_pydantic_data_converter: bool | None = None,
         **kwargs: Any,
     ) -> None:
-        if not self._client_builder:
-            self._client_builder = TemporalClientBuilder(
-                target_host=target_host or config.TARGET_HOST,
-                namespace=namespace,
-                api_key=api_key,
-                identity=identity,
-                tls=tls,
-                use_pydantic_data_converter=use_pydantic_data_converter,
-                **kwargs,
-            )
+        """Update future connection options before initialization or after cleanup."""
+        with self._lifecycle_lock:
+            self._require_configurable("client")
+            if self._client_builder is None:
+                self._client_builder = TemporalClientBuilder(
+                    target_host=target_host or config.TARGET_HOST,
+                    namespace=namespace,
+                    api_key=api_key,
+                    identity=identity,
+                    tls=tls,
+                    use_pydantic_data_converter=use_pydantic_data_converter,
+                    **kwargs,
+                )
 
-        if target_host is not None:
-            self._client_builder.set_target_host(target_host)
+            if target_host is not None:
+                self._client_builder.set_target_host(target_host)
 
-        if namespace is not None:
-            self._client_builder.set_namespace(namespace)
+            if namespace is not None:
+                self._client_builder.set_namespace(namespace)
 
-        if api_key is not None:
-            self._client_builder.set_api_key(api_key)
+            if api_key is not None:
+                self._client_builder.set_api_key(api_key)
 
-        if identity is not None:
-            self._client_builder.set_identity(identity)
+            if identity is not None:
+                self._client_builder.set_identity(identity)
 
-        if tls is not None:
-            self._client_builder.set_tls(tls)
+            if tls is not None:
+                self._client_builder.set_tls(tls)
 
-        if use_pydantic_data_converter is not None:
-            self._client_builder.set_pydantic_data_converter(enabled=use_pydantic_data_converter)
+            if use_pydantic_data_converter is not None:
+                self._client_builder.set_pydantic_data_converter(enabled=use_pydantic_data_converter)
 
-        if kwargs:
-            self._client_builder.set_kwargs(**kwargs)
+            if kwargs:
+                self._client_builder.set_kwargs(**kwargs)
 
     def configure_temporal_runtime(  # noqa: PLR0913
         self,
@@ -198,28 +222,37 @@ class TemporalBoostWorker(BaseBoostWorker):
         prometheus_unit_suffix: bool | None = config.PROMETHEUS_UNIT_SUFFIX,
         prometheus_durations_as_seconds: bool | None = config.PROMETHEUS_DURATIONS_AS_SECONDS,
     ) -> None:
-        self._runtime_builder = TemporalRuntimeBuilder(
-            logging=logging,
-            metrics=metrics,
-            global_tags=global_tags,
-            attach_service_name=attach_service_name,
-            metric_prefix=metric_prefix,
-            prometheus_bind_address=prometheus_bind_address,
-            prometheus_counters_total_suffix=prometheus_counters_total_suffix,
-            prometheus_unit_suffix=prometheus_unit_suffix,
-            prometheus_durations_as_seconds=prometheus_durations_as_seconds,
-        )
+        """Replace runtime options before first runtime creation or after cleanup."""
+        with self._lifecycle_lock:
+            self._require_configurable("runtime")
+            self._runtime_builder = TemporalRuntimeBuilder(
+                logging=logging,
+                metrics=metrics,
+                global_tags=global_tags,
+                attach_service_name=attach_service_name,
+                metric_prefix=metric_prefix,
+                prometheus_bind_address=prometheus_bind_address,
+                prometheus_counters_total_suffix=prometheus_counters_total_suffix,
+                prometheus_unit_suffix=prometheus_unit_suffix,
+                prometheus_durations_as_seconds=prometheus_durations_as_seconds,
+            )
 
     async def _build_worker(self) -> None:
-        if not self._client_builder:
-            self.configure_temporal_client()
-            self._client_builder = cast("TemporalClientBuilder", self._client_builder)
+        with self._lifecycle_lock:
+            if self._initializing_resources or self._client is not None or self._worker is not None:
+                raise RuntimeError("Temporal worker resources are already initialized or initializing")
+            self._initializing_resources = True
+        try:
+            if self._client_builder is None:
+                self._client_builder = TemporalClientBuilder()
+            self._client_builder.set_runtime(self.temporal_client_runtime)
+            self._client = await self._client_builder.build()
 
-        self._client_builder.set_runtime(self.temporal_client_runtime)
-        self._client = await self._client_builder.build()
-
-        self._worker_builder.set_client(self._client)
-        self._worker = self._worker_builder.build()
+            self._worker_builder.set_client(self._client)
+            self._worker = self._worker_builder.build()
+        finally:
+            with self._lifecycle_lock:
+                self._initializing_resources = False
 
     async def _run_worker(self) -> None:
         await self._run_lifecycle(with_cron=False)

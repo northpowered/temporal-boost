@@ -110,6 +110,8 @@ async def test_partial_startup_preserves_error_and_releases_references(stage: st
         assert not hasattr(client, "close")
         assert not hasattr(runtime, "close")
         await worker.shutdown()
+        worker.configure_temporal_client(namespace="retry")
+        worker.configure_temporal_runtime(metric_prefix="retry")
 
 
 @pytest.mark.asyncio
@@ -204,6 +206,99 @@ async def test_stop_before_start_does_not_build_resources() -> None:
         assert not sdk.ready.is_set()
         client.start_workflow.assert_not_awaited()
         assert worker._client_builder is None
+
+
+def assert_configuration_rejected(worker: TemporalBoostWorker) -> None:
+    client_builder, runtime_builder = worker._client_builder, worker._runtime_builder
+    client, sdk, runtime = worker._client, worker._worker, worker._runtime
+    with pytest.raises(RuntimeError, match=r"configure.*client"):
+        worker.configure_temporal_client(target_host="ignored:7233", namespace="ignored")
+    with pytest.raises(RuntimeError, match=r"configure.*runtime"):
+        worker.configure_temporal_runtime(metric_prefix="ignored")
+    assert worker._client_builder is client_builder
+    assert worker._runtime_builder is runtime_builder
+    assert worker._client is client
+    assert worker._worker is sdk
+    assert worker._runtime is runtime
+
+
+@pytest.mark.asyncio
+async def test_configuration_is_rejected_while_building_running_and_stopping() -> None:
+    connecting, connected = asyncio.Event(), asyncio.Event()
+    stopping, stopped = asyncio.Event(), asyncio.Event()
+    with resources() as (worker, sdk, client, _):
+
+        async def connect(**_kwargs: Any) -> MagicMock:
+            connecting.set()
+            await connected.wait()
+            return client
+
+        original_shutdown = sdk.shutdown
+
+        async def shutdown() -> None:
+            stopping.set()
+            await stopped.wait()
+            await original_shutdown()
+
+        with (
+            patch("temporalio.client.Client.connect", side_effect=connect) as connect_mock,
+            patch.object(sdk, "shutdown", side_effect=shutdown),
+        ):
+            task = asyncio.create_task(worker._run_worker())
+            try:
+                await asyncio.wait_for(connecting.wait(), WAIT_TIMEOUT)
+                assert worker.state == "building"
+                await asyncio.to_thread(assert_configuration_rejected, worker)
+                connected.set()
+                await asyncio.wait_for(sdk.ready.wait(), WAIT_TIMEOUT)
+                assert worker.state == "running"
+                assert_configuration_rejected(worker)
+                worker.request_stop()
+                await asyncio.wait_for(stopping.wait(), WAIT_TIMEOUT)
+                assert worker.state == "stopping"
+                assert_configuration_rejected(worker)
+                connect_mock.assert_awaited_once()
+            finally:
+                connected.set()
+                stopped.set()
+                await stop_and_wait(worker, task)
+
+
+@pytest.mark.asyncio
+async def test_stopped_configuration_is_applied_on_next_run_with_fresh_objects() -> None:
+    with resources() as (worker, sdk, client, runtime):
+        task = asyncio.create_task(worker._run_worker())
+        try:
+            await asyncio.wait_for(sdk.ready.wait(), WAIT_TIMEOUT)
+        finally:
+            await stop_and_wait(worker, task)
+        assert worker.state == "stopped"
+        next_sdk, next_client, next_runtime = SdkWorker(), MagicMock(spec_set=Client), MagicMock(spec_set=Runtime)
+        worker.configure_temporal_client(target_host="next:7233", namespace="next", tls=False)
+        worker.configure_temporal_runtime(metric_prefix="next", prometheus_bind_address="127.0.0.1:9200")
+        with (
+            patch("temporal_boost.temporal.runtime.Runtime", return_value=next_runtime) as create_runtime,
+            patch("temporalio.client.Client.connect", new=AsyncMock(return_value=next_client)) as connect,
+            patch("temporal_boost.temporal.worker.Worker", return_value=next_sdk) as create_worker,
+        ):
+            task = asyncio.create_task(worker._run_worker())
+            try:
+                await asyncio.wait_for(next_sdk.ready.wait(), WAIT_TIMEOUT)
+                assert worker.temporal_client_runtime is next_runtime
+                assert worker.temporal_client is next_client
+                assert worker.temporal_worker is next_sdk
+                assert next_runtime is not runtime
+                assert next_client is not client
+                assert next_sdk is not sdk
+                assert connect.call_args.kwargs["target_host"] == "next:7233"
+                assert connect.call_args.kwargs["namespace"] == "next"
+                assert connect.call_args.kwargs["runtime"] is next_runtime
+                assert create_runtime.call_args.kwargs["telemetry"].metric_prefix == "next"
+                assert create_runtime.call_args.kwargs["telemetry"].metrics.bind_address == "127.0.0.1:9200"
+                assert create_worker.call_args.kwargs["client"] is next_client
+            finally:
+                await stop_and_wait(worker, task)
+        assert worker.state == "stopped"
 
 
 @pytest.mark.asyncio

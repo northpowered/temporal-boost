@@ -155,9 +155,27 @@ SDK `shutdown()` вызывается не более одного раза пр
 
 Свойства `temporal_client` и `temporal_worker` до сборки выбрасывают `RuntimeError`.
 `configure_temporal_client()` создаёт или изменяет builder, а не устанавливает соединение.
-`configure_temporal_runtime()` заменяет builder, но не сбрасывает уже созданный `_runtime`.
-Все настройки следует задавать до запуска и до первого обращения к `temporal_client_runtime`:
-изменение builder не перенастраивает существующие SDK-объекты активного запуска.
+В TB-015 `configure_temporal_runtime()` заменяет builder только до инициализации runtime; первое
+чтение `temporal_client_runtime` создаёт/кеширует SDK runtime, может открыть Prometheus-порт и
+запрещает последующую runtime-конфигурацию до run cleanup. Созданный runtime не заменяется неявно.
+Состояние `created` означает отсутствие активного run, а не отсутствие лениво созданного runtime.
+
+Client configuration фиксируется при входе в `_build_worker()`, до await подключения. После
+создания client/SDK worker повторный build и configure отклоняются. Во всех активных состояниях
+`building` / `running` / `stopping` обе configure-функции выбрасывают `RuntimeError`, даже если
+соответствующий объект ещё не создан. Guard и изменения builders сериализуются lifecycle lock;
+ленивое создание runtime также выполняется под этим lock. Отклонённый вызов не меняет ни builder,
+ни действующие SDK objects. Default builders создаются внутренними путями, без вызова запрещённой
+во время run публичной configure-функции.
+
+После полного cleanup (`stopped`) references очищены, и обе configure-функции доступны для следующего
+run со свежими объектами. Новое чтение runtime property снова создаёт runtime и фиксирует настройки.
+Ошибка runtime constructor без кешированного объекта допускает перенастройку перед повторной попыткой
+вне активного run. Во время stopping свойство не создаёт отсутствующий runtime. Неявного reconnect,
+замены live runtime или изменения текущего SDK worker нет. Worker tuning задаётся в конструкторе;
+standalone builders остаются изменяемыми и влияют только на последующие build. Для миграции настройки
+переносятся до run/property access либо после stop/join/cleanup; initialized preview можно заменить
+новым adapter с учётом внешних ссылок на старый runtime и владения metrics-портом.
 
 Каждый `TemporalBoostWorker` по умолчанию создаёт свой runtime и client. Автоматического разделения
 одного runtime между воркерами нет. Отдельно используемый `TemporalClientBuilder` при отсутствии
@@ -532,7 +550,7 @@ SDK runtime строится лениво в процессе worker и не п�
 
 | Утверждение или пример | Фактическое состояние |
 | --- | --- |
-| Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
+| Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; настройка worker до инициализации перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
 | Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal, FastStream, встроенные ASGI и custom managed workers с отдельным `BoostApp.shutdown_timeout`. SDK activity grace period задаётся отдельно |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
