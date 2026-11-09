@@ -327,8 +327,8 @@ cleanup error логируется. При отмене основной corouti
 остаются ответственностью адаптеров; Temporal использует специализированный lifecycle из раздела 4.
 
 Temporal adapter подключён к managed stop в TB-005 и проходит unit-проверку через настоящий coordinator
-с SDK double. FastStream подключён в TB-013 с проверкой настоящего in-memory broker. ASGI ещё не
-подключены (TB-014); stop может завершиться timeout.
+с SDK double. FastStream подключён в TB-013 с проверкой настоящего in-memory broker. Uvicorn,
+Hypercorn и Granian подключены в TB-014 с HTTP/lifespan smoke-тестами настоящих backend.
 SDK activities, игнорирующие отмену, тоже могут превысить бюджет coordinator. Отдельные CLI-команды
 используют lifecycle adapter напрямую, а внешний supervisor процессов остаётся вне этого coordinator.
 Бюджет приложения не связан с `TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT`: TB-004 подключает эту настройку
@@ -415,16 +415,40 @@ converter по умолчанию SDK. Настройки относятся к 
 Это следствие порядка импортов, а не отдельная таблица приоритетов. Отсутствие любой реализации
 или запрос недоступного сервера приводит к `RuntimeError`.
 
-Адаптеры передают общие `app`, `host`, `port`, logging и произвольные kwargs серверу:
+В TB-014 встроенные адаптеры используют общий внутренний `ManagedAsgiWorker` из `workers/asgi.py`.
+Он владеет одним loop на run, запоминает ранний stop, доставляет `request_stop()` через
+`call_soon_threadsafe()` и ждёт serving task даже при повторной отмене owner. Исключения дочерних
+tasks, включая `SystemExit` / `KeyboardInterrupt`, возвращаются owner как результат и пробрасываются
+после закрытия loop. Async `shutdown()` до/после run — no-op, на owning loop разделяет ожидание cleanup;
+из чужого loop и ASGI callback требуется `request_stop()`. ContextVar обнаруживает callback, даже
+если backend запускает его в отдельной task. Одновременные run отклоняются; следующий run создаёт
+свежий server/loop. Main-thread SIGINT/SIGTERM handlers восстанавливаются, worker threads их не меняют.
+
+Адаптеры передают общие `app`, `host`, `port`, logging и поддерживаемые backend kwargs:
 
 | Адаптер | Запуск | Cleanup |
 | --- | --- | --- |
-| Uvicorn | `uvicorn.Config` → `Server.run()` | `asyncio.run(server.shutdown())` |
-| Hypercorn | `asyncio.run()` → task с `serve(app, config, mode="asgi")`; kwargs становятся атрибутами `Config` | Отмена task и ожидание; без task `shutdown()` выбрасывает `RuntimeError` |
-| Granian | `Server(..., interface=Interfaces.ASGI).serve()` | Синхронный `server.shutdown()` внутри async-обёртки |
+| Uvicorn 0.35.0 | `uvicorn.Config` → `await Server.serve()` | После startup выставляется `should_exit`; serve выполняет shutdown; при ошибке main loop cleanup вызывается только если он ещё не запускался |
+| Hypercorn 0.17.3 | `await serve(app, config, mode="asgi", shutdown_trigger=event.wait)` | Завершение trigger инициирует native graceful shutdown; serving task не отменяется при обычном stop |
+| Granian 2.4.2 | `granian.server.embed.Server(..., interface=Interfaces.ASGI)` → async `serve()` | Публичный `stop()` в owning loop, затем join serving task; повторного shutdown нет |
 
-Путь приложения строкой передаётся самому серверу; общего импортера ASGI-приложений в адаптерах нет.
-Поддержку строки и конкретных kwargs нужно проверять для выбранного backend.
+Uvicorn сохраняет native импорт строки/factory и signal capture заменён обработчиками adapter.
+Версия 0.35.0 пропускает shutdown при `should_exit` во время startup: adapter ждёт окончания startup
+перед выставлением флага. Ошибка main loop сохраняется при вторичной ошибке cleanup; при обычной
+отмене cleanup error получает приоритет. Failed lifespan startup/shutdown не превращается в успех.
+Hypercorn и Granian разрешают `module:attribute` через общий importer без eval; оба принимают app object.
+Granian factory вызывается один раз перед созданием observer, Uvicorn использует `factory=True`;
+Hypercorn требует готовый app. Observer Granian сохраняет explicit lifespan failure messages и ошибки
+после startup, которые native protocol иначе только логирует; обычное native auto-detection отсутствия
+lifespan до startup сохранено.
+
+Поддерживается один server в текущем asyncio loop: `workers != 1` и reload отклоняются. Hypercorn
+принимает только существующие поля Config, `worker_class="asyncio"`, `debug=False`. Uvicorn/Granian
+допускают `loop="asyncio"` / `"auto"`, иные loop choices отклоняются; loop setup принадлежит adapter.
+Granian использует experimental embedded API, поэтому process-manager kwargs недоступны.
+Остановка во время startup ждёт завершения native startup, затем запускает graceful cleanup;
+зависшие hooks могут превысить бюджет coordinator. Сигнатуры сверены с установленными версиями lockfile
+и публичной документацией через Context7; новые backend workers/process managers не запускаются.
 
 Внешний process runner передаёт число процессов в child target и ограничивает его контекстом CLI
 через `cli/process_context.py` (`ContextVar`, reset в `finally`). `_run_all_workers_cli()` проверяет
@@ -439,7 +463,7 @@ converter по умолчанию SDK. Настройки относятся к 
 Произвольный exec/import-time запуск серверов и внутренний process manager backend остаются отдельной
 ответственностью приложения. Deployment-примеры разделяют HTTP и consumers; HTTP-контейнеры/поды
 масштабируются с отдельными network addresses за балансировщиком. Это защита TB-010; управление
-жизненным циклом ASGI-адаптеров по-прежнему относится к TB-014.
+жизненным циклом встроенных ASGI-адаптеров реализовано в TB-014.
 
 ### FastStream
 
@@ -510,7 +534,7 @@ SDK runtime строится лениво в процессе worker и не п�
 | --- | --- |
 | Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; поздняя настройка worker перекрывает их |
 | `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
-| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal, FastStream и custom managed workers с отдельным `BoostApp.shutdown_timeout`; ASGI ещё не подключены. SDK activity grace period задаётся отдельно |
+| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal, FastStream, встроенные ASGI и custom managed workers с отдельным `BoostApp.shutdown_timeout`. SDK activity grace period задаётся отдельно |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
 | `TestAsyncRuntime` в [example_app.py](examples/example_app.py) | У класса нет обязательного `shutdown()`; как есть он абстрактен и не зарегистрирован в приложении |
 
@@ -589,7 +613,12 @@ Temporal dev server (SDK скачивает CLI; `TEMPORAL_CLI_PATH` позво�
 ранний/повторный stop, partial startup, ошибки/отмену, lifespan task failures, owner loop, coordinator,
 SIGINT/SIGTERM и optional imports. Smoke-тест FastStream 0.5.48 с `TestRedisBroker(connect_only=True)`
 доказывает передачу options, доставку сообщения, broker stop и выход из lifespan без Redis-сервера.
-Graceful shutdown реальных ASGI-адаптеров остаётся вне этих проверок.
+`tests/test_asgi_workers.py` / `tests/asgi_lifecycle_app.py` добавляют doubles всех backend, проверки
+optional imports, kwargs, раннего/повторного stop, partial startup, primary/cleanup errors, отмены waiter,
+owner и callback/foreign-loop диагностики. Subprocess smoke настоящих backend проверяют app object /
+строку, factory Uvicorn/Granian, HTTP и shared lifespan state, main/worker thread, coordinator,
+SIGINT/SIGTERM, восстановление handlers, startup/shutdown failures и занятый порт. После успешного stop
+lifespan shutdown вызван один раз, loop закрыт, pending tasks и слушающего socket нет.
 
 В `tests/test_boost_app.py` прежние дублирующиеся `test_run_with_args` заменены раздельными проверками
 списка аргументов и `sys.argv`, с фактическим запуском только выбранного callback и ожидаемым `SystemExit`.

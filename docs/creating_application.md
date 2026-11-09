@@ -513,6 +513,47 @@ app.add_asgi_worker(
 )
 ```
 
+### Managed ASGI Shutdown
+
+Uvicorn, Hypercorn, and Granian workers support `BoostApp.stop()` under `run all`. Their serving
+tasks and cleanup share one event loop per run. The coordinator requests stop from another thread
+and waits up to `BoostApp(shutdown_timeout=...)`; it never runs server cleanup in a separate loop.
+Main-thread runs handle SIGINT/SIGTERM and restore the previous handlers. Worker threads leave
+process signal handling to the coordinator or CLI supervisor.
+
+The lifecycle is verified with HTTP requests and ASGI lifespan counters against the lockfile versions:
+
+| Backend | Serving API | Stop mechanism | Application |
+| --- | --- | --- | --- |
+| Uvicorn 0.35.0 | `Server.serve()` | Set `should_exit` after startup completes | Object or `module:attribute`; `factory=True` supported |
+| Hypercorn 0.17.3 | `hypercorn.asyncio.serve()` | `shutdown_trigger` completes | Object or `module:attribute`; pass an already-created app |
+| Granian 2.4.2 | `granian.server.embed.Server.serve()` | Public `stop()`, then join serving task | Object or `module:attribute`; `factory=True` supported |
+
+Normal cleanup belongs to the serving API. The adapter does not call server shutdown again after
+it finishes. Uvicorn also receives cleanup if an error interrupts its main loop. Explicit lifespan
+startup/shutdown failure messages produce errors, including on Granian, which otherwise only records
+some lifespan failures internally. Import and startup errors reach the caller.
+
+Built-in adapters expose a thread-safe, repeatable `worker.request_stop()`. Async `worker.shutdown()`
+is harmless before or after a run; on the owning loop it requests stop and waits for cleanup.
+Use `request_stop()` from another loop or an ASGI callback. Cancelling a shutdown waiter does not
+cancel cleanup. A stop before the first run creates no server resources; a completed adapter can
+run again on a fresh loop. An in-progress startup hook is allowed to finish before graceful shutdown.
+A hook that never finishes can exceed the coordinator's budget.
+
+These adapters run one server in the worker's asyncio loop. Set `workers=1` and disable backend
+reloaders (`reload=False`, or `use_reloader=False` for Hypercorn). Other worker counts and reloaders
+are rejected. Explicit loop choices are limited to `asyncio`/`auto` for Uvicorn and Granian;
+Hypercorn requires `worker_class="asyncio"` and `debug=False`. The adapter owns loop setup.
+Configure process scaling through separate HTTP deployments as described in
+[ASGI and external processes](running_application.md#asgi-and-external-processes).
+
+Migration: Granian now uses its experimental embedded async server, so options must belong to that
+server's constructor. Process-manager options such as `workers_lifetime` are unavailable. Hypercorn
+kwargs must name existing configuration fields; misspellings now raise an error. Hypercorn does
+not accept a `factory` option through this API: call the factory yourself and pass its result.
+Uvicorn and Granian reject custom loop choices instead of silently changing global loop policy.
+
 ### ASGI Worker with Temporal Integration
 
 Combine ASGI endpoints with Temporal workflows:
