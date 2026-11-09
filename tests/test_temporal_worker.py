@@ -1,5 +1,7 @@
+import asyncio
 import importlib.util
 import logging
+from collections.abc import Iterator
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -242,8 +244,12 @@ class TestTemporalBoostWorker:
             patch.object(worker._worker_builder, "build"),
         ):
             await worker._build_worker()
+            with pytest.raises(RuntimeError, match=r"configure.*client"):
+                worker.configure_temporal_client(use_pydantic_data_converter=False)
+            worker._release_resources()
             worker.configure_temporal_client(use_pydantic_data_converter=False)
             await worker._build_worker()
+            worker._release_resources()
             worker.configure_temporal_client(namespace="updated")
             await worker._build_worker()
 
@@ -544,6 +550,134 @@ class TestTemporalBoostWorker:
 
         assert "Worker 'test_worker' started" in caplog.text
         assert "test_queue" in caplog.text
+
+
+@pytest.fixture
+def configuration_resources() -> Iterator[tuple[TemporalBoostWorker, MagicMock, AsyncMock, MagicMock]]:
+    worker = TemporalBoostWorker("configured", "queue", activities=[MagicMock()])
+    with (
+        patch("temporal_boost.temporal.runtime.TemporalRuntimeBuilder.build") as runtime_build,
+        patch("temporalio.client.Client.connect", new_callable=AsyncMock) as connect,
+        patch("temporal_boost.temporal.worker.Worker") as sdk_worker,
+    ):
+        yield worker, runtime_build, connect, sdk_worker
+
+
+def test_runtime_property_freezes_runtime_configuration_without_replacing_builder(
+    configuration_resources: tuple[TemporalBoostWorker, MagicMock, AsyncMock, MagicMock],
+) -> None:
+    worker, runtime_build, connect, sdk_worker = configuration_resources
+    worker.configure_temporal_runtime(metric_prefix="original")
+    builder = worker._runtime_builder
+    runtime = worker.temporal_client_runtime
+    assert worker.state == "created"
+    assert runtime is runtime_build.return_value
+    with pytest.raises(RuntimeError, match=r"configure.*runtime"):
+        worker.configure_temporal_runtime(metric_prefix="ignored")
+    assert worker._runtime_builder is builder
+    assert worker.temporal_client_runtime is runtime
+    runtime_build.assert_called_once_with()
+    connect.assert_not_awaited()
+    sdk_worker.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_preinitialization_configuration_reaches_sdk_objects(
+    configuration_resources: tuple[TemporalBoostWorker, MagicMock, AsyncMock, MagicMock],
+) -> None:
+    worker, runtime_build, connect, sdk_worker = configuration_resources
+    worker.configure_temporal_runtime(metric_prefix="old")
+    worker.configure_temporal_runtime(metric_prefix="selected")
+    runtime = worker.temporal_client_runtime
+    worker.configure_temporal_client(target_host="old:7233", namespace="old")
+    worker.configure_temporal_client(target_host="selected:7233", namespace="selected", tls=False)
+    await worker._build_worker()
+    assert worker.temporal_client_runtime is runtime
+    assert worker._runtime_builder is not None
+    assert worker._runtime_builder._metric_prefix == "selected"
+    assert connect.call_args.kwargs["target_host"] == "selected:7233"
+    assert connect.call_args.kwargs["namespace"] == "selected"
+    assert connect.call_args.kwargs["tls"] is False
+    assert connect.call_args.kwargs["runtime"] is runtime
+    assert worker.temporal_client is connect.return_value
+    assert worker.temporal_worker is sdk_worker.return_value
+    assert sdk_worker.call_args.kwargs["client"] is connect.return_value
+    runtime_build.assert_called_once_with()
+
+
+@pytest.mark.asyncio
+async def test_initialized_worker_rejects_configuration_and_rebuild_without_changing_objects(
+    configuration_resources: tuple[TemporalBoostWorker, MagicMock, AsyncMock, MagicMock],
+) -> None:
+    worker, runtime_build, connect, sdk_worker = configuration_resources
+    worker.configure_temporal_client(namespace="original")
+    await worker._build_worker()
+    client_builder, runtime_builder = worker._client_builder, worker._runtime_builder
+    client, runtime, sdk = worker.temporal_client, worker.temporal_client_runtime, worker.temporal_worker
+    with pytest.raises(RuntimeError, match=r"configure.*client"):
+        worker.configure_temporal_client(namespace="ignored", use_pydantic_data_converter=False)
+    with pytest.raises(RuntimeError, match=r"configure.*runtime"):
+        worker.configure_temporal_runtime(metric_prefix="ignored")
+    with pytest.raises(RuntimeError, match="initialized"):
+        await worker._build_worker()
+    assert worker._client_builder is client_builder
+    assert worker._runtime_builder is runtime_builder
+    assert client_builder is not None
+    assert client_builder._namespace == "original"
+    assert worker.temporal_client is client
+    assert worker.temporal_client_runtime is runtime
+    assert worker.temporal_worker is sdk
+    runtime_build.assert_called_once_with()
+    connect.assert_awaited_once()
+    sdk_worker.assert_called_once()
+
+
+def test_failed_runtime_initialization_remains_configurable(
+    configuration_resources: tuple[TemporalBoostWorker, MagicMock, AsyncMock, MagicMock],
+) -> None:
+    worker, runtime_build, _, _ = configuration_resources
+    runtime = MagicMock()
+    runtime_build.side_effect = [ValueError("runtime failed"), runtime]
+    with pytest.raises(ValueError, match="runtime failed"):
+        _ = worker.temporal_client_runtime
+    worker.configure_temporal_runtime(metric_prefix="retry")
+    assert worker.temporal_client_runtime is runtime
+    assert worker._runtime_builder is not None
+    assert worker._runtime_builder._metric_prefix == "retry"
+    assert runtime_build.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_client_initialization_freezes_configuration_before_connect_completes(
+    configuration_resources: tuple[TemporalBoostWorker, MagicMock, AsyncMock, MagicMock],
+) -> None:
+    worker, _, connect, sdk_worker = configuration_resources
+    connecting, connected = asyncio.Event(), asyncio.Event()
+    client = MagicMock()
+
+    async def build_client(**_kwargs: object) -> MagicMock:
+        connecting.set()
+        await connected.wait()
+        return client
+
+    connect.side_effect = build_client
+    building = asyncio.create_task(worker._build_worker())
+    try:
+        await asyncio.wait_for(connecting.wait(), 2)
+        # Direct initialization has no active run and still needs its own guard.
+        assert worker.state == "created"
+        with pytest.raises(RuntimeError, match=r"configure.*client"):
+            worker.configure_temporal_client(namespace="ignored")
+        with pytest.raises(RuntimeError, match=r"configure.*runtime"):
+            worker.configure_temporal_runtime(metric_prefix="ignored")
+        with pytest.raises(RuntimeError, match="initializing"):
+            await worker._build_worker()
+    finally:
+        connected.set()
+        await asyncio.wait_for(building, 2)
+    assert worker.temporal_client is client
+    assert sdk_worker.call_args.kwargs["client"] is client
+    connect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

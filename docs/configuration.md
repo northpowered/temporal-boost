@@ -101,8 +101,9 @@ worker = app.add_worker("example", "example-queue", activities=[my_activity])
 worker.configure_temporal_client(data_converter=custom_converter)  # Explicit converter takes priority
 ```
 
-On an existing worker builder, `configure_temporal_client()` updates the flag only when given `True`
-or `False`; `None` leaves the previous selection unchanged. Use
+Before client initialization, or after run cleanup, `configure_temporal_client()` updates the flag
+only when given `True` or `False`; `None` leaves the previous selection unchanged. Late calls raise
+`RuntimeError`; see [when configuration becomes fixed](#when-configuration-becomes-fixed). Use
 `builder.set_pydantic_data_converter(enabled=False)` to disable Pydantic on a standalone builder;
 `builder.set_pydantic_data_converter()` still enables it. Each subsequent `build()` uses the current
 selection without retaining a converter automatically added by an earlier build. These changes apply
@@ -287,6 +288,49 @@ export TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS=true
 ## Runtime Configuration
 
 Runtime configuration is done programmatically. See [Advanced Usage](advanced_usage.md) for details.
+
+## When Configuration Becomes Fixed
+
+Configure a Temporal worker before starting it. Settings become fixed at these points:
+
+| Worker condition | Runtime configuration | Client configuration |
+| --- | --- | --- |
+| Created, no resources initialized | Allowed | Allowed |
+| Runtime created through `temporal_client_runtime`, client not initialized | Raises `RuntimeError` | Allowed |
+| Client/SDK worker initialization started or completed | Raises `RuntimeError` | Raises `RuntimeError` |
+| Lifecycle is `building`, `running`, or `stopping` | Raises `RuntimeError` | Raises `RuntimeError` |
+| Run cleanup completed (`stopped`), resources released | Allowed for the next run | Allowed for the next run |
+
+The `temporal_client_runtime` property creates and caches a runtime when first read, even before a
+run. This can bind a Prometheus port. Set runtime options before reading it. Repeated reads return the
+same object; reconfiguration is rejected without changing its builder. The `created` lifecycle state
+means no run is active, so it can still contain a runtime initialized through this property.
+
+Rejected client calls also leave both builders and SDK objects unchanged. There is no automatic
+reconnect, runtime replacement, or live update of an SDK worker. After a run or startup failure has
+completed cleanup, both configuration methods are available again. The next run builds fresh objects
+using those settings. Reading `temporal_client_runtime` after cleanup creates a new runtime and fixes
+its options again. A failed runtime constructor that leaves no cached runtime can be reconfigured
+before retrying, provided no lifecycle is active.
+
+```python
+worker = app.add_worker("consumer", "queue", activities=[my_activity])
+worker.configure_temporal_runtime(prometheus_bind_address="127.0.0.1:9101")
+worker.configure_temporal_client(namespace="production")
+# Optional inspection now creates the runtime and fixes its telemetry options:
+runtime = worker.temporal_client_runtime
+```
+
+**Migration:** Move configuration calls before `run()`/`cron()` and before the first runtime property
+read. For a later change, request stop, wait for the run to return and cleanup to complete, then
+configure the next run. To discard an initialized preview runtime without running the adapter, create
+a new worker instead of replacing its runtime. External references may keep the old runtime/exporter
+alive, so release them before reusing its port.
+
+SDK worker options such as activities, interceptors, and concurrency are supplied when constructing
+the adapter or calling `app.add_worker()`; use a new adapter to change those options. Standalone
+`TemporalClientBuilder`/`TemporalWorkerBuilder` instances remain mutable: their setters affect future
+builds and do not alter objects already returned by `build()`.
 
 ## Configuration Priority
 
