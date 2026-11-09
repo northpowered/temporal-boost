@@ -117,6 +117,38 @@ the SDK Pydantic converter.
 
 These settings control worker behavior and resource limits.
 
+The six concurrency, poll-count, and polling-ratio options below use the environment/default only
+when the corresponding worker argument is omitted or `None`. Selected values are validated when
+`TemporalWorkerBuilder` is constructed, including through `BoostApp.add_worker()`:
+
+| Worker argument | Accepted values |
+| --- | --- |
+| `max_concurrent_workflow_tasks` | Positive integer |
+| `max_concurrent_activities` | Positive integer |
+| `max_concurrent_local_activities` | Positive integer |
+| `max_concurrent_workflow_task_polls` | Positive integer |
+| `max_concurrent_activity_task_polls` | Positive integer |
+| `nonsticky_to_sticky_poll_ratio` | Finite, non-negative `int` or `float`, including `0.0`; no upper cap |
+
+Wrong types, including booleans and numeric strings, raise `TypeError`; out-of-range values raise
+`ValueError`. Counts reject floats, including `1.0`. Explicit values do not silently fall back:
+replace an old zero count with `None` or omit it to select configuration. A selected zero or negative
+count from the environment also raises `ValueError`. A valid explicit argument can override an
+invalid configured default. Environment parsing still occurs at import time; malformed integer/float
+text retains the existing parser fallback to the framework default.
+
+The SDK enforces additional constraints during `build()`, including workflow task concurrency and
+workflow poll counts of at least two when workflow caching is enabled (`max_cached_workflows > 0`).
+With caching disabled, one is valid. The builder's non-negative, finite ratio check rejects unusable
+settings that SDK Core itself does not range-check; it does not impose a `1.0` upper limit.
+
+```python
+app.add_worker("worker", "queue", workflows=[MyWorkflow], nonsticky_to_sticky_poll_ratio=0.0)
+```
+
+The zero ratio reaches the SDK unchanged. The SDK still uses at least one poller per sticky/non-sticky
+queue when caching is enabled; zero does not disable non-sticky polling.
+
 ### `TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS`
 
 **Type**: Integer  

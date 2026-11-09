@@ -3,6 +3,7 @@ import importlib.util
 import logging
 from collections.abc import Iterator
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,6 +14,86 @@ from temporal_boost import BoostApp
 from temporal_boost.temporal import config
 from temporal_boost.temporal.worker import TemporalWorkerBuilder
 from temporal_boost.workers.temporal import TemporalBoostWorker
+
+
+NUMERIC_WORKER_OPTIONS = [
+    ("max_concurrent_workflow_tasks", "MAX_CONCURRENT_WORKFLOW_TASKS"),
+    ("max_concurrent_activities", "MAX_CONCURRENT_ACTIVITIES"),
+    ("max_concurrent_local_activities", "MAX_CONCURRENT_LOCAL_ACTIVITIES"),
+    ("max_concurrent_workflow_task_polls", "MAX_WORKFLOW_TASK_POLLS"),
+    ("max_concurrent_activity_task_polls", "MAX_ACTIVITY_TASK_POLLS"),
+    ("nonsticky_to_sticky_poll_ratio", "NONSTICKY_STICKY_RATIO"),
+]
+
+
+@pytest.mark.parametrize(("option", "config_name"), NUMERIC_WORKER_OPTIONS)
+@pytest.mark.parametrize(
+    ("value", "count_error", "ratio_error"),
+    [
+        (None, None, None),
+        (0, ValueError, None),
+        (0.0, TypeError, None),
+        (2, None, None),
+        (1.0, TypeError, None),
+        (0.5, TypeError, None),
+        (-1, ValueError, ValueError),
+        (-0.5, TypeError, ValueError),
+        ("2", TypeError, TypeError),
+        ("", TypeError, TypeError),
+        (False, TypeError, TypeError),
+        (True, TypeError, TypeError),
+        ([], TypeError, TypeError),
+        (float("nan"), TypeError, ValueError),
+        (float("inf"), TypeError, ValueError),
+        (float("-inf"), TypeError, ValueError),
+    ],
+)
+def test_numeric_worker_options_validate_selected_value(  # noqa: PLR0913
+    monkeypatch: pytest.MonkeyPatch,
+    option: str,
+    config_name: str,
+    value: Any,
+    *,
+    count_error: type[Exception] | None,
+    ratio_error: type[Exception] | None,
+) -> None:
+    is_ratio = option == "nonsticky_to_sticky_poll_ratio"
+    default = 0.4 if is_ratio else 12
+    monkeypatch.setattr(config, config_name, default)
+    expected = default if value is None else value
+    error = ratio_error if is_ratio else count_error
+    if error is not None:
+        with pytest.raises(error, match=option):
+            TemporalWorkerBuilder("queue", **{option: value})
+    else:
+        builder = TemporalWorkerBuilder("queue", **{option: value})
+        builder.set_client(MagicMock())
+        with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+            builder.build()
+        assert sdk_worker.call_args.kwargs[option] == expected
+
+
+@pytest.mark.parametrize(("option", "config_name"), NUMERIC_WORKER_OPTIONS)
+@pytest.mark.parametrize("default", [0, -1])
+def test_numeric_worker_defaults_are_validated_and_can_be_overridden(
+    monkeypatch: pytest.MonkeyPatch, option: str, config_name: str, default: int
+) -> None:
+    monkeypatch.setattr(config, config_name, default)
+    if default == 0 and option == "nonsticky_to_sticky_poll_ratio":
+        builder = TemporalWorkerBuilder("queue", **{option: None})
+        builder.set_client(MagicMock())
+        with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+            builder.build()
+        assert sdk_worker.call_args.kwargs[option] == 0
+    else:
+        with pytest.raises(ValueError, match=option):
+            TemporalWorkerBuilder("queue", **{option: None})
+
+    builder = TemporalWorkerBuilder("queue", **{option: 3})
+    builder.set_client(MagicMock())
+    with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+        builder.build()
+    assert sdk_worker.call_args.kwargs[option] == 3
 
 
 class TestTemporalWorkerBuilder:
@@ -177,6 +258,21 @@ class TestTemporalWorkerBuilder:
 
 
 class TestTemporalBoostWorker:
+    def test_app_forwards_zero_poll_ratio(self) -> None:
+        app = BoostApp(logger_config=None)
+        worker = app.add_worker("worker", "queue", activities=[MagicMock()], nonsticky_to_sticky_poll_ratio=0.0)
+        worker._worker_builder.set_client(MagicMock())
+        with patch("temporal_boost.temporal.worker.Worker") as sdk_worker:
+            worker._worker_builder.build()
+        assert sdk_worker.call_args.kwargs["nonsticky_to_sticky_poll_ratio"] == 0.0
+
+    @pytest.mark.parametrize("option", [name for name, _ in NUMERIC_WORKER_OPTIONS])
+    def test_app_rejects_negative_numeric_option_before_registration(self, option: str) -> None:
+        app = BoostApp(logger_config=None)
+        with pytest.raises(ValueError, match=option):
+            app.add_worker("worker", "queue", activities=[MagicMock()], **{option: -1})
+        assert app.get_registered_workers() == []
+
     @pytest.mark.parametrize("timeout", [None, timedelta(), timedelta(seconds=90)])
     def test_app_forwards_graceful_shutdown_timeout(
         self, monkeypatch: pytest.MonkeyPatch, timeout: timedelta | None
