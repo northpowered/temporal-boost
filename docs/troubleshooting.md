@@ -400,6 +400,22 @@ Common issues and solutions when working with Temporal-boost.
    )
    ```
 
+## Application Import Errors
+
+The external launcher distinguishes these failures:
+
+| Error | Meaning | Next step |
+| --- | --- | --- |
+| `Import string ... must be in format ...` | Malformed `module:attribute` path | Use `package.module:app` or `package.module:container.app`, without expressions. |
+| `Could not import module ...` with a chained `ModuleNotFoundError` | The requested module or a package prefix is unavailable | Check the module name and launch directory; install the project or set `PYTHONPATH` for a `src` layout. |
+| `ModuleNotFoundError: No module named ...` naming a dependency | The application was found, but one of its imports failed | Install or correct that dependency using the original traceback. The importer does not retry other directories. |
+| `Attribute ... not found in module ...` | The module loaded, but the dotted attribute path failed | Check the exported app object and nested attribute names. The original `AttributeError` is retained as the cause. |
+| `SyntaxError`, `ImportError`, or another application exception | Python failed while executing application code | Fix the reported source error; directory fallback does not handle application initialization errors. |
+
+A failed import restores `sys.path`. A successful fallback retains only the directory that resolved
+the app so later application imports work. See [application import lookup](running_application.md#application-import-lookup)
+for the bounded current-directory/parent search and module-cache behavior.
+
 ## Configuration Issues
 
 ### Environment Variables Not Loading

@@ -270,8 +270,23 @@ uv run temporal-boost service.main:app -- --help
 ```
 
 Здесь `run` после `service.main:app` относится к CLI самого приложения. Дополнительный `run` перед путём
-приложения не требуется. `import_app_object()` поддерживает `module:attribute.nested`; при неудаче импорта
-пробует добавить текущий или родительский каталог в `sys.path`. Строгой проверки типа `BoostApp` нет:
+приложения не требуется. `import_app_object()` поддерживает `module:attribute.nested`, все части — Python
+identifiers. Сначала используется обычный `sys.path`; fallback ограничен текущим и непосредственным
+родительским каталогом (в таком порядке, без повторного добавления имеющегося entry). Fallback возможен
+только при `ModuleNotFoundError.name`, равном целевому module либо одному из его package prefixes.
+Если traceback показывает исполнение самого module/package, даже совпадающий `name` считается ошибкой
+инициализации, а не отсутствием target.
+Ошибки зависимостей, bare `ModuleNotFoundError` без name, `ImportError`, `SyntaxError` и другие ошибки
+инициализации пробрасываются сразу с исходным traceback и не запускают повторный поиск.
+
+TB-019 восстанавливает исходный `sys.path` при любом неуспешном вызове, включая attribute lookup.
+Неуспешные кандидаты убираются до следующей попытки; при успешном fallback остаётся только использованный
+каталог для deferred imports. Успех через normal path ничего не добавляет. Кэш `sys.modules` и побочные
+эффекты пользовательских imports не откатываются; importer вызывается на setup до потоков. Для другого
+layout проект устанавливается либо заранее задаётся `PYTHONPATH`; рекурсивного поиска/app-dir API нет.
+Malformed path, отсутствующий target и отсутствующий attribute дают разные `ValueError`; lookup ошибки
+сохраняются как cause. Вложенный attribute читается один раз без `hasattr()`; ошибка свойства, отличная
+от `AttributeError`, сохраняется. Строгой проверки типа `BoostApp` нет:
 runner вызывает `.run(arguments)` у импортированного объекта.
 Разделитель `--` нужен для передачи options внутреннему CLI, а не самому launcher.
 В default single-process режиме скрипт и установленная entry point сохраняют одинаковые exit codes.
@@ -498,7 +513,8 @@ Uvicorn сохраняет native импорт строки/factory и signal ca
 Версия 0.35.0 пропускает shutdown при `should_exit` во время startup: adapter ждёт окончания startup
 перед выставлением флага. Ошибка main loop сохраняется при вторичной ошибке cleanup; при обычной
 отмене cleanup error получает приоритет. Failed lifespan startup/shutdown не превращается в успех.
-Hypercorn и Granian разрешают `module:attribute` через общий importer без eval; оба принимают app object.
+Hypercorn и Granian разрешают `module:attribute` через общий ASGI loader без eval; оба принимают app object.
+Этот loader использует обычный importlib и не применяет fallback путей внешнего CLI importer.
 Granian factory вызывается один раз перед созданием observer, Uvicorn использует `factory=True`;
 Hypercorn требует готовый app. Observer Granian сохраняет explicit lifespan failure messages и ошибки
 после startup, которые native protocol иначе только логирует; обычное native auto-detection отсутствия
@@ -614,7 +630,7 @@ SDK runtime строится лениво в процессе worker и не п�
 | Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/prometheus.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/advanced_usage.md` |
 | ASGI backend | `workers/asgi_registry.py`, соответствующий адаптер, `workers/__init__.py` | `tests/test_asgi_registry.py`, `pyproject.toml` extras, `examples/example_fastapi.py` |
 | FastStream | `workers/faststream_worker.py`, `boost_app.py` | `docs/faststream_integration.md`, `examples/example_*faststream*.py` |
-| Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; `tests/test_process_runner.py`: supervision doubles и настоящие процессы |
+| Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; `tests/test_cli_importer.py`: временные модули, диагностика и sys.path; `tests/test_process_runner.py`: supervision doubles и настоящие процессы |
 
 При добавлении нового ASGI backend реализуйте `BaseAsgiWorker`, зарегистрируйте класс с проверкой
 зависимостей, обеспечьте импорт модуля для выполнения декоратора, добавьте enum/extra при необходимости.
