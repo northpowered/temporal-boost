@@ -133,12 +133,23 @@ TEMPORAL_MAX_CONCURRENT_ACTIVITIES=10
 TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS=10
 ```
 
-Load with `python-dotenv`:
+The package does not load `.env` automatically. For direct script execution, install `python-dotenv`
+separately and load it before the first import of `temporal_boost` or your worker modules:
 
 ```python
 from dotenv import load_dotenv
-load_dotenv()
+
+load_dotenv(".env")
+
+from temporal_boost import BoostApp
+
+app = BoostApp()
 ```
+
+When using the installed `temporal-boost` launcher, prepare the environment before starting the
+command: it imports the package before your app module. Changing environment variables after import
+does not refresh defaults. Explicit endpoint/namespace settings on the app and worker still override
+the imported environment; see [configuration priority](configuration.md#configuration-priority).
 
 ## CLI Exit Codes and Programmatic Invocation
 

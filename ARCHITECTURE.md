@@ -358,11 +358,28 @@ SDK activities, игнорирующие отмену, тоже могут пр�
 Автоматической загрузки `.env` в пакете нет. Окружение нужно подготовить до импорта `temporal_boost`.
 Дополнительно значения по умолчанию аргументов runtime-конфигурации фиксируются при определении функций:
 простая замена константы после импорта не обновляет эти defaults.
+Для установленного CLI загрузка `.env` внутри app module тоже запаздывает: entry point сначала
+импортирует пакет. Окружение launcher нужно подготовить снаружи до старта процесса.
 
 Для endpoint и namespace практический приоритет следующий: последний явный вызов
 `worker.configure_temporal_client(...)` → параметры `BoostApp` → env-константы → встроенные defaults.
 В конструкторах builders строки выбираются через `value or config.VALUE`; пустая строка попадает в fallback.
 Поздние setters принимают и пустые строки, поскольку проверяется `is not None`.
+Приоритет применяется независимо к каждому полю; `None` на уже существующем client builder не сбрасывает
+предыдущее значение. Пустая строка в app endpoint/namespace доходит до setter без замены. TLS и Pydantic
+отличают `None` от явного `False`; числовые worker options имеют собственную валидацию (ниже).
+
+Runtime `configure_temporal_runtime()` заменяет настройки целиком: пропущенные поля получают defaults,
+зафиксированные при импорте, а не значения предыдущего вызова. Это относится к bind address и трём
+Prometheus flags в builder и методе adapter. Явный `metrics` имеет приоритет; при `metrics=None` явный
+`prometheus_bind_address=None` отключает неявный exporter даже при адресе в env, а явный `None` для
+suffix/duration flags преобразуется в `False`.
+
+TB-017 согласует guides и API с этим поведением. Изолированные tests проверяют фактические kwargs
+`Client.connect()` при конфликте env/app/worker, независимый выбор полей, повторные вызовы и пустые
+строки. В subprocess проверены отсутствие загрузки `.env`, неизменность defaults новых builders после
+изменения окружения и фиксация runtime defaults после изменения env и config-констант. SDK client,
+worker и runtime заменены doubles; сетевые соединения и exporter bind в этих тестах не нужны.
 
 | Переменная окружения | Default | Где используется |
 | --- | --- | --- |
@@ -563,8 +580,8 @@ SDK runtime строится лениво в процессе worker и не п�
 
 | Утверждение или пример | Фактическое состояние |
 | --- | --- |
-| Env имеет высший приоритет в [configuration.md](docs/configuration.md) и [creating_application.md](docs/creating_application.md) | Явные endpoint/namespace `BoostApp` перекрывают env; настройка worker до инициализации перекрывает их |
-| `use_pydantic` описан как bool override в [api_reference.md](docs/api_reference.md) | `False` обрабатывается некорректно; детали в разделе 6 |
+| Приоритет endpoint/namespace в guides и API (согласован в TB-017) | Последняя явная настройка worker → `BoostApp` → env при импорте → default; особенности полей описаны отдельно |
+| `use_pydantic` как bool override в [api_reference.md](docs/api_reference.md) (исправлен в TB-001) | `False` отключает автоматический Pydantic converter, explicit converter имеет приоритет; детали в разделе 6 |
 | Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal, FastStream, встроенные ASGI и custom managed workers с отдельным `BoostApp.shutdown_timeout`. SDK activity grace period задаётся отдельно |
 | Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
 | `TestAsyncRuntime` в [example_app.py](examples/example_app.py) | У класса нет обязательного `shutdown()`; как есть он абстрактен и не зарегистрирован в приложении |

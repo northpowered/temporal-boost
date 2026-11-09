@@ -415,11 +415,17 @@ Common issues and solutions when working with Temporal-boost.
    env | grep TEMPORAL
    ```
 
-2. **Load from .env file:**
+2. **Load from .env before the first package import:** The package does not load it automatically.
+   Install `python-dotenv` separately for this direct script example:
    ```python
    from dotenv import load_dotenv
-   load_dotenv()
+   load_dotenv(".env")
+
+   from temporal_boost import BoostApp
+   app = BoostApp()
    ```
+   For the installed CLI, prepare the environment before starting the command; loading it inside
+   the imported app module is too late. Environment changes after package import do not refresh defaults.
 
 3. **Check variable names:**
    - Use exact names: `TEMPORAL_TARGET_HOST`
@@ -430,6 +436,10 @@ Common issues and solutions when working with Temporal-boost.
    from temporal_boost.temporal import config
    print(config.TARGET_HOST)
    ```
+
+Explicit app and worker endpoint/namespace settings override the imported environment. Check
+[configuration priority](configuration.md#configuration-priority) when a configured value differs
+from the process environment.
 
 ### Prometheus Metrics Not Working
 

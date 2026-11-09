@@ -46,13 +46,24 @@ app = BoostApp(
 
 ### Configuration Priority
 
-Configuration is loaded in this order:
+Endpoint and namespace are selected independently in this order (highest to lowest priority):
 
-1. **Environment variables** (highest priority)
+1. **Explicit worker configuration** via `worker.configure_temporal_client(target_host=..., namespace=...)`
 2. **BoostApp initialization parameters**
-3. **Default values** (lowest priority)
+3. **Environment variables read at import**
+4. **Built-in default values** (`localhost:7233` and `default`)
 
-For example, if you set `TEMPORAL_TARGET_HOST` in your environment, it will override any value passed to `BoostApp`.
+For example, with `TEMPORAL_TARGET_HOST=temporal.prod:7233` in the environment,
+`BoostApp(temporal_endpoint="temporal.dev:7233")` selects `temporal.dev:7233`. A later explicit
+worker configuration can override that address before client initialization. On an existing builder,
+omitted fields and `None` leave previous settings unchanged; the last explicit value for each field wins.
+
+Environment values are read when `temporal_boost` is first imported. The package does not load `.env`
+automatically, and changing `os.environ` after import does not update configuration defaults.
+Load environment files before the first package import, or prepare the environment before starting
+the installed CLI. Boolean flags, numeric options, empty strings, and runtime defaults have distinct
+rules; see the [configuration guide](configuration.md#configuration-priority) and
+[environment loading](configuration.md#environment-loading).
 
 ## Defining Activities
 
