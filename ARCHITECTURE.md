@@ -93,13 +93,19 @@ flowchart TD
 | `add_worker(name, task_queue, ...)` | `TemporalBoostWorker`; команду `run <name>`; при наличии обоих CRON-параметров — `cron <name>` | Созданный `TemporalBoostWorker` |
 | `add_asgi_worker(name, app, host, port, ...)` | Выбранный ASGI-адаптер и `run <name>` | `None` |
 | `add_faststream_worker(name, app, ...)` | `FastStreamBoostWorker` и `run <name>` | Созданный `FastStreamBoostWorker` |
-| `add_async_runtime(name, boost_worker)` | Уже созданный объект и его `run()` | `None` |
+| `add_async_runtime(name, boost_worker)` | Уже созданный `BaseBoostWorker`, каноническое имя и его `run()` | `None` |
 | `add_exec_method_sync(name, callback)` | Синхронный callback как `exec <name>` | `None` |
 | `get_registered_workers()` | Возвращает поверхностную копию общего списка | `list[BaseBoostWorker]` |
 
 При добавлении воркеров запрещены имена `run`, `cron`, `exec`, `all`; имена проверяются на дублирование
 среди всех типов в `_registered_workers`. В Temporal worker должен быть хотя бы один workflow или activity.
 Регистрация не проверяет их декораторы и совместимость с SDK — дальнейшая валидация выполняется при сборке SDK worker.
+В TB-018 все четыре метода регистрации используют общие `_validate_worker_registration()` и
+`_register_worker()`: factories проверяют имя до создания объекта, а общий путь повторно валидирует
+имя и identity, присваивает `worker.name`, регистрирует CLI callback и добавляет объект в единый список.
+Повторная регистрация одного объекта под тем же или другим именем в одном app запрещена до мутаций.
+Каноническое имя определяет CLI, имена в `get_registered_workers()`, logs и потоки `worker-<name>`.
+После регистрации имя менять нельзя; для каждой регистрации в другом app нужен отдельный экземпляр.
 
 `add_worker()` передаёт `**worker_kwargs` в `TemporalWorkerBuilder`, затем в SDK `Worker`.
 Параметры подключения задаются через `BoostApp` или `worker.configure_temporal_client()`, а параметры
@@ -107,11 +113,19 @@ flowchart TD
 В частности, `interceptors` в `add_worker()` относятся к SDK worker; client interceptors передаются отдельно
 через `configure_temporal_client(**kwargs)`.
 
-`add_async_runtime()` аннотирован параметром `TemporalBoostWorker`, хотя выполняет только регистрацию `run()`
-и добавление объекта в общий список. Он не применяет общие Temporal-настройки, не регистрирует CRON-команду
-и не присваивает переданное имя полю `boost_worker.name`. Эти особенности нужно учитывать при расширении API.
-Списки `_registered_cron_workers` и `_registered_asgi_workers` не управляют запуском: первый лишь пополняется,
-второй остаётся пустым; фактический источник для `run all` — `_registered_workers`.
+`add_async_runtime()` принимает `BaseBoostWorker` (аннотация расширена ещё в TB-002); обязательны
+`run()` и async `shutdown()`, managed stopping требует `request_stop()` или базы `AsyncBoostWorker`.
+Метод сохраняет настройки заранее созданного Temporal worker: не применяет общие endpoint/namespace/
+Pydantic/debug настройки app, не пересчитывает `cron_workflow_id` и не регистрирует CRON-команду.
+Это прежняя семантика конфигурации. Для применения app defaults и регистрации CRON используется
+`add_worker()`. Сигнатура custom `run()` сохраняется для отдельной CLI-команды; `run all` вызывает её
+без аргументов. `get_registered_workers()` возвращает shallow copy единственного registry.
+
+Неиспользуемые `_registered_cron_workers` и `_registered_asgi_workers` удалены в TB-018; CRON-команды
+по-прежнему регистрируются по конфигурации `add_worker()`. Миграция: alias теперь становится именем
+объекта, повторные aliases одного экземпляра отклоняются; прежнее внутреннее имя нужно хранить отдельно,
+если оно используется как application data. Новый типизируемый пример —
+[example_custom_worker.py](examples/example_custom_worker.py); старый `TestAsyncRuntime` остаётся TB-024.
 
 ## 4. Жизненный цикл Temporal worker
 
@@ -504,7 +518,7 @@ Granian использует experimental embedded API, поэтому process-m
 Обёртка сохраняет сигнатуру callback через `functools.wraps`, поэтому разбор аргументов и help остаются
 за Typer. Проверка не разбирает argv повторно и не импортирует приложение в родителе.
 Определяется `isinstance(worker, BaseAsgiWorker)`, поэтому защищены все backend и custom ASGI через
-`add_async_runtime()`, без зависимости от неиспользуемого `_registered_asgi_workers`.
+`add_async_runtime()`, используя единый registry без специализированного ASGI списка.
 `--workers > 1 ... run all` с ASGI и выбор ASGI дают диагностический code 2 в child; supervisor
 пробрасывает его после cleanup. `--workers 1` допустим, включая `run all`; наличие ASGI само по себе
 не запрещает выбор Temporal, CRON, exec или help. Backend kwargs не включают shared-socket режим.

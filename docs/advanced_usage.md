@@ -389,6 +389,38 @@ worker2.configure_temporal_client(
 
 ## Worker Lifecycle
 
+### Custom Worker Registration
+
+`app.add_async_runtime("service", worker)` registers an existing `BaseBoostWorker` subclass and
+assigns `worker.name = "service"`. An internal name supplied by the class is replaced; an initial
+name is optional. CLI dispatch, `get_registered_workers()`, logs, and the `worker-service` thread in
+`run all` use the registered name. Keep it unchanged after registration and create a distinct instance
+for each app registration.
+
+Names must be unique across Temporal, ASGI, FastStream, and custom workers. The names `run`, `cron`,
+`exec`, and `all` are reserved. Reusing a name or registering the same object twice in one app raises
+`RuntimeError` before changing the object or adding a command. The worker's `run()` signature still
+defines its individual CLI arguments; provide defaults for any parameters because `run all` calls
+it without arguments.
+
+Pre-created Temporal workers retain their configuration. `add_async_runtime()` does not apply app
+endpoint/namespace/Pydantic defaults, change the existing CRON workflow ID, or register CRON commands.
+Configure such workers explicitly before initialization, or use `add_worker()` to inherit app
+settings and register CRON commands.
+
+Implement `run()` and async `shutdown()` on a direct `BaseBoostWorker` subclass. For managed shutdown,
+implement thread-safe `request_stop()` and run cleanup on the owning loop. `AsyncBoostWorker` provides
+this lifecycle for asyncio workers, as in the following example.
+
+The standalone `examples/example_custom_worker.py` requires no external service:
+
+```bash
+uv run python examples/example_custom_worker.py run all
+# Ctrl+C requests managed shutdown.
+```
+
+It is also checked with `uv run mypy examples/example_custom_worker.py`.
+
 ### Custom Worker Shutdown
 
 ```python
