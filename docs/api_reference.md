@@ -130,7 +130,10 @@ add_asgi_worker(
 - `port` (int): Port to bind to.
 - `log_level` (str | int | None): Logging level for ASGI server.
 - `asgi_worker_type` (ASGIWorkerType): ASGI server type (auto, uvicorn, hypercorn, granian).
-- `**asgi_worker_kwargs`: Additional ASGI worker options.
+- `**asgi_worker_kwargs`: Backend configuration options for a single async server. Backend reloaders,
+  multiple internal workers, and custom loop modes are rejected. Granian uses its embedded server;
+  Hypercorn validates configuration field names. See
+  [managed ASGI shutdown](creating_application.md#managed-asgi-shutdown) for the supported options.
 
 **Example:**
 

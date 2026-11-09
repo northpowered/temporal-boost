@@ -706,8 +706,10 @@ should also use the non-blocking request rather than awaiting their own shutdown
 `FastStreamBoostWorker` also implements managed stopping, including cancellation of pending startup,
 shutdown hooks, broker cleanup, and lifespan exit on its owning loop. See
 [FastStream managed shutdown](faststream_integration.md#managed-shutdown) for hook options and migration details.
-Uvicorn, Hypercorn, and Granian do not yet implement this managed stop contract (TB-014).
-Their existing cleanup paths may reach the coordinator's timeout. Individual `run <name>` and
+Uvicorn, Hypercorn, and Granian implement the same stop contract through their public async serving
+APIs. Shutdown runs on the serving loop, without a second cleanup after normal completion. See
+[managed ASGI shutdown](creating_application.md#managed-asgi-shutdown) for supported modes and backend options.
+A stalled startup hook or backend cleanup can reach the coordinator's timeout. Individual `run <name>` and
 `cron <name>` commands use adapter lifecycle directly; the application coordinator's signal handlers
 apply to `run all`. The external CLI also coordinates selected workers through the
 [child stop watcher](#multi-process-supervision), with its own process deadline.
