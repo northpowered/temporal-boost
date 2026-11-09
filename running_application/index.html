@@ -1493,10 +1493,20 @@ its history is retained; use a reviewed new versioned ID when intentionally crea
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">10</span>
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">10</span>
 </span></code></pre></div>
-<p>Load with <code>python-dotenv</code>:</p>
+<p>The package does not load <code>.env</code> automatically. For direct script execution, install <code>python-dotenv</code>
+separately and load it before the first import of <code>temporal_boost</code> or your worker modules:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">load_dotenv</span><span class="p">()</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">load_dotenv</span><span class="p">(</span><span class="s2">&quot;.env&quot;</span><span class="p">)</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
 </span></code></pre></div>
+<p>When using the installed <code>temporal-boost</code> launcher, prepare the environment before starting the
+command: it imports the package before your app module. Changing environment variables after import
+does not refresh defaults. Explicit endpoint/namespace settings on the app and worker still override
+the imported environment; see <a href="../configuration/#configuration-priority">configuration priority</a>.</p>
 <h2 id="cli-exit-codes-and-programmatic-invocation">CLI Exit Codes and Programmatic Invocation</h2>
 <p>Use the same command arguments with a script or the installed single-process launcher:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>main.py<span class="w"> </span>run<span class="w"> </span>payment_worker

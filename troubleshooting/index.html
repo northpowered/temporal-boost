@@ -1594,10 +1594,16 @@
 </span></code></pre></div></p>
 </li>
 <li>
-<p><strong>Load from .env file:</strong>
+<p><strong>Load from .env before the first package import:</strong> The package does not load it automatically.
+   Install <code>python-dotenv</code> separately for this direct script example:
    <div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="n">load_dotenv</span><span class="p">()</span>
-</span></code></pre></div></p>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="n">load_dotenv</span><span class="p">(</span><span class="s2">&quot;.env&quot;</span><span class="p">)</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+   For the installed CLI, prepare the environment before starting the command; loading it inside
+   the imported app module is too late. Environment changes after package import do not refresh defaults.</p>
 </li>
 <li>
 <p><strong>Check variable names:</strong></p>
@@ -1613,6 +1619,9 @@
 </span></code></pre></div></p>
 </li>
 </ol>
+<p>Explicit app and worker endpoint/namespace settings override the imported environment. Check
+<a href="../configuration/#configuration-priority">configuration priority</a> when a configured value differs
+from the process environment.</p>
 <h3 id="prometheus-metrics-not-working">Prometheus Metrics Not Working</h3>
 <p><strong>Symptoms:</strong>
 - Metrics endpoint not accessible

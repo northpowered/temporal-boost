@@ -1479,13 +1479,23 @@
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="configuration-priority">Configuration Priority</h3>
-<p>Configuration is loaded in this order:</p>
+<p>Endpoint and namespace are selected independently in this order (highest to lowest priority):</p>
 <ol>
-<li><strong>Environment variables</strong> (highest priority)</li>
+<li><strong>Explicit worker configuration</strong> via <code>worker.configure_temporal_client(target_host=..., namespace=...)</code></li>
 <li><strong>BoostApp initialization parameters</strong></li>
-<li><strong>Default values</strong> (lowest priority)</li>
+<li><strong>Environment variables read at import</strong></li>
+<li><strong>Built-in default values</strong> (<code>localhost:7233</code> and <code>default</code>)</li>
 </ol>
-<p>For example, if you set <code>TEMPORAL_TARGET_HOST</code> in your environment, it will override any value passed to <code>BoostApp</code>.</p>
+<p>For example, with <code>TEMPORAL_TARGET_HOST=temporal.prod:7233</code> in the environment,
+<code>BoostApp(temporal_endpoint="temporal.dev:7233")</code> selects <code>temporal.dev:7233</code>. A later explicit
+worker configuration can override that address before client initialization. On an existing builder,
+omitted fields and <code>None</code> leave previous settings unchanged; the last explicit value for each field wins.</p>
+<p>Environment values are read when <code>temporal_boost</code> is first imported. The package does not load <code>.env</code>
+automatically, and changing <code>os.environ</code> after import does not update configuration defaults.
+Load environment files before the first package import, or prepare the environment before starting
+the installed CLI. Boolean flags, numeric options, empty strings, and runtime defaults have distinct
+rules; see the <a href="../configuration/#configuration-priority">configuration guide</a> and
+<a href="../configuration/#environment-loading">environment loading</a>.</p>
 <h2 id="defining-activities">Defining Activities</h2>
 <p>Activities are functions that perform actual work. They should be deterministic-free and can perform I/O operations.</p>
 <h3 id="basic-activity">Basic Activity</h3>

@@ -1202,8 +1202,8 @@
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>name</code> (str | None): Application name. Defaults to "temporal_generic_service".</li>
-<li><code>temporal_endpoint</code> (str | None): Override <code>TEMPORAL_TARGET_HOST</code> environment variable.</li>
-<li><code>temporal_namespace</code> (str | None): Override <code>TEMPORAL_NAMESPACE</code> environment variable.</li>
+<li><code>temporal_endpoint</code> (str | None): Override the imported <code>TEMPORAL_TARGET_HOST</code> value. <code>None</code> inherits it.</li>
+<li><code>temporal_namespace</code> (str | None): Override the imported <code>TEMPORAL_NAMESPACE</code> value. <code>None</code> inherits it.</li>
 <li><code>debug_mode</code> (bool): Enable debug mode. Defaults to False.</li>
 <li><code>use_pydantic</code> (bool | None): <code>None</code> inherits <code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code>; <code>True</code> enables
   Pydantic and <code>False</code> disables automatic Pydantic selection. An explicit client <code>data_converter</code> takes priority.</li>
@@ -1435,6 +1435,9 @@ cannot hide failed cleanup.
 See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
 <h2 id="temporalboostworker">TemporalBoostWorker</h2>
 <p>Temporal worker class.</p>
+<p>Endpoint and namespace precedence is the last explicit worker configuration → <code>BoostApp</code> parameters →
+environment values captured at import → built-in defaults (<code>localhost:7233</code>, <code>default</code>). Each field is
+selected independently. See <a href="../configuration/#configuration-priority">configuration priority</a>.</p>
 <h3 id="temporalboostworkerconfigure_temporal_client"><code>TemporalBoostWorker.configure_temporal_client()</code></h3>
 <p>Configure the Temporal client before initialization or after the previous run has finished cleanup.
 Raises <code>RuntimeError</code> once initialization starts, or while a lifecycle is building, running, or stopping.
@@ -1462,6 +1465,10 @@ The call never reconnects a live client or changes its SDK worker. Rejected call
   builder unchanged. An explicit <code>data_converter</code> in <code>kwargs</code> takes priority.</li>
 <li><code>**kwargs</code>: Additional client options.</li>
 </ul>
+<p>On an existing builder, omitted fields and <code>None</code> keep their previous values. Explicit empty strings
+are passed to setters unchanged; they do not reset to environment defaults. Explicit <code>tls=False</code>
+overrides an imported <code>True</code> value. Configure before initialization; these options do not reconnect
+an active client.</p>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">target_host</span><span class="o">=</span><span class="s2">&quot;temporal.example.com:7233&quot;</span><span class="p">,</span>
@@ -1626,6 +1633,11 @@ starting a lifecycle. After <code>stopped</code>, configuration is available aga
 <ul>
 <li><code>Client</code>: Temporal client instance.</li>
 </ul>
+<p>Constructor arguments for <code>target_host</code>, <code>namespace</code>, <code>api_key</code>, and <code>identity</code> override imported
+configuration when non-empty; <code>None</code> and empty strings fall back to config. Later setters replace
+stored values, including with empty strings. <code>tls=None</code> inherits imported config; <code>tls=False</code> overrides
+it. A standalone builder has no <code>BoostApp</code> configuration layer. Environment changes after package
+import are not read automatically by new builders.</p>
 <p>The constructor's <code>use_pydantic_data_converter</code> flag inherits the environment when <code>None</code>, enables
 Pydantic when <code>True</code>, and disables automatic selection when <code>False</code>. An explicit <code>data_converter</code>
 in constructor kwargs or <code>set_kwargs()</code> takes priority over the flag.</p>
@@ -1699,6 +1711,12 @@ default instead of the SDK's zero grace period.</p>
 over <code>prometheus_bind_address</code>. Only the effective Prometheus endpoint is logged as bound.
 The caller owns the returned runtime; pass it to <code>TemporalClientBuilder.set_runtime()</code> before
 building a standalone client. Do not pass a live runtime between processes.</p>
+<p>The four <code>prometheus_*</code> argument defaults above are captured when the function is defined at import,
+as are those on <code>TemporalBoostWorker.configure_temporal_runtime()</code>. Changing the environment or
+<code>config.PROMETHEUS_*</code> afterward does not refresh omitted arguments. With <code>metrics=None</code>, explicitly
+passing <code>prometheus_bind_address=None</code> disables the implicit exporter; passing <code>False</code> or <code>None</code> for a
+suffix/duration flag yields <code>False</code>. Each worker runtime configuration call replaces the previous
+configuration and uses function defaults for omitted fields. See <a href="../configuration/#runtime-configuration">runtime configuration</a>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Runtime</span>
 </span></code></pre></div>
 <p><strong>Returns:</strong></p>
@@ -1720,7 +1738,10 @@ building a standalone client. Do not pass a live runtime between processes.</p>
 <li><code>granian</code>: Use Granian server</li>
 </ul>
 <h2 id="configuration-constants">Configuration Constants</h2>
-<p>All configuration is available in <code>temporal_boost.temporal.config</code>:</p>
+<p>Environment defaults are available as constants in <code>temporal_boost.temporal.config</code>. They are read
+once during the first package import; <code>.env</code> files are not loaded automatically. Prepare the
+environment before importing the package or starting the CLI. Later <code>os.environ</code> changes do not
+update these constants or configure existing SDK objects. See <a href="../configuration/#environment-loading">environment loading</a>.</p>
 <ul>
 <li><code>TARGET_HOST</code>: Temporal server address</li>
 <li><code>CLIENT_NAMESPACE</code>: Temporal namespace</li>
