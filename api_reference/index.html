@@ -1651,6 +1651,16 @@ Passing <code>enabled=False</code> removes the automatic selection while preserv
 </span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
+<p>For the six numeric options, omission or <code>None</code> selects the corresponding
+<a href="../configuration/#temporal_max_concurrent_workflow_tasks">environment/default setting</a>.
+Concurrency and poll counts must be positive integers. The polling ratio must be a finite,
+non-negative <code>int</code> or <code>float</code>; <code>0.0</code> is passed unchanged and values above <code>1.0</code> are accepted.
+Booleans, numeric strings, and other wrong types raise <code>TypeError</code>; invalid ranges raise <code>ValueError</code>
+at construction. Configured defaults undergo the same checks when selected. Zero counts now raise
+an error; use <code>None</code> or omit the argument to select configuration.</p>
+<p>Additional SDK constraints, such as workflow counts of at least two with caching enabled, are checked
+by the SDK during <code>build()</code>. A zero ratio does not disable non-sticky polling: the SDK retains its
+minimum poller count.</p>
 <h3 id="temporalworkerbuilderbuild"><code>TemporalWorkerBuilder.build()</code></h3>
 <p>Build and return Temporal worker.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Worker</span>
