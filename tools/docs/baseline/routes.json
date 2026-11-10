@@ -346,8 +346,5 @@
         "debug-mode"
       ]
     }
-  },
-  "assets": {
-    "img/doc_v0_screen.png": "a5de8d0a62b74d41a8e42ce61ebda2b65728b9054346a54f2a9070bd360b48a9"
   }
 }
