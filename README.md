@@ -125,6 +125,20 @@ require `TEMPORAL_BOOST_INTEGRATION=1`. Use `-m ""` to include both groups.
 
 ## Documentation
 
+The portal has [English](https://northpowered.github.io/temporal-boost/) and
+[Russian](https://northpowered.github.io/temporal-boost/ru/) editions. Existing English URLs are preserved.
+
+Documentation tools use their own Python environment and lockfile:
+
+```bash
+uv sync --project tools/docs --locked
+uv run --project tools/docs --locked python scripts/docs/build_portal.py --all --strict
+uv run --project tools/docs --locked python scripts/docs/build_portal.py --serve --all --mount /temporal-boost/
+```
+
+See the [documentation contributor guide](tools/docs/README.md) for translations, browser checks,
+assets, and deployment recovery.
+
 - 📖 [Getting Started](https://northpowered.github.io/temporal-boost/) - Overview and installation
 - 🏗️ [Creating Applications](https://northpowered.github.io/temporal-boost/creating_application/) - Activities, workflows, and workers
 - 🚀 [Running Applications](https://northpowered.github.io/temporal-boost/running_application/) - Deployment and production

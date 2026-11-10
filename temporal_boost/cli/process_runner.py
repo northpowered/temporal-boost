@@ -127,7 +127,8 @@ class _ProcessSupervisor:
             self._signal = signum
 
     def _record_error(self, source: str, error: BaseException) -> None:
-        logger.error("%s", source, exc_info=(type(error), error, error.__traceback__))  # noqa: LOG014
+        # The captured exception may be logged outside its original handler.
+        logger.error("%s", source, exc_info=(type(error), error, error.__traceback__))
         if self._error is None:
             self._error = error
 

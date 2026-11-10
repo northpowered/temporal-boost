@@ -2,7 +2,7 @@ from temporal_boost.common import DEFAULT_LOGGING_CONFIG
 
 
 class TestCommon:
-    def test_default_logging_config_structure(self):
+    def test_default_logging_config_structure(self) -> None:
         assert isinstance(DEFAULT_LOGGING_CONFIG, dict)
         assert "version" in DEFAULT_LOGGING_CONFIG
         assert "disable_existing_loggers" in DEFAULT_LOGGING_CONFIG
@@ -11,19 +11,19 @@ class TestCommon:
         assert "root" in DEFAULT_LOGGING_CONFIG
         assert "loggers" in DEFAULT_LOGGING_CONFIG
 
-    def test_default_logging_config_version(self):
+    def test_default_logging_config_version(self) -> None:
         assert DEFAULT_LOGGING_CONFIG["version"] == 1
 
-    def test_default_logging_config_disable_existing_loggers(self):
+    def test_default_logging_config_disable_existing_loggers(self) -> None:
         assert DEFAULT_LOGGING_CONFIG["disable_existing_loggers"] is False
 
-    def test_default_logging_config_formatters(self):
+    def test_default_logging_config_formatters(self) -> None:
         assert "default" in DEFAULT_LOGGING_CONFIG["formatters"]
         formatter = DEFAULT_LOGGING_CONFIG["formatters"]["default"]
         assert "format" in formatter
         assert "datefmt" in formatter
 
-    def test_default_logging_config_handlers(self):
+    def test_default_logging_config_handlers(self) -> None:
         assert "default" in DEFAULT_LOGGING_CONFIG["handlers"]
         handler = DEFAULT_LOGGING_CONFIG["handlers"]["default"]
         assert "class" in handler
@@ -31,14 +31,14 @@ class TestCommon:
         assert "formatter" in handler
         assert handler["formatter"] == "default"
 
-    def test_default_logging_config_root(self):
+    def test_default_logging_config_root(self) -> None:
         root = DEFAULT_LOGGING_CONFIG["root"]
         assert "level" in root
         assert root["level"] == "DEBUG"
         assert "handlers" in root
         assert "default" in root["handlers"]
 
-    def test_default_logging_config_loggers(self):
+    def test_default_logging_config_loggers(self) -> None:
         loggers = DEFAULT_LOGGING_CONFIG["loggers"]
         assert "" in loggers
         assert "uvicorn" in loggers
@@ -47,9 +47,8 @@ class TestCommon:
         assert "faststream" in loggers
         assert "temporalio" in loggers
 
-    def test_default_logging_config_logger_levels(self):
+    def test_default_logging_config_logger_levels(self) -> None:
         loggers = DEFAULT_LOGGING_CONFIG["loggers"]
-        for logger_name, logger_config in loggers.items():
+        for logger_config in loggers.values():
             assert "level" in logger_config
             assert logger_config["level"] == "DEBUG"
-

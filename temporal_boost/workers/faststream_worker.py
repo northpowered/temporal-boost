@@ -124,10 +124,11 @@ class FastStreamBoostWorker(BaseBoostWorker):
         if primary is None or isinstance(primary, (asyncio.CancelledError, FutureCancelledError)):
             return error
         if error is not primary:
+            # Cleanup errors can be logged after their exception handler has exited.
             logger.error(
                 "Cleanup failed for FastStream worker '%s'; preserving lifecycle error",
                 self.name,
-                exc_info=(type(error), error, error.__traceback__),  # noqa: LOG014
+                exc_info=(type(error), error, error.__traceback__),
             )
         return primary
 

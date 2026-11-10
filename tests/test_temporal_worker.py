@@ -117,7 +117,7 @@ class TestTemporalWorkerBuilder:
         monkeypatch.setattr("temporal_boost.temporal.worker.config", isolated_config)
 
         if expected is None:
-            with pytest.raises(ValueError, match="graceful_shutdown_timeout.*non-negative"):
+            with pytest.raises(ValueError, match=r"graceful_shutdown_timeout.*non-negative"):
                 TemporalWorkerBuilder("queue")
             return
 
@@ -151,10 +151,10 @@ class TestTemporalWorkerBuilder:
 
     @pytest.mark.parametrize("timeout", [timedelta(seconds=-1), timedelta(microseconds=-1)])
     def test_negative_graceful_shutdown_timeout_is_rejected(self, timeout: timedelta) -> None:
-        with pytest.raises(ValueError, match="graceful_shutdown_timeout.*non-negative"):
+        with pytest.raises(ValueError, match=r"graceful_shutdown_timeout.*non-negative"):
             TemporalWorkerBuilder("queue", graceful_shutdown_timeout=timeout)
 
-    def test_init_with_defaults(self):
+    def test_init_with_defaults(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         assert builder.task_queue == "test_queue"
         assert builder._client is None
@@ -163,52 +163,52 @@ class TestTemporalWorkerBuilder:
         assert builder._interceptors == []
         assert builder._debug_mode is False
 
-    def test_init_with_debug_mode(self):
+    def test_init_with_debug_mode(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue", debug_mode=True)
         assert builder._debug_mode is True
 
-    def test_init_with_max_concurrent_workflow_tasks(self):
+    def test_init_with_max_concurrent_workflow_tasks(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue", max_concurrent_workflow_tasks=100)
         assert builder._max_concurrent_workflow_tasks == 100
 
-    def test_init_with_max_concurrent_activities(self):
+    def test_init_with_max_concurrent_activities(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue", max_concurrent_activities=50)
         assert builder._max_concurrent_activities == 50
 
-    def test_init_with_kwargs(self):
+    def test_init_with_kwargs(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue", custom_param="value")
         assert builder._worker_kwargs["custom_param"] == "value"
 
-    def test_client_property_not_set(self):
+    def test_client_property_not_set(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         with pytest.raises(RuntimeError):
             _ = builder.client
 
-    def test_client_property_set(self):
+    def test_client_property_set(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         mock_client = MagicMock()
         builder.set_client(mock_client)
         assert builder.client == mock_client
 
-    def test_set_client(self):
+    def test_set_client(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         mock_client = MagicMock()
         builder.set_client(mock_client)
         assert builder._client == mock_client
 
-    def test_set_activities(self):
+    def test_set_activities(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
 
-        def activity1():
+        def activity1() -> None:
             pass
 
-        def activity2():
+        def activity2() -> None:
             pass
 
         builder.set_activities([activity1, activity2])
         assert builder._activities == [activity1, activity2]
 
-    def test_set_workflows(self):
+    def test_set_workflows(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
 
         class Workflow1:
@@ -220,7 +220,7 @@ class TestTemporalWorkerBuilder:
         builder.set_workflows([Workflow1, Workflow2])
         assert builder._workflows == [Workflow1, Workflow2]
 
-    def test_set_interceptors(self):
+    def test_set_interceptors(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         interceptor1 = MagicMock()
         interceptor2 = MagicMock()
@@ -228,12 +228,12 @@ class TestTemporalWorkerBuilder:
         builder.set_interceptors([interceptor1, interceptor2])
         assert builder._interceptors == [interceptor1, interceptor2]
 
-    def test_build(self):
+    def test_build(self) -> None:
         builder = TemporalWorkerBuilder(task_queue="test_queue")
         mock_client = MagicMock()
         builder.set_client(mock_client)
 
-        def activity():
+        def activity() -> None:
             pass
 
         class Workflow:
@@ -304,7 +304,7 @@ class TestTemporalBoostWorker:
 
     def test_app_rejects_negative_graceful_shutdown_timeout(self) -> None:
         app = BoostApp(logger_config=None)
-        with pytest.raises(ValueError, match="graceful_shutdown_timeout.*non-negative"):
+        with pytest.raises(ValueError, match=r"graceful_shutdown_timeout.*non-negative"):
             app.add_worker("worker", "queue", activities=[MagicMock()], graceful_shutdown_timeout=timedelta(seconds=-1))
 
     @pytest.mark.asyncio
@@ -364,8 +364,8 @@ class TestTemporalBoostWorker:
                 assert "data_converter" not in call.kwargs
         assert connect.call_args.kwargs["namespace"] == "updated"
 
-    def test_init_with_minimal_params(self):
-        def dummy_activity():
+    def test_init_with_minimal_params(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -380,7 +380,7 @@ class TestTemporalBoostWorker:
         assert worker._client is None
         assert worker._client_builder is None
 
-    def test_init_with_no_workflows_or_activities(self):
+    def test_init_with_no_workflows_or_activities(self) -> None:
         with pytest.raises(RuntimeError, match="must have at least one workflow or activity"):
             TemporalBoostWorker(
                 worker_name="test_worker",
@@ -389,7 +389,7 @@ class TestTemporalBoostWorker:
                 workflows=[],
             )
 
-    def test_init_with_workflows_only(self):
+    def test_init_with_workflows_only(self) -> None:
         class DummyWorkflow:
             pass
 
@@ -401,11 +401,11 @@ class TestTemporalBoostWorker:
 
         assert worker.name == "test_worker"
 
-    def test_init_with_cron_schedule(self):
-        def dummy_activity():
+    def test_init_with_cron_schedule(self) -> None:
+        def dummy_activity() -> None:
             pass
 
-        async def cron_runner():
+        async def cron_runner() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -419,8 +419,8 @@ class TestTemporalBoostWorker:
         assert worker._cron_schedule == "0 0 * * *"
         assert worker._cron_runner == cron_runner
 
-    def test_init_with_debug_mode(self):
-        def dummy_activity():
+    def test_init_with_debug_mode(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -432,8 +432,8 @@ class TestTemporalBoostWorker:
 
         assert worker._worker_builder._debug_mode is True
 
-    def test_init_with_interceptors(self):
-        def dummy_activity():
+    def test_init_with_interceptors(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         interceptor = MagicMock()
@@ -447,8 +447,8 @@ class TestTemporalBoostWorker:
 
         assert interceptor in worker._worker_builder._interceptors
 
-    def test_temporal_client_property_not_initialized(self):
-        def dummy_activity():
+    def test_temporal_client_property_not_initialized(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -460,8 +460,8 @@ class TestTemporalBoostWorker:
         with pytest.raises(RuntimeError, match="Temporal client has not been initialized"):
             _ = worker.temporal_client
 
-    def test_temporal_worker_property_not_initialized(self):
-        def dummy_activity():
+    def test_temporal_worker_property_not_initialized(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -473,8 +473,8 @@ class TestTemporalBoostWorker:
         with pytest.raises(RuntimeError, match="Temporal worker has not been initialized"):
             _ = worker.temporal_worker
 
-    def test_temporal_cron_runner_property_not_set(self):
-        def dummy_activity():
+    def test_temporal_cron_runner_property_not_set(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -486,11 +486,11 @@ class TestTemporalBoostWorker:
         with pytest.raises(RuntimeError, match="Cron runner is not configured"):
             _ = worker.temporal_cron_runner
 
-    def test_temporal_cron_runner_property_set(self):
-        def dummy_activity():
+    def test_temporal_cron_runner_property_set(self) -> None:
+        def dummy_activity() -> None:
             pass
 
-        async def cron_runner():
+        async def cron_runner() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -503,8 +503,8 @@ class TestTemporalBoostWorker:
 
         assert worker.temporal_cron_runner == cron_runner
 
-    def test_configure_temporal_client(self):
-        def dummy_activity():
+    def test_configure_temporal_client(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -528,8 +528,8 @@ class TestTemporalBoostWorker:
         assert worker._client_builder._identity == "test_identity"
         assert worker._client_builder._tls is True
 
-    def test_configure_temporal_client_pydantic(self):
-        def dummy_activity():
+    def test_configure_temporal_client_pydantic(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -543,8 +543,8 @@ class TestTemporalBoostWorker:
         assert worker._client_builder is not None
         assert worker._client_builder._data_converter is not None
 
-    def test_configure_temporal_client_updates_existing(self):
-        def dummy_activity():
+    def test_configure_temporal_client_updates_existing(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -558,8 +558,8 @@ class TestTemporalBoostWorker:
 
         assert worker._client_builder._target_host == "new_host:7233"
 
-    def test_configure_temporal_runtime(self):
-        def dummy_activity():
+    def test_configure_temporal_runtime(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -578,7 +578,7 @@ class TestTemporalBoostWorker:
         assert worker._runtime_builder._prometheus_counters_total_suffix is True
 
     def test_temporal_client_runtime_property(self, mock_sdk_runtime: MagicMock) -> None:
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -593,8 +593,8 @@ class TestTemporalBoostWorker:
         mock_sdk_runtime.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_build_worker(self):
-        def dummy_activity():
+    async def test_build_worker(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -620,8 +620,8 @@ class TestTemporalBoostWorker:
                 assert worker._worker == mock_worker
 
     @pytest.mark.asyncio
-    async def test_shutdown(self):
-        def dummy_activity():
+    async def test_shutdown(self) -> None:
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -634,8 +634,8 @@ class TestTemporalBoostWorker:
         await worker.shutdown()
         assert worker._worker is None
 
-    def test_log_worker_start(self, caplog):
-        def dummy_activity():
+    def test_log_worker_start(self, caplog: pytest.LogCaptureFixture) -> None:
+        def dummy_activity() -> None:
             pass
 
         class DummyWorkflow:
@@ -794,7 +794,7 @@ def test_incomplete_or_empty_cron_configuration_is_rejected_before_building(
         pass
 
     with patch("temporal_boost.workers.temporal.TemporalWorkerBuilder") as builder:
-        with pytest.raises(ValueError, match="cron_schedule.*cron_runner|cron_schedule.*non-empty"):
+        with pytest.raises(ValueError, match=r"cron_schedule.*cron_runner|cron_schedule.*non-empty"):
             TemporalBoostWorker(
                 "cron_worker",
                 "queue",
@@ -812,7 +812,7 @@ def test_manual_cron_without_configuration_fails_before_creating_loop_or_buildin
         patch("temporal_boost.workers.temporal.asyncio.run") as run,
         patch.object(worker, "_build_worker", new_callable=AsyncMock) as build,
     ):
-        with pytest.raises(RuntimeError, match="cron_schedule.*cron_runner"):
+        with pytest.raises(RuntimeError, match=r"cron_schedule.*cron_runner"):
             worker.cron()
 
     run.assert_not_called()
@@ -824,9 +824,9 @@ def test_manual_cron_without_configuration_fails_before_creating_loop_or_buildin
 async def test_async_cron_without_configuration_fails_before_building() -> None:
     worker = TemporalBoostWorker("consumer", "queue", activities=[MagicMock()])
     with patch.object(worker, "_build_worker", new_callable=AsyncMock) as build:
-        with pytest.raises(RuntimeError, match="cron_schedule.*cron_runner"):
+        with pytest.raises(RuntimeError, match=r"cron_schedule.*cron_runner"):
             await worker._run_with_cron()
-        with pytest.raises(RuntimeError, match="cron_schedule.*cron_runner"):
+        with pytest.raises(RuntimeError, match=r"cron_schedule.*cron_runner"):
             await worker._register_cron()
 
     build.assert_not_called()

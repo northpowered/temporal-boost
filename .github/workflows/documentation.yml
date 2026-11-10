@@ -1,48 +1,154 @@
-name: Documentation Deployment
+name: Documentation portal
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
     paths:
       - "docs/**"
-      - "mkdocs.yml"
+      - "zensical.toml"
+      - "scripts/docs/**"
+      - "tools/docs/**"
       - ".github/workflows/documentation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "zensical.toml"
+      - "scripts/docs/**"
+      - "tools/docs/**"
+      - ".github/workflows/documentation.yml"
+  workflow_dispatch:
+    inputs:
+      restore_run_id:
+        description: "Rollback: successful main docs run ID, or 'baseline' for the recorded MkDocs site; empty builds current sources"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event_name == 'pull_request' && github.ref || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  deploy:
-    name: Build and Deploy Documentation
+  build:
+    name: Build and check both locales
+    if: inputs.restore_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
+    permissions:
+      contents: read
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
-
-      - name: Set up Python
+      - name: Set up documentation Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
-          python-version: "3.11"
-
+          python-version-file: tools/docs/.python-version
       - name: Install uv
         uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
         with:
           version: "0.9.9"
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Install documentation dependencies
+          cache-dependency-glob: tools/docs/uv.lock
+      - name: Install isolated documentation tools
+        run: uv sync --project tools/docs --locked
+      - name: Install pinned browser
+        run: uv run --project tools/docs --no-sync playwright install --with-deps chromium
+      - name: Strict build and artifact checks
         run: |
-          uv sync --locked --group docs
-
-      - name: Build documentation
-        run: |
-          uv run --no-sync mkdocs build --strict
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@e9c66a37f080288a11235e32cbe2dc5fb3a679cc # v4
+          uv run --project tools/docs --no-sync python scripts/docs/build_portal.py --all --strict
+          uv run --project tools/docs --no-sync python scripts/docs/check_portal.py --site site
+      - name: Check builder and browser behavior
+        run: uv run --project tools/docs --no-sync pytest -c tools/docs/pyproject.toml tools/docs/tests/
+      - name: Save browser review screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          cname: northpowered.github.io
-          keep_files: false
+          name: docs-browser-screenshots
+          path: .cache/docs-portal/screenshots
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Save verified preview and rollback artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docs-portal-verified
+          path: site
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload the same verified Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+          include-hidden-files: true
+          retention-days: 30
+
+  restore:
+    name: Restore a verified production artifact
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.restore_run_id != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout restore tools
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
+      - name: Set up documentation Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version-file: tools/docs/.python-version
+      - name: Install uv
+        uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: "0.9.9"
+      - name: Install tools
+        run: uv sync --project tools/docs --locked
+      - name: Verify restore source is a successful main docs run
+        if: inputs.restore_run_id != 'baseline'
+        env:
+          RESTORE_RUN_ID: ${{ inputs.restore_run_id }}
+          GH_TOKEN: ${{ github.token }}
+        run: uv run --project tools/docs --no-sync python scripts/docs/restore_portal.py --verify-run
+      - name: Download the previously verified artifact
+        if: inputs.restore_run_id != 'baseline'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: docs-portal-verified
+          path: site
+          run-id: ${{ inputs.restore_run_id }}
+          github-token: ${{ github.token }}
+      - name: Restore the recorded baseline
+        if: inputs.restore_run_id == 'baseline'
+        run: uv run --project tools/docs --no-sync python scripts/docs/restore_portal.py --baseline --site site
+      - name: Check restored artifact
+        run: uv run --project tools/docs --no-sync python scripts/docs/restore_portal.py --site site
+      - name: Upload restored Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+          include-hidden-files: true
+          retention-days: 30
+
+  deploy:
+    name: Publish verified main artifact
+    needs: [build, restore]
+    if: >-
+      always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      (needs.build.result == 'success' || needs.restore.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Deploy without rebuilding
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -19,6 +19,8 @@ from temporalio.worker import Worker
 from tests.test_cron_workflow_idempotency import CronProbe, make_worker
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.asyncio,
@@ -60,7 +62,7 @@ async def test_restarts_and_process_race_share_one_chain_and_closed_ids_are_reje
                 sys.executable,
                 "-c",
                 REGISTER_IN_PROCESS,
-                str(Path(__file__).resolve().parent.parent),
+                str(PROJECT_ROOT),
                 target,
                 queue,
                 stdout=asyncio.subprocess.PIPE,

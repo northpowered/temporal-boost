@@ -576,8 +576,8 @@ def test_installed_cli_aggregates_real_child_exit_codes(tmp_path: Path, argument
 @pytest.mark.parametrize("configured_path", ["unset", "directory", "file", "missing"])
 @pytest.mark.parametrize("start_fails", [False, True])
 def test_repeated_process_runs_do_not_manage_prometheus_directories(
-    monkeypatch, tmp_path, configured_path, start_fails
-):
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, configured_path: str, start_fails: bool
+) -> None:
     directory = tmp_path / "user-metrics"
     directory.mkdir()
     data = directory / "owned-by-user.db"

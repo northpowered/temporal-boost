@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{# Native alternates always point at the locale root. Keep the other native metadata. #}
+{% block site_meta %}
+  {% set meta = namespace(html=super()) %}
+  {% for alt in config.extra.alternate %}
+    {% set native = '<link rel="alternate" href="' ~ (alt.link | url) ~ '" hreflang="' ~ alt.lang ~ '">' %}
+    {% set meta.html = meta.html | replace(native, '') %}
+  {% endfor %}
+  {{ meta.html | safe }}
+{% endblock %}
+
+{% block scripts %}
+  {# 0.1.0 probes <alternate page>/sitemap.xml to rewrite language links. Our manifest
+     already resolves pages, so hide alternates only during native initialization.
+     The delivered HTML and the initialized DOM both retain complete SEO alternates. #}
+  <script>
+    const portalHeadAlternates = [...document.head.querySelectorAll('link[rel="alternate"][hreflang]')];
+    portalHeadAlternates.forEach((link) => link.rel = "portal-alternate");
+  </script>
+  {{ super() }}
+  <script>
+    document$.subscribe(() => portalHeadAlternates.forEach((link) => link.rel = "alternate"));
+  </script>
+{% endblock %}
+
+{% block extrahead %}
+  {{ super() }}
+  <script id="portal-search-i18n" type="application/json">{{ {"strings": config.extra.search_strings, "count": config.extra.search_result_count} | tojson }}</script>
+  {% if page and config.extra.routes[page.url] %}
+    {% for alt in config.extra.routes[page.url] %}
+      <link rel="alternate" hreflang="{{ alt.lang }}" href="{{ config.extra.origin }}{{ alt.link }}">
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{{ config.extra.origin }}{{ config.extra.defaults[page.url] }}">
+  {% endif %}
+{% endblock %}

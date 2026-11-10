@@ -72,91 +72,91 @@ class TestTemporalClientBuilder:
         for call in connect.call_args_list[-3:]:
             assert call.kwargs["data_converter"] is converter
 
-    def test_init_with_defaults(self):
+    def test_init_with_defaults(self) -> None:
         builder = TemporalClientBuilder()
         assert builder._target_host is not None
         assert builder._namespace is not None
         assert builder._runtime is None
         assert builder._data_converter is None
 
-    def test_init_with_target_host(self):
+    def test_init_with_target_host(self) -> None:
         builder = TemporalClientBuilder(target_host="localhost:7233")
         assert builder._target_host == "localhost:7233"
 
-    def test_init_with_namespace(self):
+    def test_init_with_namespace(self) -> None:
         builder = TemporalClientBuilder(namespace="test_namespace")
         assert builder._namespace == "test_namespace"
 
-    def test_init_with_api_key(self):
+    def test_init_with_api_key(self) -> None:
         builder = TemporalClientBuilder(api_key="test_key")
         assert builder._api_key == "test_key"
 
-    def test_init_with_tls(self):
+    def test_init_with_tls(self) -> None:
         builder = TemporalClientBuilder(tls=True)
         assert builder._tls is True
 
-    def test_init_with_identity(self):
+    def test_init_with_identity(self) -> None:
         builder = TemporalClientBuilder(identity="test_identity")
         assert builder._identity == "test_identity"
 
-    def test_init_with_pydantic_data_converter(self):
+    def test_init_with_pydantic_data_converter(self) -> None:
         builder = TemporalClientBuilder(use_pydantic_data_converter=True)
         assert builder._data_converter is not None
 
-    def test_init_with_kwargs(self):
+    def test_init_with_kwargs(self) -> None:
         builder = TemporalClientBuilder(custom_param="value")
         assert builder._client_kwargs["custom_param"] == "value"
 
-    def test_set_runtime(self):
+    def test_set_runtime(self) -> None:
         builder = TemporalClientBuilder()
         runtime = MagicMock()
         builder.set_runtime(runtime)
         assert builder._runtime == runtime
 
-    def test_set_target_host(self):
+    def test_set_target_host(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_target_host("new_host:7233")
         assert builder._target_host == "new_host:7233"
 
-    def test_set_namespace(self):
+    def test_set_namespace(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_namespace("new_namespace")
         assert builder._namespace == "new_namespace"
 
-    def test_set_api_key(self):
+    def test_set_api_key(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_api_key("new_key")
         assert builder._api_key == "new_key"
 
-    def test_set_tls(self):
+    def test_set_tls(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_tls(True)
         assert builder._tls is True
 
-    def test_set_identity(self):
+    def test_set_identity(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_identity("new_identity")
         assert builder._identity == "new_identity"
 
-    def test_set_kwargs(self):
+    def test_set_kwargs(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_kwargs(param1="value1", param2="value2")
         assert builder._client_kwargs["param1"] == "value1"
         assert builder._client_kwargs["param2"] == "value2"
 
-    def test_set_kwargs_updates_existing(self):
+    def test_set_kwargs_updates_existing(self) -> None:
         builder = TemporalClientBuilder(existing="old")
         builder.set_kwargs(existing="new", new_param="value")
         assert builder._client_kwargs["existing"] == "new"
         assert builder._client_kwargs["new_param"] == "value"
 
-    def test_set_pydantic_data_converter(self):
+    def test_set_pydantic_data_converter(self) -> None:
         builder = TemporalClientBuilder()
         builder.set_pydantic_data_converter()
         assert builder._data_converter is not None
 
     @pytest.mark.asyncio
-    async def test_build_with_default_runtime(self):
+    async def test_build_with_default_runtime(self) -> None:
         builder = TemporalClientBuilder(target_host="localhost:7233")
 
         mock_client = AsyncMock()
@@ -172,7 +172,7 @@ class TestTemporalClientBuilder:
             assert call_kwargs["runtime"] is not None
 
     @pytest.mark.asyncio
-    async def test_build_with_custom_runtime(self):
+    async def test_build_with_custom_runtime(self) -> None:
         builder = TemporalClientBuilder(target_host="localhost:7233")
         mock_runtime = MagicMock()
         builder.set_runtime(mock_runtime)
@@ -188,7 +188,7 @@ class TestTemporalClientBuilder:
             assert call_kwargs["runtime"] == mock_runtime
 
     @pytest.mark.asyncio
-    async def test_build_with_pydantic_data_converter(self):
+    async def test_build_with_pydantic_data_converter(self) -> None:
         builder = TemporalClientBuilder(target_host="localhost:7233")
         builder.set_pydantic_data_converter()
 
@@ -204,7 +204,7 @@ class TestTemporalClientBuilder:
             assert call_kwargs["data_converter"] is not None
 
     @pytest.mark.asyncio
-    async def test_build_with_all_parameters(self):
+    async def test_build_with_all_parameters(self) -> None:
         builder = TemporalClientBuilder(
             target_host="localhost:7233",
             namespace="test_namespace",

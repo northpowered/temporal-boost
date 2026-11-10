@@ -16,11 +16,11 @@ class MockASGIWorker:
 
 
 class TestASGIWorkerRegistry:
-    def test_init(self):
+    def test_init(self) -> None:
         registry = ASGIWorkerRegistry()
         assert registry._data == {}
 
-    def test_register(self):
+    def test_register(self) -> None:
         registry = ASGIWorkerRegistry()
 
         @registry.register("test_worker")
@@ -30,7 +30,7 @@ class TestASGIWorkerRegistry:
         assert "test_worker" in registry._data
         assert registry._data["test_worker"] == TestWorker
 
-    def test_register_with_packages(self):
+    def test_register_with_packages(self) -> None:
         registry = ASGIWorkerRegistry()
 
         @registry.register("test_worker", packages=["os"])
@@ -39,7 +39,7 @@ class TestASGIWorkerRegistry:
 
         assert "test_worker" in registry._data
 
-    def test_register_with_missing_package(self):
+    def test_register_with_missing_package(self) -> None:
         registry = ASGIWorkerRegistry()
 
         @registry.register("test_worker", packages=["nonexistent_package_12345"])
@@ -48,7 +48,7 @@ class TestASGIWorkerRegistry:
 
         assert "test_worker" not in registry._data
 
-    def test_get_existing(self):
+    def test_get_existing(self) -> None:
         registry = ASGIWorkerRegistry()
 
         @registry.register("test_worker")
@@ -58,13 +58,13 @@ class TestASGIWorkerRegistry:
         worker_class = registry.get("test_worker")
         assert worker_class == TestWorker
 
-    def test_get_nonexistent(self):
+    def test_get_nonexistent(self) -> None:
         registry = ASGIWorkerRegistry()
 
         with pytest.raises(RuntimeError, match="is not available"):
             registry.get("nonexistent")
 
-    def test_available_keys(self):
+    def test_available_keys(self) -> None:
         registry = ASGIWorkerRegistry()
 
         @registry.register("worker1")
@@ -82,7 +82,7 @@ class TestASGIWorkerRegistry:
 
 
 class TestASGIWorkerType:
-    def test_enum_values(self):
+    def test_enum_values(self) -> None:
         assert ASGIWorkerType.uvicorn.value == "uvicorn"
         assert ASGIWorkerType.hypercorn.value == "hypercorn"
         assert ASGIWorkerType.granian.value == "granian"
@@ -90,28 +90,28 @@ class TestASGIWorkerType:
 
 
 class TestGetASGIWorkerClass:
-    def test_get_uvicorn(self):
+    def test_get_uvicorn(self) -> None:
         with patch.object(asgi_worker_registry, "get") as mock_get:
             mock_get.return_value = MockASGIWorker
             worker_class = get_asgi_worker_class(ASGIWorkerType.uvicorn)
             mock_get.assert_called_once_with("uvicorn")
             assert worker_class == MockASGIWorker
 
-    def test_get_hypercorn(self):
+    def test_get_hypercorn(self) -> None:
         with patch.object(asgi_worker_registry, "get") as mock_get:
             mock_get.return_value = MockASGIWorker
             worker_class = get_asgi_worker_class(ASGIWorkerType.hypercorn)
             mock_get.assert_called_once_with("hypercorn")
             assert worker_class == MockASGIWorker
 
-    def test_get_granian(self):
+    def test_get_granian(self) -> None:
         with patch.object(asgi_worker_registry, "get") as mock_get:
             mock_get.return_value = MockASGIWorker
             worker_class = get_asgi_worker_class(ASGIWorkerType.granian)
             mock_get.assert_called_once_with("granian")
             assert worker_class == MockASGIWorker
 
-    def test_get_auto_with_uvicorn_available(self):
+    def test_get_auto_with_uvicorn_available(self) -> None:
         with patch.object(asgi_worker_registry, "available_keys") as mock_keys:
             mock_keys.return_value = ["uvicorn", "hypercorn"]
 
@@ -121,7 +121,7 @@ class TestGetASGIWorkerClass:
                 mock_get.assert_called_once_with("uvicorn")
                 assert worker_class == MockASGIWorker
 
-    def test_get_auto_without_uvicorn(self):
+    def test_get_auto_without_uvicorn(self) -> None:
         with patch.object(asgi_worker_registry, "available_keys") as mock_keys:
             mock_keys.return_value = ["hypercorn", "granian"]
 
@@ -131,7 +131,7 @@ class TestGetASGIWorkerClass:
                 mock_get.assert_called_once_with("granian")
                 assert worker_class == MockASGIWorker
 
-    def test_get_auto_with_no_workers(self):
+    def test_get_auto_with_no_workers(self) -> None:
         with patch.object(asgi_worker_registry, "available_keys") as mock_keys:
             mock_keys.return_value = []
 
@@ -139,13 +139,14 @@ class TestGetASGIWorkerClass:
                 get_asgi_worker_class(ASGIWorkerType.auto)
 
 
-
 BUILTINS = ("uvicorn", "granian", "hypercorn")
 ORDERS = [order for size in range(1, 4) for subset in combinations(BUILTINS, size) for order in permutations(subset)]
 
 
 @pytest.mark.parametrize("order", ORDERS)
-def test_auto_priority_is_independent_of_registration_order(order, monkeypatch):
+def test_auto_priority_is_independent_of_registration_order(
+    order: tuple[str, ...], monkeypatch: pytest.MonkeyPatch
+) -> None:
     registry = ASGIWorkerRegistry()
     classes = {key: type(f"Worker_{key}", (MockASGIWorker,), {}) for key in order}
     for key in order:
@@ -158,7 +159,7 @@ def test_auto_priority_is_independent_of_registration_order(order, monkeypatch):
 
 
 @pytest.mark.parametrize("order", [("zeta", "alpha"), ("alpha", "zeta")])
-def test_custom_fallback_is_lexical(order, monkeypatch):
+def test_custom_fallback_is_lexical(order: tuple[str, ...], monkeypatch: pytest.MonkeyPatch) -> None:
     registry = ASGIWorkerRegistry()
     classes = {key: type(key, (MockASGIWorker,), {}) for key in order}
     for key in order:
@@ -170,7 +171,7 @@ def test_custom_fallback_is_lexical(order, monkeypatch):
 
 
 @pytest.mark.parametrize("key", ["uvicorn", "granian", "hypercorn", "custom"])
-def test_duplicate_registration_is_idempotent_but_cannot_replace(key):
+def test_duplicate_registration_is_idempotent_but_cannot_replace(key: str) -> None:
     registry = ASGIWorkerRegistry()
     registry.register(key)(MockASGIWorker)
     assert registry.register(key)(MockASGIWorker) is MockASGIWorker
@@ -181,7 +182,7 @@ def test_duplicate_registration_is_idempotent_but_cannot_replace(key):
 
 
 @pytest.mark.parametrize("key", BUILTINS)
-def test_missing_optional_dependency_does_not_register_backend(key):
+def test_missing_optional_dependency_does_not_register_backend(key: str) -> None:
     registry = ASGIWorkerRegistry()
     with patch("builtins.__import__", side_effect=ImportError("optional backend missing")):
         assert registry.register(key, packages=[key])(MockASGIWorker) is MockASGIWorker

@@ -1,0 +1,23 @@
+[
+  {
+    "path": "assets/brand/temporal-light.svg",
+    "source": "https://images.ctfassets.net/0uuz8ydxyd9p/6h19hCTYqrDacnDV8havze/58f49e40aa15d91f34654290ddc91e75/Temporal_Symbol_light.svg",
+    "sha256": "6687690e2e38707bae111398270eed69c84526f27c325193277fa6ce76cf49d2",
+    "retrieved": "2026-11-09",
+    "terms": "Temporal brand guidelines: https://temporal.io/brand; trademark rights remain with Temporal"
+  },
+  {
+    "path": "assets/brand/temporal-dark.svg",
+    "source": "https://images.ctfassets.net/0uuz8ydxyd9p/3B1zR4imcNyF9oHQxT06AD/9fce8b9ead280e66c21805c58d115176/Temporal_Symbol_dark.svg",
+    "sha256": "5c9617618f60940907e35045dd502f44b1377042aa8bf822d7c9e07847b293e2",
+    "retrieved": "2026-11-09",
+    "terms": "Temporal brand guidelines: https://temporal.io/brand; trademark rights remain with Temporal"
+  },
+  {
+    "path": "assets/fonts/InterVariable.woff2",
+    "source": "https://github.com/rsms/inter/blob/master/docs/font-files/InterVariable.woff2",
+    "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+    "retrieved": "2026-11-09",
+    "terms": "SIL Open Font License 1.1; see assets/fonts/LICENSE.txt"
+  }
+]
