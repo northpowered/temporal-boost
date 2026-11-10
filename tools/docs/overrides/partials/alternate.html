@@ -1,0 +1,19 @@
+<div class="md-header__option">
+  <div class="md-select">
+    <button class="md-header__button md-icon" aria-label="{{ lang.t('select.language') }}">
+      {% include ".icons/material/translate.svg" %}
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        {% set alternatives = config.extra.routes[page.url] if page else config.extra.alternate %}
+        {% for alt in alternatives %}
+          <li class="md-select__item">
+            <a href="{{ alt.link }}" hreflang="{{ alt.lang }}" lang="{{ alt.lang }}"
+               class="md-select__link" data-portal-language data-anchor-ids="{{ alt.anchors | default([]) | join(' ') }}"
+               {% if alt.lang == config.theme.language %}aria-current="page"{% endif %}>{{ alt.name }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>

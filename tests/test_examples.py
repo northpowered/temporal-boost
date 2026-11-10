@@ -10,7 +10,7 @@ from temporal_boost import BaseBoostWorker
 
 @pytest.mark.asyncio
 async def test_documented_runtime_is_attached_before_connecting() -> None:
-    guide = Path("docs/advanced_usage.md").read_text(encoding="utf-8")
+    guide = await asyncio.to_thread(Path("docs/en/advanced_usage.md").read_text, encoding="utf-8")
     section = guide.split("Use builders directly", 1)[1]
     fragment = section.split("```python\n", 1)[1].split("\n```", 1)[0]
     namespace = {"__name__": "documented_runtime"}

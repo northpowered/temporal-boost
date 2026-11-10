@@ -307,6 +307,11 @@ def test_cleanup_error_does_not_replace_child_failure_or_skip_kill(
     assert raised.value.code == 7
     assert first.killed_at is not None
     assert "terminate failed" in caplog.text
+    logged_error = next(
+        record.exc_info for record in caplog.records if record.exc_info and record.exc_info[1] is first.terminate_error
+    )
+    assert logged_error is not None
+    assert logged_error[2] is not None
     harness.assert_clean()
 
 
@@ -576,8 +581,8 @@ def test_installed_cli_aggregates_real_child_exit_codes(tmp_path: Path, argument
 @pytest.mark.parametrize("configured_path", ["unset", "directory", "file", "missing"])
 @pytest.mark.parametrize("start_fails", [False, True])
 def test_repeated_process_runs_do_not_manage_prometheus_directories(
-    monkeypatch, tmp_path, configured_path, start_fails
-):
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, configured_path: str, start_fails: bool
+) -> None:
     directory = tmp_path / "user-metrics"
     directory.mkdir()
     data = directory / "owned-by-user.db"

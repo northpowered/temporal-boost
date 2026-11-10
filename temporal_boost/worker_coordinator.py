@@ -94,7 +94,8 @@ class WorkerCoordinator:
                 source, error = self._failures.get_nowait()
             except Empty:
                 break
-            logger.error("%s failed", source, exc_info=(type(error), error, error.__traceback__))  # noqa: LOG014
+            # This failure was captured in another thread; preserve its traceback.
+            logger.error("%s failed", source, exc_info=error)
             if first_error is None:
                 first_error = error
         if first_error is not None:

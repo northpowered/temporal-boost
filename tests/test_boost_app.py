@@ -1,7 +1,6 @@
 import asyncio
 import json
-import logging
-import os
+import pathlib
 import sys
 import tempfile
 import threading
@@ -161,7 +160,7 @@ def test_invalid_cron_registration_has_no_partial_app_or_connection_side_effects
         pass
 
     with patch.object(TemporalBoostWorker, "configure_temporal_client") as configure:
-        with pytest.raises(ValueError, match="cron_schedule.*cron_runner|cron_schedule.*non-empty"):
+        with pytest.raises(ValueError, match=r"cron_schedule.*cron_runner|cron_schedule.*non-empty"):
             app.add_worker(
                 "invalid_cron",
                 "queue",
@@ -280,7 +279,7 @@ class TestBoostApp:
 
         assert connect.call_args.kwargs["data_converter"] is converter
 
-    def test_init_with_defaults(self):
+    def test_init_with_defaults(self) -> None:
         app = BoostApp()
         assert app._name == "temporal_generic_service"
         assert app._global_temporal_endpoint is None
@@ -289,33 +288,33 @@ class TestBoostApp:
         assert app._debug_mode is False
         assert app._registered_workers == []
 
-    def test_init_with_custom_name(self):
+    def test_init_with_custom_name(self) -> None:
         app = BoostApp(name="test_app")
         assert app._name == "test_app"
 
-    def test_init_with_temporal_endpoint(self):
+    def test_init_with_temporal_endpoint(self) -> None:
         app = BoostApp(temporal_endpoint="localhost:7233")
         assert app._global_temporal_endpoint == "localhost:7233"
 
-    def test_init_with_temporal_namespace(self):
+    def test_init_with_temporal_namespace(self) -> None:
         app = BoostApp(temporal_namespace="test_namespace")
         assert app._global_temporal_namespace == "test_namespace"
 
-    def test_init_with_debug_mode(self):
+    def test_init_with_debug_mode(self) -> None:
         app = BoostApp(debug_mode=True)
         assert app._debug_mode is True
 
-    def test_init_with_use_pydantic(self):
+    def test_init_with_use_pydantic(self) -> None:
         app = BoostApp(use_pydantic=True)
         assert app._global_use_pydantic is True
 
-    def test_init_with_logger_config_dict(self):
+    def test_init_with_logger_config_dict(self) -> None:
         log_config = {"version": 1, "disable_existing_loggers": False}
         app = BoostApp(logger_config=log_config)
         assert app._logger_config == log_config
 
-    def test_init_with_logger_config_path_json(self):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    def test_init_with_logger_config_path_json(self) -> None:
+        with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".json", delete=False) as f:
             log_config = {"version": 1, "disable_existing_loggers": False}
             json.dump(log_config, f)
             temp_path = f.name
@@ -324,10 +323,10 @@ class TestBoostApp:
             app = BoostApp(logger_config=temp_path)
             assert app._logger_config == log_config
         finally:
-            os.unlink(temp_path)
+            pathlib.Path(temp_path).unlink()
 
-    def test_init_with_logger_config_path_yaml(self):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+    def test_init_with_logger_config_path_yaml(self) -> None:
+        with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".yaml", delete=False) as f:
             log_config = {"version": 1, "disable_existing_loggers": False}
             yaml.dump(log_config, f)
             temp_path = f.name
@@ -336,10 +335,10 @@ class TestBoostApp:
             app = BoostApp(logger_config=temp_path)
             assert app._logger_config == log_config
         finally:
-            os.unlink(temp_path)
+            pathlib.Path(temp_path).unlink()
 
-    def test_init_with_logger_config_path_ini(self):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".ini", delete=False) as f:
+    def test_init_with_logger_config_path_ini(self) -> None:
+        with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".ini", delete=False) as f:
             f.write(
                 "[loggers]\nkeys=root\n\n[handlers]\nkeys=console\n\n[formatters]\nkeys=default\n\n"
                 "[logger_root]\nlevel=DEBUG\nhandlers=console\n\n[handler_console]\n"
@@ -352,10 +351,10 @@ class TestBoostApp:
             app = BoostApp(logger_config=temp_path)
             assert app._logger_config is None
         finally:
-            os.unlink(temp_path)
+            pathlib.Path(temp_path).unlink()
 
-    def test_init_with_invalid_logger_config(self):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    def test_init_with_invalid_logger_config(self) -> None:
+        with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".json", delete=False) as f:
             f.write("invalid json")
             temp_path = f.name
 
@@ -363,16 +362,16 @@ class TestBoostApp:
             with pytest.raises(RuntimeError, match="Logging configuration failed"):
                 BoostApp(logger_config=temp_path)
         finally:
-            os.unlink(temp_path)
+            pathlib.Path(temp_path).unlink()
 
-    def test_get_registered_workers_empty(self):
+    def test_get_registered_workers_empty(self) -> None:
         app = BoostApp()
         assert app.get_registered_workers() == []
 
-    def test_add_worker_success(self):
+    def test_add_worker_success(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         class DummyWorkflow:
@@ -389,10 +388,10 @@ class TestBoostApp:
         assert worker.name == "test_worker"
         assert len(app.get_registered_workers()) == 1
 
-    def test_add_worker_with_reserved_name(self):
+    def test_add_worker_with_reserved_name(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         with pytest.raises(RuntimeError, match="is reserved and cannot be used"):
@@ -402,10 +401,10 @@ class TestBoostApp:
                 activities=[dummy_activity],
             )
 
-    def test_add_worker_duplicate_name(self):
+    def test_add_worker_duplicate_name(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         app.add_worker(
@@ -421,10 +420,10 @@ class TestBoostApp:
                 activities=[dummy_activity],
             )
 
-    def test_add_worker_with_global_temporal_endpoint(self):
+    def test_add_worker_with_global_temporal_endpoint(self) -> None:
         app = BoostApp(temporal_endpoint="localhost:7233")
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = app.add_worker(
@@ -436,10 +435,10 @@ class TestBoostApp:
         assert worker._client_builder is not None
         assert worker._client_builder._target_host == "localhost:7233"
 
-    def test_add_worker_with_global_temporal_namespace(self):
+    def test_add_worker_with_global_temporal_namespace(self) -> None:
         app = BoostApp(temporal_namespace="test_namespace")
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = app.add_worker(
@@ -451,10 +450,10 @@ class TestBoostApp:
         assert worker._client_builder is not None
         assert worker._client_builder._namespace == "test_namespace"
 
-    def test_add_worker_with_global_use_pydantic(self):
+    def test_add_worker_with_global_use_pydantic(self) -> None:
         app = BoostApp(use_pydantic=True)
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = app.add_worker(
@@ -466,13 +465,13 @@ class TestBoostApp:
         assert worker._client_builder is not None
         assert worker._client_builder._data_converter is not None
 
-    def test_add_worker_with_cron_schedule(self):
+    def test_add_worker_with_cron_schedule(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
-        async def cron_runner():
+        async def cron_runner() -> None:
             pass
 
         worker = app.add_worker(
@@ -488,7 +487,7 @@ class TestBoostApp:
         assert result.exit_code == 0, result.exception
         assert "test_worker" in result.output
 
-    def test_add_asgi_worker_success(self):
+    def test_add_asgi_worker_success(self) -> None:
         app = BoostApp()
 
         class MockASGIApp:
@@ -504,14 +503,14 @@ class TestBoostApp:
             app.add_asgi_worker(
                 worker_name="asgi_worker",
                 asgi_app=MockASGIApp(),
-                host="0.0.0.0",
+                host="127.0.0.1",
                 port=8000,
             )
 
             assert len(app.get_registered_workers()) == 1
             mock_worker_class.assert_called_once()
 
-    def test_add_asgi_worker_with_reserved_name(self):
+    def test_add_asgi_worker_with_reserved_name(self) -> None:
         app = BoostApp()
 
         class MockASGIApp:
@@ -521,11 +520,11 @@ class TestBoostApp:
             app.add_asgi_worker(
                 worker_name="run",
                 asgi_app=MockASGIApp(),
-                host="0.0.0.0",
+                host="127.0.0.1",
                 port=8000,
             )
 
-    def test_add_asgi_worker_duplicate_name(self):
+    def test_add_asgi_worker_duplicate_name(self) -> None:
         app = BoostApp()
 
         class MockASGIApp:
@@ -541,7 +540,7 @@ class TestBoostApp:
             app.add_asgi_worker(
                 worker_name="asgi_worker",
                 asgi_app=MockASGIApp(),
-                host="0.0.0.0",
+                host="127.0.0.1",
                 port=8000,
             )
 
@@ -549,11 +548,11 @@ class TestBoostApp:
                 app.add_asgi_worker(
                     worker_name="asgi_worker",
                     asgi_app=MockASGIApp(),
-                    host="0.0.0.0",
+                    host="127.0.0.1",
                     port=8001,
                 )
 
-    def test_add_faststream_worker_success(self):
+    def test_add_faststream_worker_success(self) -> None:
         app = BoostApp()
 
         class MockFastStreamApp:
@@ -564,7 +563,7 @@ class TestBoostApp:
             mock_worker_instance.name = ""
             mock_worker_class.return_value = mock_worker_instance
 
-            worker = app.add_faststream_worker(
+            app.add_faststream_worker(
                 worker_name="faststream_worker",
                 faststream_app=MockFastStreamApp(),
             )
@@ -572,7 +571,7 @@ class TestBoostApp:
             assert len(app.get_registered_workers()) == 1
             mock_worker_class.assert_called_once()
 
-    def test_add_faststream_worker_with_reserved_name(self):
+    def test_add_faststream_worker_with_reserved_name(self) -> None:
         app = BoostApp()
 
         class MockFastStreamApp:
@@ -584,19 +583,19 @@ class TestBoostApp:
                 faststream_app=MockFastStreamApp(),
             )
 
-    def test_add_exec_method_sync(self):
+    def test_add_exec_method_sync(self) -> None:
         app = BoostApp()
 
-        def exec_callback():
+        def exec_callback() -> str:
             return "executed"
 
         app.add_exec_method_sync("test_exec", exec_callback)
         assert app._exec_typer is not None
 
-    def test_add_async_runtime(self):
+    def test_add_async_runtime(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -608,10 +607,10 @@ class TestBoostApp:
         app.add_async_runtime("test_worker", worker)
         assert len(app.get_registered_workers()) == 1
 
-    def test_add_async_runtime_with_reserved_name(self):
+    def test_add_async_runtime_with_reserved_name(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = TemporalBoostWorker(
@@ -623,15 +622,15 @@ class TestBoostApp:
         with pytest.raises(RuntimeError, match="is reserved and cannot be used"):
             app.add_async_runtime("all", worker)
 
-    def test_run_all_workers_no_workers(self):
+    def test_run_all_workers_no_workers(self) -> None:
         app = BoostApp()
         app.run_all_workers()
         assert len(app.get_registered_workers()) == 0
 
-    def test_run_all_workers_with_workers(self):
+    def test_run_all_workers_with_workers(self) -> None:
         app = BoostApp()
 
-        def dummy_activity():
+        def dummy_activity() -> None:
             pass
 
         worker = app.add_worker(

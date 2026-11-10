@@ -164,33 +164,6 @@ jobs:
           uv run --no-sync python -m py_compile examples/*.py
         shell: bash
 
-  docs:
-    name: Documentation build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
-
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
-        with:
-          version: "0.9.9"
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Install dependencies
-        run: |
-          uv sync --locked --all-extras --group lint
-
-      - name: Build documentation without publishing
-        run: uv run --no-sync mkdocs build --strict
-
   integration:
     name: Local network integration tests
     runs-on: ubuntu-latest

@@ -216,6 +216,11 @@ def test_cleanup_failure_preserves_primary_and_attempts_broker_stop(
     assert "shutdown completed" not in caplog.text
     if not cancelled:
         assert "shutdown hook failed" in caplog.text
+        logged_error = next(
+            record.exc_info for record in caplog.records if record.exc_info and record.exc_info[1] is cleanup
+        )
+        assert logged_error is not None
+        assert logged_error[2] is not None
 
 
 def test_lifespan_failure_does_not_mask_startup_failure(application: AppDouble) -> None:
@@ -395,9 +400,12 @@ def test_coordinator_stops_faststream_without_touching_signal_handlers(applicati
 
 
 @pytest.mark.parametrize("signum", [signal.SIGINT, signal.SIGTERM])
-def test_main_thread_signal_stops_worker_and_restores_handlers(signum: signal.Signals) -> None:
+@pytest.mark.parametrize("loop_state", ["startup", "idle"])
+def test_main_thread_signal_stops_worker_and_restores_handlers(signum: signal.Signals, loop_state: str) -> None:
     script = """
+import asyncio
 import os
+import selectors
 import signal
 import sys
 import threading
@@ -408,21 +416,46 @@ sys.modules['faststream'] = SimpleNamespace(FastStream=AppDouble)
 application = AppDouble()
 worker = FastStreamBoostWorker(application)
 handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+
+# Deliver a real signal after asyncio has drained its callbacks and is about
+# to block. SelectSelector reproduces Linux's need for an explicit wakeup
+# on macOS too, where the default kqueue selector can mask this bug.
+class SignalSelector(selectors.SelectSelector):
+    sent = False
+
+    def select(self, timeout=None):
+        if timeout is None and not self.sent:
+            self.sent = True
+            signal.raise_signal(int(sys.argv[1]))
+        return super().select(timeout)
+
+class SignalPolicy(asyncio.DefaultEventLoopPolicy):
+    def new_event_loop(self):
+        return asyncio.SelectorEventLoop(SignalSelector())
+
 def interrupt():
     if application.ready.wait(WAIT):
         os.kill(os.getpid(), int(sys.argv[1]))
     else:
         worker.request_stop()
 sender = threading.Thread(target=interrupt, daemon=True)
-sender.start()
+if sys.argv[2] == 'idle':
+    asyncio.set_event_loop_policy(SignalPolicy())
+else:
+    sender.start()
 worker.run()
-sender.join(WAIT)
+if sender.ident is not None:
+    sender.join(WAIT)
 assert application.ready.is_set()
 assert application.stop_calls == application.exits == application.broker.stop_calls == 1
 assert handlers == {sig: signal.getsignal(sig) for sig in handlers}
 """
     result = subprocess.run(  # noqa: S603
-        [sys.executable, "-c", script, str(int(signum))], capture_output=True, text=True, timeout=10, check=False
+        [sys.executable, "-c", script, str(int(signum)), loop_state],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
 

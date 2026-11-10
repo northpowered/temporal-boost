@@ -1,0 +1,30 @@
+.md-grid { max-width: 78rem; }
+.md-typeset { font-size: .8rem; line-height: 1.7; }
+.md-content { min-width: 0; }
+.md-typeset h1, .md-typeset h2, .md-typeset h3 { font-weight: 650; letter-spacing: -.025em; }
+.md-typeset h1 { color: var(--md-default-fg-color); }
+.md-typeset a { text-decoration: underline; text-underline-offset: .17em; }
+.md-header, .md-tabs { background: var(--md-default-bg-color); color: var(--md-default-fg-color); }
+.md-header { border-bottom: 1px solid var(--portal-border); box-shadow: none; }
+.md-tabs__link { opacity: 1; }
+.md-header__button.md-logo { padding: 0; margin: 0; }
+/* The official SVG's 1200-square canvas already provides > one T of clear space. */
+.md-header__button.md-logo img { width: 3.4rem; height: 3.4rem; }
+[data-md-color-scheme="default"] .md-logo img { content: url("../brand/temporal-dark.svg"); }
+.md-nav__link--active, .md-nav__link:focus, .md-nav__link:hover { color: var(--portal-link); }
+.md-typeset pre, .md-typeset .highlight { max-width: 100%; overflow-x: auto; }
+.md-typeset table:not([class]) { display: table; }
+.md-typeset .md-typeset__table { display: block; max-width: 100%; overflow-x: auto; }
+.md-typeset .grid.cards > ul > li { background: var(--portal-surface); border: 1px solid var(--portal-border); border-radius: .6rem; }
+.md-typeset .grid.cards > ul > li:hover { border-color: var(--portal-link); }
+:focus-visible { outline: 3px solid var(--portal-link); outline-offset: 3px; }
+.md-select:focus-within .md-select__inner { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.md-select__link[aria-current] { font-weight: 700; text-decoration: underline; }
+[id] { scroll-margin-top: 6rem; }
+@media (max-width: 600px) {
+  .md-typeset { font-size: .8rem; }
+  .md-header__title { margin-left: .2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

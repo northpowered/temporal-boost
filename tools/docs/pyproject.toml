@@ -1,0 +1,24 @@
+[project]
+name = "temporal-boost-docs"
+version = "0.0.0"
+requires-python = ">=3.11"
+dependencies = ["zensical==0.1.0", "tomli-w==1.2.0", "pyyaml==6.0.3"]
+
+[dependency-groups]
+checks = ["pytest==8.4.2", "playwright==1.56.0", "beautifulsoup4==4.14.2", "fonttools[woff]==4.60.1"]
+
+[tool.uv]
+package = false
+default-groups = ["checks"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = ["browser: requires an installed Chromium browser and a built portal"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

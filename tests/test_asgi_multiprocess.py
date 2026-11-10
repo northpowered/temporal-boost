@@ -49,17 +49,25 @@ def mixed_app() -> Iterator[BoostApp]:
         yield application
 
 
+@pytest.fixture(params=[False, True], ids=["plain", "color"])
+def cli_runner(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> CliRunner:
+    # Typer forces Rich styling on GitHub Actions, even with captured output.
+    monkeypatch.setattr("typer.rich_utils.FORCE_TERMINAL", request.param)
+    return CliRunner()
+
+
 @pytest.mark.parametrize("arguments", [["run", "all"], ["run", "http"], ["run", "--", "http"]])
 def test_replicated_asgi_command_is_rejected_before_any_worker_starts(
-    mixed_app: BoostApp, arguments: list[str]
+    mixed_app: BoostApp, arguments: list[str], cli_runner: CliRunner
 ) -> None:
     with multiprocess_execution(2):
-        result = CliRunner().invoke(mixed_app._root_typer, arguments)
+        result = cli_runner.invoke(mixed_app._root_typer, arguments)
 
     assert result.exit_code == 2, result.output
-    assert "ASGI" in result.output
-    assert "--workers 1" in result.output
-    assert "started:" not in result.output
+    output = typer.unstyle(result.output)
+    assert "ASGI" in output
+    assert "--workers 1" in output
+    assert "started:" not in output
 
 
 @pytest.mark.parametrize(
@@ -86,7 +94,7 @@ def test_guard_preserves_safe_commands_help_and_parser_errors(
         result = CliRunner().invoke(mixed_app._root_typer, arguments)
 
     assert result.exit_code == exit_code, result.output
-    assert "--workers 1" not in result.output
+    assert "--workers 1" not in typer.unstyle(result.output)
     assert "started:http" not in result.output
     if arguments in (["run", "consumer"], ["run", "--", "consumer"]):
         assert result.output.count("started:consumer:run") == 1
@@ -150,7 +158,7 @@ def test_custom_asgi_registered_as_runtime_is_guarded() -> None:
     assert "started:" not in result.output
 
 
-def test_custom_asgi_command_keeps_its_cli_parameters() -> None:
+def test_custom_asgi_command_keeps_its_cli_parameters(cli_runner: CliRunner) -> None:
     class CustomWorker(BaseAsgiWorker):
         def run(self, label: str = "default") -> None:
             print(f"http:{label}")  # noqa: T201 - observe actual callback arguments
@@ -160,14 +168,15 @@ def test_custom_asgi_command_keeps_its_cli_parameters() -> None:
     worker.name = "http"
     application.add_async_runtime(worker.name, worker)
 
-    result = CliRunner().invoke(application._root_typer, ["run", "http", "--label", "selected"])
+    result = cli_runner.invoke(application._root_typer, ["run", "http", "--label", "selected"])
     assert result.exit_code == 0, result.output
     assert "http:selected" in result.output
     with multiprocess_execution(2):
-        result = CliRunner().invoke(application._root_typer, ["run", "http", "--label", "selected"])
+        result = cli_runner.invoke(application._root_typer, ["run", "http", "--label", "selected"])
     assert result.exit_code == 2, result.output
-    assert "--workers 1" in result.output
-    assert "http:selected" not in result.output
+    output = typer.unstyle(result.output)
+    assert "--workers 1" in output
+    assert "http:selected" not in output
 
 
 def launch_cli(arguments: list[str], workers: int, directory: Path, port: int) -> subprocess.CompletedProcess[str]:
@@ -202,7 +211,7 @@ def test_real_two_process_asgi_launch_fails_before_any_bind(
     tmp_path: Path, unused_tcp_port: int, arguments: list[str]
 ) -> None:
     result = launch_cli(arguments, 2, tmp_path, unused_tcp_port)
-    output = result.stdout + result.stderr
+    output = typer.unstyle(result.stdout + result.stderr)
     assert result.returncode == 2, output
     assert "ASGI" in output
     assert "--workers 1" in output

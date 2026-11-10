@@ -45,7 +45,7 @@ def main() -> None:
     app.run_all_workers()
     for signum, handler in previous_handlers.items():
         assert signal.getsignal(signum) == handler
-    with result_file.open("a") as output:
+    with result_file.open("a", encoding="utf-8") as output:
         output.write("restored\n")
 
 

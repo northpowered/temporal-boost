@@ -231,7 +231,7 @@ Executors и другие ресурсы, переданные пользова�
 или смена очереди меняет default ID; явный ID позволяет сохранить идентичность. Закрытие локального worker
 не сопровождается вызовом отмены или удаления запущенного на сервере workflow. Старые UUID-цепочки
 автоматически не удаляются; порядок инвентаризации, выбора сохраняемого UUID или перехода на новый ID
-описан в [migration guide](docs/running_application.md#migrating-existing-uuid-cron-workflows).
+описан в [migration guide](docs/en/running_application.md#migrating-existing-uuid-cron-workflows).
 
 **`run <name>` и `run all` всегда вызывают `run()`, даже для CRON-регистраций. Они обслуживают очередь,
 но не вызывают `start_workflow()` для расписания. Для этого нужен отдельный `cron <name>`.**
@@ -610,9 +610,9 @@ SDK runtime строится лениво в процессе worker и не п�
 | Утверждение или пример | Фактическое состояние |
 | --- | --- |
 | Приоритет endpoint/namespace в guides и API (согласован в TB-017) | Последняя явная настройка worker → `BoostApp` → env при импорте → default; особенности полей описаны отдельно |
-| `use_pydantic` как bool override в [api_reference.md](docs/api_reference.md) (исправлен в TB-001) | `False` отключает автоматический Pydantic converter, explicit converter имеет приоритет; детали в разделе 6 |
-| Graceful shutdown в [running_application.md](docs/running_application.md) | Coordinator поддерживает Temporal, FastStream, встроенные ASGI и custom managed workers с отдельным `BoostApp.shutdown_timeout`. SDK activity grace period задаётся отдельно |
-| Удалённые тесты в [release_notes_2.0.0.md](docs/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
+| `use_pydantic` как bool override в [api_reference.md](docs/en/api_reference.md) (исправлен в TB-001) | `False` отключает автоматический Pydantic converter, explicit converter имеет приоритет; детали в разделе 6 |
+| Graceful shutdown в [running_application.md](docs/en/running_application.md) | Coordinator поддерживает Temporal, FastStream, встроенные ASGI и custom managed workers с отдельным `BoostApp.shutdown_timeout`. SDK activity grace period задаётся отдельно |
+| Удалённые тесты в [release_notes_2.0.0.md](docs/en/release_notes_2.0.0.md) | Это исторические release notes; актуальная suite существует в `tests/` |
 | `TestAsyncRuntime` в [example_app.py](examples/example_app.py) | У класса нет обязательного `shutdown()`; как есть он абстрактен и не зарегистрирован в приложении |
 
 Примеры и guides полезны для сценариев использования, но сами по себе не подтверждают работоспособность
@@ -622,13 +622,13 @@ SDK runtime строится лениво в процессе worker и не п�
 
 | Задача | Основные файлы | Тесты и сопутствующие материалы |
 | --- | --- | --- |
-| Регистрация, имена, команды приложения | `boost_app.py` | `tests/test_boost_app.py`, `docs/creating_application.md`, `docs/api_reference.md` |
-| Client, TLS, identity, converter | `temporal/client.py`, `workers/temporal.py`, `temporal/config.py` | `tests/test_temporal_client.py`, `tests/test_temporal_worker.py`, `docs/configuration.md` |
-| Worker options, concurrency, interceptors | `temporal/worker.py`, `workers/temporal.py` | `tests/test_temporal_worker.py`, `docs/configuration.md`, `docs/advanced_usage.md` |
+| Регистрация, имена, команды приложения | `boost_app.py` | `tests/test_boost_app.py`, `docs/en/creating_application.md`, `docs/en/api_reference.md` |
+| Client, TLS, identity, converter | `temporal/client.py`, `workers/temporal.py`, `temporal/config.py` | `tests/test_temporal_client.py`, `tests/test_temporal_worker.py`, `docs/en/configuration.md` |
+| Worker options, concurrency, interceptors | `temporal/worker.py`, `workers/temporal.py` | `tests/test_temporal_worker.py`, `docs/en/configuration.md`, `docs/en/advanced_usage.md` |
 | CRON или Temporal lifecycle | `workers/temporal.py`, `boost_app.py` | `tests/test_temporal_worker.py`, `tests/test_boost_app.py`, `examples/example_cron.py` |
-| Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/advanced_usage.md` |
+| Telemetry и конфликт metrics-порта | `temporal/runtime.py`, `cli/process_runner.py` | `tests/test_temporal_runtime.py`, `docs/en/advanced_usage.md` |
 | ASGI backend | `workers/asgi_registry.py`, соответствующий адаптер, `workers/__init__.py` | `tests/test_asgi_registry.py`, `pyproject.toml` extras, `examples/example_fastapi.py` |
-| FastStream | `workers/faststream_worker.py`, `boost_app.py` | `docs/faststream_integration.md`, `examples/example_*faststream*.py` |
+| FastStream | `workers/faststream_worker.py`, `boost_app.py` | `docs/en/faststream_integration.md`, `examples/example_*faststream*.py` |
 | Внешний CLI и процессы | `cli/runner.py`, `cli/importer.py`, `cli/process_runner.py` | `tests/test_cli.py`: CliRunner и subprocess entry point; `tests/test_cli_importer.py`: временные модули, диагностика и sys.path; `tests/test_process_runner.py`: supervision doubles и настоящие процессы |
 
 При добавлении нового ASGI backend реализуйте `BaseAsgiWorker`, зарегистрируйте класс с проверкой
@@ -711,17 +711,32 @@ uv run pytest tests/ --cov=temporal_boost --cov-report=term
 uv run ruff check temporal_boost/ examples/
 uv run ruff format --check temporal_boost/ examples/
 uv run mypy temporal_boost/
-uv run mkdocs build --strict
+uv run --project tools/docs --locked python scripts/docs/build_portal.py --all --strict
+uv run --project tools/docs --locked python scripts/docs/check_portal.py --site site
 ```
 
 В существующем подготовленном окружении `uv run --no-sync ...` позволяет выполнять проверки без
 повторной синхронизации. Ruff настроен с `fix=true` и `unsafe-fixes=true`; для диагностики без изменения
 файлов используйте `ruff check --no-fix ...`.
 
-[CI](.github/workflows/ci_prepare.yml) запускает тесты на Python 3.10–3.13. Некоторые шаги,
-включая mypy и проверки примеров, имеют `|| true`: успешный workflow не гарантирует их успешность.
-MkDocs публикует содержимое `docs/` по [mkdocs.yml](mkdocs.yml); корневой `ARCHITECTURE.md` автоматически
-в сайт не включается. Правила и команды разработки уточняйте по `AGENTS.md` и `pyproject.toml`.
+[CI](.github/workflows/ci_prepare.yml) запускает тесты на Python 3.10–3.13, обязательные проверки
+Ruff, форматирования, mypy и импорта примеров.
+Портал строится Zensical 0.1.0 в отдельном [docs project](tools/docs/pyproject.toml) на Python 3.13.9;
+основной пакет сохраняет Python 3.10. Общие настройки находятся в [zensical.toml](zensical.toml),
+языки, page IDs, маршруты, навигация и review hashes переводов — в [portal.toml](tools/docs/portal.toml).
+Источники EN/RU лежат в `docs/en/` и `docs/ru/`, assets — в `docs/_shared/`,
+общие шаблоны темы — в `tools/docs/overrides/`.
+[scripts/docs/build_portal.py](scripts/docs/build_portal.py) создаёт независимые staging projects,
+последовательно собирает локали, проверяет общий artifact и только после успеха заменяет `site/`.
+EN сохраняет корень `/temporal-boost/`, RU использует `/temporal-boost/ru/`.
+Проверяются старые anchors, links/assets, поиск, lang, canonical, reciprocal hreflang и sitemap.
+Browser checks находятся в `tools/docs/tests/` и не собираются core pytest suite.
+[Documentation workflow](.github/workflows/documentation.yml) проверяет PR без deploy permissions,
+а main публикует тот же проверенный Pages artifact. Live cutover пока не подтверждён.
+Корневой MkDocs config и его dependency group удалены; откат использует сохранённый
+`tools/docs/baseline/site.zip` без пересборки. Старые config/workflow доступны в Git на baseline-коммите.
+Процедура восстановления, baseline и capability report описаны в [tools/docs/README.md](tools/docs/README.md).
+Корневой `ARCHITECTURE.md` автоматически в сайт не включается. Правила и команды разработки уточняйте по `AGENTS.md` и `pyproject.toml`.
 
 При изменении связей модулей, порядка запуска или семантики настроек обновляйте соответствующий раздел
 этого документа вместе с кодом и тестами. Для поиска внешней документации зависимостей используйте Context7
@@ -734,7 +749,8 @@ CLI-тесты проверяют выбранный callback, передачу 
 Unit suite по умолчанию исключает marker `integration` и запрещает Python listening sockets;
 реальные HTTP/SDK exporters запускаются отдельной группой на временных loopback-портах.
 CI обязательно проверяет package/examples через Ruff `--no-fix`, format, mypy, импорт/компиляцию
-примеров и strict MkDocs без публикации. Для CLI добавлен настоящий Windows job.
+примеров. Портал проверяется отдельным Zensical workflow; PR-сборка не публикует сайт.
+Для CLI добавлен настоящий Windows job.
 
 Самостоятельный runtime пример передаёт построенный runtime в client builder до Client.connect,
 затем создаёт worker и останавливает его через async context. Автоматического shared runtime нет.

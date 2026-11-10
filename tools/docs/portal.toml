@@ -1,0 +1,549 @@
+site_url = "https://northpowered.github.io/temporal-boost/"
+default_language = "en"
+groups = [
+    { id = "start", labels = { en = "Get started", ru = "Начало работы" } },
+    { id = "guides", labels = { en = "Guides", ru = "Руководства" } },
+    { id = "operations", labels = { en = "Operations", ru = "Эксплуатация" } },
+    { id = "examples", labels = { en = "Examples", ru = "Примеры" } },
+    { id = "api", labels = { en = "API", ru = "API" } },
+    { id = "releases", labels = { en = "Releases", ru = "Выпуски" } },
+]
+
+[[locales]]
+code = "en"
+label = "English"
+source = "en"
+url_prefix = ""
+description = "Build and operate Python services with Temporal-boost."
+light_toggle = "Switch to light mode"
+dark_toggle = "Switch to dark mode"
+copyright = "Temporal-boost · <a href=\"https://temporal.io/brand\">Temporal brand guidelines</a> · Inter: SIL Open Font License"
+search_result_count = ""
+
+[locales.search_strings]
+Search = "Search"
+"Close search" = "Close search"
+Filters = "Filters"
+Tags = "Tags"
+"Search results" = "Search results"
+"No results" = "No results"
+"Loading search…" = "Loading search…"
+"Search is unavailable. Reload the page to try again." = "Search is unavailable. Reload the page to try again."
+"Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag." = "Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag."
+
+[[locales]]
+code = "ru"
+label = "Русский"
+source = "ru"
+url_prefix = "ru/"
+description = "Разработка и эксплуатация Python-сервисов с Temporal-boost."
+light_toggle = "Включить светлую тему"
+dark_toggle = "Включить тёмную тему"
+copyright = "Temporal-boost · <a href=\"https://temporal.io/brand\">Правила бренда Temporal</a> · Inter: SIL Open Font License"
+search_result_count = "Найдено: {count}"
+
+[locales.search_strings]
+Search = "Поиск"
+"Close search" = "Закрыть поиск"
+Filters = "Фильтры"
+Tags = "Теги"
+"Search results" = "Результаты поиска"
+"No results" = "Ничего не найдено"
+"Loading search…" = "Загрузка поиска…"
+"Search is unavailable. Reload the page to try again." = "Поиск недоступен. Перезагрузите страницу."
+"Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag." = "Перемещайтесь по тегам стрелками вверх и вниз. Пробел или Enter переключает тег."
+
+[[pages]]
+page_id = "home"
+source = "index.md"
+route = ""
+group = "start"
+anchors = [
+    "getting-started",
+    "about-the-framework",
+    "why-temporal-boost",
+    "main-dependencies",
+    "main-features",
+    "installation",
+    "basic-installation",
+    "optional-extras",
+    "requirements",
+    "quick-start",
+    "your-first-temporal-boost-application",
+    "configuration",
+    "running-your-application",
+    "whats-next",
+    "example-execute-a-workflow",
+]
+
+[pages.titles]
+en = "Getting started"
+ru = "Начало работы"
+
+[pages.descriptions]
+en = "Install Temporal-boost and create your first workflow service."
+ru = "Установка Temporal-boost и первое приложение с workflow."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "703540446c077aaf7458926d6549f6f5847883b2cdca6da887820a72260c4f26"
+
+[[pages]]
+page_id = "creating_application"
+source = "creating_application.md"
+route = "creating_application/"
+group = "guides"
+anchors = [
+    "creating-application",
+    "table-of-contents",
+    "application-structure",
+    "boostapp-initialization",
+    "configuration-priority",
+    "defining-activities",
+    "basic-activity",
+    "activity-with-pydantic-models",
+    "activity-with-retry-options",
+    "activity-best-practices",
+    "defining-workflows",
+    "basic-workflow",
+    "workflow-with-signals",
+    "workflow-with-queries",
+    "workflow-best-practices",
+    "adding-workers",
+    "basic-worker-registration",
+    "worker-parameters",
+    "multiple-workers-example",
+    "worker-configuration",
+    "cron-workers",
+    "creating-a-cron-worker",
+    "cron-workflow-identity",
+    "cron-schedule-format",
+    "running-cron-workers",
+    "asgi-workers",
+    "basic-asgi-worker",
+    "specifying-asgi-server",
+    "asgi-worker-from-string-path",
+    "managed-asgi-shutdown",
+    "asgi-worker-with-temporal-integration",
+    "faststream-workers",
+    "basic-faststream-worker",
+    "faststream-with-pydantic-models",
+    "faststream-with-temporal-workflows",
+    "multiple-message-queues",
+    "faststream-with-different-brokers",
+    "faststream-worker-configuration",
+    "best-practices-for-faststream-integration",
+    "faststream-producer-example",
+    "best-practices",
+    "application-structure_1",
+    "worker-organization",
+    "error-handling",
+    "performance",
+    "security",
+]
+
+[pages.titles]
+en = "Creating an application"
+ru = "Создание приложения"
+
+[pages.descriptions]
+en = "Define activities and workflows; register Temporal, ASGI, and FastStream workers."
+ru = "Определение activity и workflow, регистрация воркеров Temporal, ASGI и FastStream."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "626e34afb8e31ed0cc1106bb748373ac7238fa5de25135aa8d86848a93431dbf"
+
+[[pages]]
+page_id = "running_application"
+source = "running_application.md"
+route = "running_application/"
+group = "operations"
+anchors = [
+    "running-application",
+    "table-of-contents",
+    "development",
+    "running-all-workers",
+    "running-individual-workers",
+    "running-cron-workers",
+    "migrating-existing-uuid-cron-workflows",
+    "development-best-practices",
+    "environment-setup",
+    "application-import-lookup",
+    "cli-exit-codes-and-programmatic-invocation",
+    "production-deployment",
+    "prerequisites",
+    "environment-variables",
+    "process-management",
+    "using-systemd",
+    "using-supervisord",
+    "docker-deployment",
+    "basic-dockerfile",
+    "docker-compose",
+    "multi-stage-docker-build",
+    "kubernetes-deployment",
+    "deployment-manifest",
+    "service-for-metrics",
+    "configmap-for-configuration",
+    "using-secrets",
+    "process-management_1",
+    "running-multiple-workers",
+    "multi-process-supervision",
+    "asgi-and-external-processes",
+    "graceful-shutdown",
+    "monitoring-and-observability",
+    "prometheus-metrics",
+    "key-metrics-to-monitor",
+    "logging",
+    "health-checks",
+    "troubleshooting",
+    "worker-not-starting",
+    "connection-timeout",
+    "activities-not-executing",
+    "memory-issues",
+    "performance-issues",
+    "debug-mode",
+]
+
+[pages.titles]
+en = "Running an application"
+ru = "Запуск приложения"
+
+[pages.descriptions]
+en = "Run workers, deploy services, and coordinate graceful shutdown."
+ru = "Запуск воркеров, развёртывание сервисов и корректное завершение."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "6d6c33c6be28aa82aa147d1a676b003e4656dcd7f7d02d6221011e224928c514"
+
+[[pages]]
+page_id = "configuration"
+source = "configuration.md"
+route = "configuration/"
+group = "guides"
+anchors = [
+    "configuration",
+    "table-of-contents",
+    "environment-loading",
+    "temporal-client-configuration",
+    "temporal_target_host",
+    "temporal_namespace",
+    "temporal_tls",
+    "temporal_api_key",
+    "temporal_identity",
+    "temporal_use_pydantic_data_converter",
+    "worker-configuration",
+    "temporal_max_concurrent_workflow_tasks",
+    "temporal_max_concurrent_activities",
+    "temporal_max_concurrent_local_activities",
+    "temporal_max_workflow_task_polls",
+    "temporal_max_activity_task_polls",
+    "temporal_nonsticky_to_sticky_ratio",
+    "temporal_graceful_shutdown_timeout",
+    "prometheus-metrics-configuration",
+    "temporal_prometheus_bind_address",
+    "temporal_prometheus_counters_total_suffix",
+    "temporal_prometheus_unit_suffix",
+    "temporal_prometheus_durations_as_seconds",
+    "runtime-configuration",
+    "when-configuration-becomes-fixed",
+    "configuration-priority",
+    "configuration-examples",
+    "development-configuration",
+    "production-configuration",
+    "high-performance-configuration",
+    "resource-limited-configuration",
+    "using-configuration-files",
+    "configuration-validation",
+    "startup-environment-and-explicit-overrides",
+    "configuration-tips",
+    "common-configuration-patterns",
+    "pattern-1-environment-based",
+    "pattern-2-configuration-class",
+    "pattern-3-pydantic-settings",
+    "security-best-practices",
+    "troubleshooting-configuration",
+    "check-current-configuration",
+    "validate-configuration",
+]
+
+[pages.titles]
+en = "Configuration"
+ru = "Конфигурация"
+
+[pages.descriptions]
+en = "Configure connections, concurrency, metrics, and configuration precedence."
+ru = "Подключения, параллелизм, метрики и приоритет конфигурации."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "3db2f372ed929f991bd11fa7b1e50fb2db03428bfea19ebbbaa985d632df5609"
+
+[[pages]]
+page_id = "advanced_usage"
+source = "advanced_usage.md"
+route = "advanced_usage/"
+group = "guides"
+anchors = [
+    "advanced-usage",
+    "table-of-contents",
+    "custom-runtime-configuration",
+    "custom-logging-configuration",
+    "worker-customization",
+    "per-worker-configuration",
+    "worker-builder-pattern",
+    "metrics-across-workers-and-processes",
+    "interceptors",
+    "creating-an-interceptor",
+    "using-interceptors",
+    "custom-logging",
+    "structured-logging-with-context",
+    "activity-logging-decorator",
+    "multiple-clients",
+    "multiple-temporal-clusters",
+    "worker-lifecycle",
+    "custom-worker-registration",
+    "custom-worker-shutdown",
+    "error-handling-patterns",
+    "activity-retry-with-custom-logic",
+    "workflow-error-handling",
+    "performance-optimization",
+    "tuning-concurrency",
+    "sticky-workflows",
+    "connection-pooling",
+    "activity-result-caching",
+    "advanced-patterns",
+    "workflow-versioning",
+    "custom-data-converter",
+]
+
+[pages.titles]
+en = "Advanced usage"
+ru = "Расширенное использование"
+
+[pages.descriptions]
+en = "Customize runtimes, metrics, interceptors, and worker lifecycles."
+ru = "Настройка runtime, метрик, перехватчиков и жизненного цикла воркеров."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "7fcd2f5c67c309827fc5ee5439077ef0b22631a93760c6c01a8d452a4833d9ad"
+
+[[pages]]
+page_id = "faststream_integration"
+source = "faststream_integration.md"
+route = "faststream_integration/"
+group = "guides"
+anchors = [
+    "faststream-integration",
+    "overview",
+    "installation",
+    "quick-start",
+    "basic-example",
+    "integration-patterns",
+    "pattern-1-message-queue-temporal-workflow",
+    "pattern-2-multiple-message-queues",
+    "pattern-3-conditional-processing",
+    "supported-brokers",
+    "redis",
+    "rabbitmq",
+    "kafka",
+    "configuration",
+    "worker-configuration",
+    "managed-shutdown",
+    "message-broker-configuration",
+    "error-handling",
+    "message-processing-errors",
+    "dead-letter-queues",
+    "best-practices",
+    "examples",
+    "additional-resources",
+]
+
+[pages.titles]
+en = "FastStream integration"
+ru = "Интеграция с FastStream"
+
+[pages.descriptions]
+en = "Connect message brokers and Temporal workflows with managed FastStream workers."
+ru = "Брокеры сообщений и workflow Temporal с управляемыми воркерами FastStream."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "ab628f61bc385f13ec1122f5ed7052d2b975cf0551a0ce91c709a3c57336938e"
+
+[[pages]]
+page_id = "examples"
+source = "examples.md"
+route = "examples/"
+group = "examples"
+anchors = [
+    "examples",
+    "table-of-contents",
+    "basic-examples",
+    "example-1-simple-activity-and-workflow",
+    "example-2-pydantic-models",
+    "example-3-multiple-activities-in-sequence",
+    "advanced-patterns",
+    "example-4-workflow-with-signals",
+    "example-5-cron-worker",
+    "example-6-parallel-activities",
+    "example-7-activity-retry-policy",
+    "integration-examples",
+    "example-8-fastapi-integration",
+    "example-9-faststream-integration",
+    "example-10-faststream-with-temporal-workflows",
+    "example-11-multiple-faststream-subscribers",
+    "real-world-scenarios",
+    "example-12-e-commerce-order-processing",
+    "example-11-data-processing-pipeline",
+]
+
+[pages.titles]
+en = "Examples"
+ru = "Примеры"
+
+[pages.descriptions]
+en = "Python examples for activities, workflows, integrations, and business processes."
+ru = "Примеры activity, workflow, интеграций и бизнес-процессов на Python."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "08e53bf88ab6d9468213441dc896ba0ada5dd383369b68d3511388e04a4af79b"
+
+[[pages]]
+page_id = "api_reference"
+source = "api_reference.md"
+route = "api_reference/"
+group = "api"
+anchors = [
+    "api-reference",
+    "boostapp",
+    "boostapp__init__",
+    "boostappadd_worker",
+    "boostappadd_asgi_worker",
+    "boostappadd_faststream_worker",
+    "boostapprun",
+    "boostapprun_all_workers-and-boostappstop",
+    "boostappadd_async_runtime",
+    "boostappget_registered_workers",
+    "cli-process-runner",
+    "worker-stop-contract",
+    "temporalboostworker",
+    "temporalboostworkerconfigure_temporal_client",
+    "temporalboostworkerconfigure_temporal_runtime",
+    "temporalboostworkerrun",
+    "temporalboostworkercron",
+    "temporalboostworkerrequest_stop-and-temporalboostworkershutdown",
+    "lifecycle-states",
+    "properties",
+    "temporalclientbuilder",
+    "temporalclientbuilder__init__",
+    "temporalclientbuilderbuild",
+    "temporalclientbuilderset_pydantic_data_converter",
+    "temporalworkerbuilder",
+    "temporalworkerbuilder__init__",
+    "temporalworkerbuilderbuild",
+    "temporalruntimebuilder",
+    "temporalruntimebuilder__init__",
+    "temporalruntimebuilderbuild",
+    "enums",
+    "asgiworkertype",
+    "configuration-constants",
+]
+
+[pages.titles]
+en = "API reference"
+ru = "Справочник API"
+
+[pages.descriptions]
+en = "Public application, worker, builder, and CLI contracts."
+ru = "Публичные контракты приложения, воркеров, сборщиков и CLI."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "b2dd31b35e4c47ffdaea87d61279a1b9009b2ab26b34525722be84692664f7a7"
+
+[[pages]]
+page_id = "troubleshooting"
+source = "troubleshooting.md"
+route = "troubleshooting/"
+group = "operations"
+anchors = [
+    "troubleshooting",
+    "table-of-contents",
+    "connection-issues",
+    "cannot-connect-to-temporal-server",
+    "tls-handshake-errors",
+    "worker-issues",
+    "worker-not-starting",
+    "worker-not-processing-tasks",
+    "activity-issues",
+    "activity-not-found",
+    "activity-timeout",
+    "activity-retry-issues",
+    "workflow-issues",
+    "workflow-not-starting",
+    "workflow-determinism-errors",
+    "workflow-timeout",
+    "performance-issues",
+    "high-memory-usage",
+    "slow-workflow-execution",
+    "application-import-errors",
+    "configuration-issues",
+    "environment-variables-not-loading",
+    "prometheus-metrics-not-working",
+    "deployment-issues",
+    "docker-container-issues",
+    "kubernetes-deployment-issues",
+    "debugging-tips",
+    "enable-debug-mode",
+    "enable-verbose-logging",
+    "check-temporal-ui",
+    "common-log-patterns",
+    "getting-help",
+]
+
+[pages.titles]
+en = "Troubleshooting"
+ru = "Устранение неполадок"
+
+[pages.descriptions]
+en = "Diagnose connection, worker, activity, workflow, and deployment problems."
+ru = "Диагностика подключений, воркеров, activity, workflow и развёртывания."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "443eed346c48c1c02ddaea93eb4029f5b32c2e718d9b0b6a6d26511d8c2f8a19"
+
+[[pages]]
+page_id = "release_notes_2_0_0"
+source = "release_notes_2.0.0.md"
+route = "release_notes_2.0.0/"
+group = "releases"
+anchors = [
+    "release-notes-temporal-boost-200",
+    "major-changes",
+    "project-restructure",
+    "configuration-via-environment-variables",
+    "new-builders-and-extensibility",
+    "asgi-worker-registry",
+    "devops-and-tooling",
+    "tests-removed",
+    "breaking-changes",
+    "migration-guide",
+    "new-features",
+]
+
+[pages.titles]
+en = "Release notes 2.0.0"
+ru = "Изменения 2.0.0"
+
+[pages.descriptions]
+en = "Historical release notes and migration guidance for Temporal Boost 2.0.0."
+ru = "Исторические изменения и миграция Temporal Boost 2.0.0."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "1e646f14d0fb687caf7d1d846c51267704bfad08bc0a7a367f45ab18e3c42abb"
