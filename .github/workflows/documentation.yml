@@ -34,7 +34,8 @@ jobs:
   build:
     name: Build and check both locales
     if: inputs.restore_run_id == ''
-    runs-on: ubuntu-latest
+    # Python 3.13.9 and Playwright 1.56 support Ubuntu 24.04, not 26.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -88,7 +89,8 @@ jobs:
   restore:
     name: Restore a verified production artifact
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.restore_run_id != ''
-    runs-on: ubuntu-latest
+    # Keep the restore environment compatible with the pinned documentation Python.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
