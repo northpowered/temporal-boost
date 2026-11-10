@@ -307,6 +307,11 @@ def test_cleanup_error_does_not_replace_child_failure_or_skip_kill(
     assert raised.value.code == 7
     assert first.killed_at is not None
     assert "terminate failed" in caplog.text
+    logged_error = next(
+        record.exc_info for record in caplog.records if record.exc_info and record.exc_info[1] is first.terminate_error
+    )
+    assert logged_error is not None
+    assert logged_error[2] is not None
     harness.assert_clean()
 
 

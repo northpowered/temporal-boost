@@ -95,7 +95,7 @@ class WorkerCoordinator:
             except Empty:
                 break
             # This failure was captured in another thread; preserve its traceback.
-            logger.error("%s failed", source, exc_info=(type(error), error, error.__traceback__))
+            logger.error("%s failed", source, exc_info=error)
             if first_error is None:
                 first_error = error
         if first_error is not None:

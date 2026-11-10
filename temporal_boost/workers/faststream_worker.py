@@ -49,7 +49,8 @@ class FastStreamBoostWorker(BaseBoostWorker):
         # The signal handler must not acquire the lifecycle lock.
         self._stop_requested = True
         if self._loop is not None:
-            self._loop.call_soon(self.request_stop)
+            # Wake the selector as well as queueing the stop request.
+            self._loop.call_soon_threadsafe(self.request_stop)
 
     def run(self) -> None:
         """Run until request_stop(), preserving startup and cleanup failures.
@@ -128,7 +129,7 @@ class FastStreamBoostWorker(BaseBoostWorker):
             logger.error(
                 "Cleanup failed for FastStream worker '%s'; preserving lifecycle error",
                 self.name,
-                exc_info=(type(error), error, error.__traceback__),
+                exc_info=error,
             )
         return primary
 

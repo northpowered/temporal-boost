@@ -330,6 +330,11 @@ def test_first_failure_survives_peer_cleanup_failure(caplog: pytest.LogCaptureFi
     assert errors[0] is primary
     assert peer.cleanup_started.is_set()
     assert "peer cleanup failed" in caplog.text
+    logged_error = next(
+        record.exc_info for record in caplog.records if record.exc_info and record.exc_info[1] is secondary
+    )
+    assert logged_error is not None
+    assert logged_error[2] is not None
 
 
 def test_first_failure_survives_shutdown_timeout(caplog: pytest.LogCaptureFixture) -> None:
