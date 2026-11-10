@@ -6,7 +6,7 @@
 - `tests/` contains the pytest suite, with files named `test_<area>.py`.
 - `examples/` contains runnable integration and usage examples; `docs/en/` and `docs/ru/` contain portal Markdown, and `docs/_shared/` contains local assets.
 - `tools/docs/` is an isolated Python 3.13 documentation project. `zensical.toml` and `tools/docs/portal.toml` own shared settings and localized routes; `scripts/docs/` stages, builds, and checks the portal.
-- `tools/docs/overrides/` contains shared theme templates; `tools/docs/baseline/` preserves legacy routes and the site archive used for compatibility checks and rollback.
+- `tools/docs/overrides/` contains shared theme templates; `tools/docs/baseline/routes.json` preserves legacy routes for compatibility checks. CI builds the site before testing and stores verified builds as Actions artifacts.
 - Packaging and tool configuration are in `pyproject.toml`; dependencies are locked in `uv.lock`.
 
 ## Build, Test, and Development Commands
@@ -34,7 +34,7 @@ uv run --project tools/docs --locked playwright install chromium
 uv run --project tools/docs --locked pytest -c tools/docs/pyproject.toml tools/docs/tests/
 ```
 
-Keep Python 3.10 support and documentation dependencies separate. Review the Russian translation whenever English changes, then update its source hash in `portal.toml`; do not refresh hashes without reviewing content. See `tools/docs/README.md` for authoring, provenance, and rollback. Baseline rollback restores a recorded site archive and needs no MkDocs installation.
+Keep Python 3.10 support and documentation dependencies separate. Review the Russian translation whenever English changes, then update its source hash in `portal.toml`; do not refresh hashes without reviewing content. See `tools/docs/README.md` for authoring, provenance, and rollback. Rollback downloads a verified artifact from a successful main documentation run; do not commit built sites or ZIP archives.
 
 ## Coding Style & Naming Conventions
 

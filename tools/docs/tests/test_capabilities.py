@@ -6,13 +6,11 @@ import json
 import subprocess
 import sys
 import tomllib
-import zipfile
 from pathlib import Path
 
 from bs4 import BeautifulSoup
 from build_portal import ROOT, load_manifest, stage_locale
 from fontTools.ttLib import TTFont
-from restore_portal import check_restored_site, restore_baseline
 
 
 def test_extensions_and_native_tags_are_rendered(tmp_path: Path) -> None:
@@ -92,20 +90,3 @@ def test_core_dependencies_remain_isolated() -> None:
     assert "docs" not in root["tool"]["uv"]["default-groups"]
     assert all("zensical" not in dep and "playwright" not in dep for dep in root["project"]["dependencies"])
     assert root["tool"]["pytest"]["ini_options"]["testpaths"] == ["tests"]
-
-
-def test_old_site_can_be_restored(tmp_path: Path) -> None:
-    baseline = ROOT / "tools/docs/baseline"
-    data = json.loads((baseline / "routes.json").read_text())
-    with zipfile.ZipFile(baseline / "site.zip") as archive:
-        assert archive.testzip() is None
-        archive.extractall(tmp_path)
-    for page in data["pages"].values():
-        soup = BeautifulSoup((tmp_path / page["route"] / "index.html").read_text(), "html.parser")
-        assert set(page["anchors"]) <= {tag["id"] for tag in soup.select("[id]")}
-
-
-def test_baseline_restores_through_the_active_deployment_input(tmp_path: Path) -> None:
-    destination = tmp_path / "site"
-    restore_baseline(destination)
-    check_restored_site(destination)
