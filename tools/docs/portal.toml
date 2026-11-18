@@ -478,6 +478,7 @@ anchors = [
     "tls-handshake-errors",
     "worker-issues",
     "worker-not-starting",
+    "unexpected-metrics-endpoint",
     "worker-not-processing-tasks",
     "activity-issues",
     "activity-not-found",
@@ -515,7 +516,7 @@ ru = "Диагностика подключений, воркеров, activity,
 
 [pages.translations.ru]
 status = "reviewed"
-source_sha256 = "443eed346c48c1c02ddaea93eb4029f5b32c2e718d9b0b6a6d26511d8c2f8a19"
+source_sha256 = "7cedeb9873f59a8c56b5e836404e8bcdf852172181fffa67e34792de9367b33d"
 
 [[pages]]
 page_id = "release_notes_2_0_0"

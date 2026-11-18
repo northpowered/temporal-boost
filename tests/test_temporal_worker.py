@@ -97,6 +97,14 @@ def test_numeric_worker_defaults_are_validated_and_can_be_overridden(
 
 
 class TestTemporalWorkerBuilder:
+    @pytest.mark.parametrize("endpoint", ["0.0.0.0:9000", "", None])
+    def test_metrics_endpoint_is_rejected_with_runtime_configuration_hint(self, endpoint: str | None) -> None:
+        with pytest.raises(
+            TypeError,
+            match=r"metrics_endpoint.*configure_temporal_runtime\(prometheus_bind_address=",
+        ):
+            TemporalWorkerBuilder("queue", metrics_endpoint=endpoint)
+
     @pytest.mark.parametrize(
         ("env_value", "expected"),
         [(None, 30), ("65", 65), ("0", 0), ("invalid", 30), ("-1", None)],
@@ -229,7 +237,7 @@ class TestTemporalWorkerBuilder:
         assert builder._interceptors == [interceptor1, interceptor2]
 
     def test_build(self) -> None:
-        builder = TemporalWorkerBuilder(task_queue="test_queue")
+        builder = TemporalWorkerBuilder(task_queue="test_queue", max_cached_workflows=123)
         mock_client = MagicMock()
         builder.set_client(mock_client)
 
@@ -242,7 +250,7 @@ class TestTemporalWorkerBuilder:
         builder.set_activities([activity])
         builder.set_workflows([Workflow])
 
-        with patch("temporal_boost.temporal.worker.Worker") as mock_worker_class:
+        with patch("temporal_boost.temporal.worker.Worker", autospec=True) as mock_worker_class:
             mock_worker_instance = MagicMock()
             mock_worker_class.return_value = mock_worker_instance
 
@@ -255,6 +263,7 @@ class TestTemporalWorkerBuilder:
             assert call_kwargs["task_queue"] == "test_queue"
             assert call_kwargs["activities"] == [activity]
             assert call_kwargs["workflows"] == [Workflow]
+            assert call_kwargs["max_cached_workflows"] == 123
 
 
 class TestTemporalBoostWorker:
@@ -262,6 +271,26 @@ class TestTemporalBoostWorker:
     def mock_sdk_runtime(self) -> Iterator[MagicMock]:
         with patch("temporal_boost.temporal.runtime.Runtime") as runtime:
             yield runtime
+
+    @pytest.mark.parametrize("endpoint", ["0.0.0.0:9000", "", None])
+    def test_app_rejects_metrics_endpoint_before_registration_or_initialization(
+        self, endpoint: str | None, mock_sdk_runtime: MagicMock
+    ) -> None:
+        app = BoostApp(logger_config=None)
+        with (
+            patch("temporalio.client.Client.connect", autospec=True) as connect,
+            patch("temporal_boost.temporal.worker.Worker", autospec=True) as sdk_worker,
+        ):
+            with pytest.raises(
+                TypeError,
+                match=r"metrics_endpoint.*configure_temporal_runtime\(prometheus_bind_address=",
+            ):
+                app.add_worker("worker", "queue", activities=[MagicMock()], metrics_endpoint=endpoint)
+
+        assert app.get_registered_workers() == []
+        mock_sdk_runtime.assert_not_called()
+        connect.assert_not_called()
+        sdk_worker.assert_not_called()
 
     def test_app_forwards_zero_poll_ratio(self) -> None:
         app = BoostApp(logger_config=None)
