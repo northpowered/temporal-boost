@@ -3,77 +3,111 @@
 <html lang="en" class="no-js">
   <head>
     
+  
+  
+    
+    
+  
+    
+    
+  
+  
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Extremely fast development for Temporal-based microservices">
+        <meta name="description" content="Public application, worker, builder, and CLI contracts.">
       
+      
+      
+        <link rel="canonical" href="https://northpowered.github.io/temporal-boost/api_reference/">
       
       
       
         <link rel="prev" href="../examples/">
       
       
-        <link rel="next" href="../troubleshooting/">
+        <link rel="next" href="../release_notes_2.0.0/">
       
       
-      <link rel="icon" href="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+        
+          
+        
+          
+        
+      
+      
+      <link rel="icon" href="../assets/brand/temporal-dark.svg">
+      <meta name="generator" content="zensical-0.1.0">
     
-    
-      
-        <title>API Reference - Temporal-boost</title>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
-      
-      
-
-  
-  
-  
-  
-  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012a10%2010%200%200%201-10%2010A10%2010%200%200%201%202%2012%2010%2010%200%200%201%2012%202a10%2010%200%200%201%2010%2010M6%2013h8l-3.5%203.5%201.42%201.42L17.84%2012l-5.92-5.92L10.5%207.5%2014%2011H6z%22/%3E%3C/svg%3E');}</style>
-
 
     
-    
+      
+        <title>API reference - Temporal-boost</title>
       
     
     
       
         
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
         
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/tokens.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/temporal.css">
+    
+    <script>__md_scope=new URL("/temporal-boost/",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
     
     
+  
+  <script id="portal-search-i18n" type="application/json">{"count":"","strings":{"Close search":"Close search","Filters":"Filters","Loading search…":"Loading search…","No results":"No results","Search":"Search","Search is unavailable. Reload the page to try again.":"Search is unavailable. Reload the page to try again.","Search results":"Search results","Tags":"Tags","Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag.":"Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag."}}</script>
+  
     
+      <link rel="alternate" hreflang="en" href="https://northpowered.github.io/temporal-boost/api_reference/">
+    
+      <link rel="alternate" hreflang="ru" href="https://northpowered.github.io/temporal-boost/ru/api_reference/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://northpowered.github.io/temporal-boost/api_reference/">
+  
+
   </head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
   
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
     <div data-md-component="skip">
-      
-        
-        <a href="#api-reference" class="md-skip">
-          Skip to content
-        </a>
-      
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
     </div>
     <div data-md-component="announce">
       
@@ -82,18 +116,17 @@
     
       
 
-  
-
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Temporal-boost" class="md-header__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+    <a href="./.." title="Temporal-boost" class="md-header__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
       
-  <img src="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg" alt="logo">
+  <img src="../assets/brand/temporal-light.svg" alt="Temporal-boost">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Navigation</span>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -105,31 +138,93 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              API Reference
+              API reference
             
           </span>
         </div>
       </div>
     </div>
     
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
     
       <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
-    
-    
-      <div class="md-header__source">
-        <a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+      <div class="md-header__option">
+  <div class="md-select">
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+        
+          <li class="md-select__item">
+            <a href="/temporal-boost/api_reference/" hreflang="en" lang="en"
+               class="md-select__link" data-portal-language data-anchor-ids="api-reference boostapp boostapp__init__ boostappadd_worker boostappadd_asgi_worker boostappadd_faststream_worker boostapprun boostapprun_all_workers-and-boostappstop boostappadd_async_runtime boostappget_registered_workers cli-process-runner worker-stop-contract temporalboostworker temporalboostworkerconfigure_temporal_client temporalboostworkerconfigure_temporal_runtime temporalboostworkerrun temporalboostworkercron temporalboostworkerrequest_stop-and-temporalboostworkershutdown lifecycle-states properties temporalclientbuilder temporalclientbuilder__init__ temporalclientbuilderbuild temporalclientbuilderset_pydantic_data_converter temporalworkerbuilder temporalworkerbuilder__init__ temporalworkerbuilderbuild temporalruntimebuilder temporalruntimebuilder__init__ temporalruntimebuilderbuild enums asgiworkertype configuration-constants"
+               aria-current="page">English</a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/temporal-boost/ru/api_reference/" hreflang="ru" lang="ru"
+               class="md-select__link" data-portal-language data-anchor-ids="api-reference boostapp boostapp__init__ boostappadd_worker boostappadd_asgi_worker boostappadd_faststream_worker boostapprun boostapprun_all_workers-and-boostappstop boostappadd_async_runtime boostappget_registered_workers cli-process-runner worker-stop-contract temporalboostworker temporalboostworkerconfigure_temporal_client temporalboostworkerconfigure_temporal_runtime temporalboostworkerrun temporalboostworkercron temporalboostworkerrequest_stop-and-temporalboostworkershutdown lifecycle-states properties temporalclientbuilder temporalclientbuilder__init__ temporalclientbuilderbuild temporalclientbuilderset_pydantic_data_converter temporalworkerbuilder temporalworkerbuilder__init__ temporalworkerbuilderbuild temporalruntimebuilder temporalruntimebuilder__init__ temporalruntimebuilderbuild enums asgiworkertype configuration-constants"
+               >Русский</a>
+          </li>
+        
+      </ul>
+    </div>
   </div>
-  <div class="md-source__repository">
-    northpowered/temporal-boost
-  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Search</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        
+<a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></div>
+  <div class="md-source__repository">northpowered/temporal-boost</div>
 </a>
-      </div>
-    
+      
+    </div>
   </nav>
   
 </header>
@@ -138,6 +233,149 @@
       
       
         
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./.." class="md-tabs__link">
+          
+  
+  Get started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../creating_application/" class="md-tabs__link">
+          
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../running_application/" class="md-tabs__link">
+          
+  
+  Operations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/" class="md-tabs__link">
+          
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="././" class="md-tabs__link">
+          
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../release_notes_2.0.0/" class="md-tabs__link">
+          
+  
+  Releases
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
           
         
       
@@ -152,26 +390,24 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Temporal-boost" class="md-nav__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+    <a href="./.." title="Temporal-boost" class="md-nav__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
       
-  <img src="https://raw.githubusercontent.com/temporalio/documentation/main/static/img/favicon.svg" alt="logo">
+  <img src="../assets/brand/temporal-light.svg" alt="Temporal-boost">
 
     </a>
     Temporal-boost
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
-  </div>
-  <div class="md-source__repository">
-    northpowered/temporal-boost
-  </div>
+      
+<a href="https://github.com/northpowered/temporal-boost" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></div>
+  <div class="md-source__repository">northpowered/temporal-boost</div>
 </a>
     </div>
   
@@ -183,18 +419,82 @@
   
   
   
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_1">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="./.." class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Getting started
+    
+  
+  Getting started
+
     
   </span>
   
+  
 
       </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
     </li>
   
 
@@ -208,6 +508,11 @@
     
     
     
+    
+      
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -222,23 +527,31 @@
   
   
   <span class="md-ellipsis">
-    Guides
+    
+  
+  Guides
+
     
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            Guides
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Guides
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
               
                 
+                  
   
   
   
@@ -249,42 +562,23 @@
   
   
   <span class="md-ellipsis">
-    Creating application
+    
+  
+  Creating an application
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
-              
-            
+                
               
                 
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../running_application/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Running application
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
+                  
   
   
   
@@ -295,19 +589,23 @@
   
   
   <span class="md-ellipsis">
-    Configuration
+    
+  
+  Configuration
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -318,19 +616,23 @@
   
   
   <span class="md-ellipsis">
-    Advanced usage
+    
+  
+  Advanced usage
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
-              
-            
+                
               
                 
+                  
   
   
   
@@ -341,19 +643,24 @@
   
   
   <span class="md-ellipsis">
-    FastStream Integration
+    
+  
+  FastStream integration
+
     
   </span>
+  
   
 
       </a>
     </li>
   
 
+                
               
-            
-          </ul>
-        </nav>
+            </ul>
+          </nav>
+        
       
     </li>
   
@@ -361,6 +668,170 @@
     
       
       
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Operations
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Operations
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Running an application
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Examples
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Examples
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
   
   
   
@@ -371,12 +842,25 @@
   
   
   <span class="md-ellipsis">
-    Examples
+    
+  
+  Examples
+
     
   </span>
   
+  
 
       </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
     </li>
   
 
@@ -389,9 +873,65 @@
   
   
   
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
       
       
         
@@ -402,29 +942,38 @@
   
   
   <span class="md-ellipsis">
-    API Reference
+    
+  
+  API reference
+
     
   </span>
+  
   
 
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="././" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    API Reference
+    
+  
+  API reference
+
     
   </span>
+  
   
 
       </a>
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -433,14 +982,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#boostapp" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp
+      <span class="md-typeset">
+        BoostApp
+      </span>
     </span>
   </a>
   
@@ -450,7 +1001,9 @@
           <li class="md-nav__item">
   <a href="#boostapp__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.__init__()
+      <span class="md-typeset">
+        <code>BoostApp.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -459,7 +1012,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_worker" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_worker()
+      <span class="md-typeset">
+        <code>BoostApp.add_worker()</code>
+      </span>
     </span>
   </a>
   
@@ -468,7 +1023,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_asgi_worker" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_asgi_worker()
+      <span class="md-typeset">
+        <code>BoostApp.add_asgi_worker()</code>
+      </span>
     </span>
   </a>
   
@@ -477,7 +1034,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_faststream_worker" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_faststream_worker()
+      <span class="md-typeset">
+        <code>BoostApp.add_faststream_worker()</code>
+      </span>
     </span>
   </a>
   
@@ -486,7 +1045,9 @@
           <li class="md-nav__item">
   <a href="#boostapprun" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.run()
+      <span class="md-typeset">
+        <code>BoostApp.run()</code>
+      </span>
     </span>
   </a>
   
@@ -495,7 +1056,9 @@
           <li class="md-nav__item">
   <a href="#boostapprun_all_workers-and-boostappstop" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.run_all_workers() and BoostApp.stop()
+      <span class="md-typeset">
+        <code>BoostApp.run_all_workers()</code> and <code>BoostApp.stop()</code>
+      </span>
     </span>
   </a>
   
@@ -504,7 +1067,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_async_runtime" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_async_runtime()
+      <span class="md-typeset">
+        <code>BoostApp.add_async_runtime()</code>
+      </span>
     </span>
   </a>
   
@@ -513,7 +1078,9 @@
           <li class="md-nav__item">
   <a href="#boostappget_registered_workers" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.get_registered_workers()
+      <span class="md-typeset">
+        <code>BoostApp.get_registered_workers()</code>
+      </span>
     </span>
   </a>
   
@@ -527,7 +1094,9 @@
         <li class="md-nav__item">
   <a href="#cli-process-runner" class="md-nav__link">
     <span class="md-ellipsis">
-      CLI Process Runner
+      <span class="md-typeset">
+        CLI Process Runner
+      </span>
     </span>
   </a>
   
@@ -536,7 +1105,9 @@
         <li class="md-nav__item">
   <a href="#worker-stop-contract" class="md-nav__link">
     <span class="md-ellipsis">
-      Worker Stop Contract
+      <span class="md-typeset">
+        Worker Stop Contract
+      </span>
     </span>
   </a>
   
@@ -545,7 +1116,9 @@
         <li class="md-nav__item">
   <a href="#temporalboostworker" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker
+      <span class="md-typeset">
+        TemporalBoostWorker
+      </span>
     </span>
   </a>
   
@@ -555,7 +1128,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerconfigure_temporal_client" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.configure_temporal_client()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_client()</code>
+      </span>
     </span>
   </a>
   
@@ -564,7 +1139,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerconfigure_temporal_runtime" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.configure_temporal_runtime()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_runtime()</code>
+      </span>
     </span>
   </a>
   
@@ -573,7 +1150,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerrun" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.run()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.run()</code>
+      </span>
     </span>
   </a>
   
@@ -582,7 +1161,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkercron" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.cron()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.cron()</code>
+      </span>
     </span>
   </a>
   
@@ -591,7 +1172,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerrequest_stop-and-temporalboostworkershutdown" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.request_stop() and TemporalBoostWorker.shutdown()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.request_stop()</code> and <code>TemporalBoostWorker.shutdown()</code>
+      </span>
     </span>
   </a>
   
@@ -600,7 +1183,9 @@
           <li class="md-nav__item">
   <a href="#lifecycle-states" class="md-nav__link">
     <span class="md-ellipsis">
-      Lifecycle states
+      <span class="md-typeset">
+        Lifecycle states
+      </span>
     </span>
   </a>
   
@@ -609,7 +1194,9 @@
           <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Properties
+      <span class="md-typeset">
+        Properties
+      </span>
     </span>
   </a>
   
@@ -623,7 +1210,9 @@
         <li class="md-nav__item">
   <a href="#temporalclientbuilder" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder
+      <span class="md-typeset">
+        TemporalClientBuilder
+      </span>
     </span>
   </a>
   
@@ -633,7 +1222,9 @@
           <li class="md-nav__item">
   <a href="#temporalclientbuilder__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder.__init__()
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -642,7 +1233,9 @@
           <li class="md-nav__item">
   <a href="#temporalclientbuilderbuild" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder.build()
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.build()</code>
+      </span>
     </span>
   </a>
   
@@ -651,7 +1244,9 @@
           <li class="md-nav__item">
   <a href="#temporalclientbuilderset_pydantic_data_converter" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder.set_pydantic_data_converter()
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.set_pydantic_data_converter()</code>
+      </span>
     </span>
   </a>
   
@@ -665,7 +1260,9 @@
         <li class="md-nav__item">
   <a href="#temporalworkerbuilder" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalWorkerBuilder
+      <span class="md-typeset">
+        TemporalWorkerBuilder
+      </span>
     </span>
   </a>
   
@@ -675,7 +1272,9 @@
           <li class="md-nav__item">
   <a href="#temporalworkerbuilder__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalWorkerBuilder.__init__()
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -684,7 +1283,9 @@
           <li class="md-nav__item">
   <a href="#temporalworkerbuilderbuild" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalWorkerBuilder.build()
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.build()</code>
+      </span>
     </span>
   </a>
   
@@ -698,7 +1299,9 @@
         <li class="md-nav__item">
   <a href="#temporalruntimebuilder" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalRuntimeBuilder
+      <span class="md-typeset">
+        TemporalRuntimeBuilder
+      </span>
     </span>
   </a>
   
@@ -708,7 +1311,9 @@
           <li class="md-nav__item">
   <a href="#temporalruntimebuilder__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalRuntimeBuilder.__init__()
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -717,7 +1322,9 @@
           <li class="md-nav__item">
   <a href="#temporalruntimebuilderbuild" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalRuntimeBuilder.build()
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.build()</code>
+      </span>
     </span>
   </a>
   
@@ -731,7 +1338,9 @@
         <li class="md-nav__item">
   <a href="#enums" class="md-nav__link">
     <span class="md-ellipsis">
-      Enums
+      <span class="md-typeset">
+        Enums
+      </span>
     </span>
   </a>
   
@@ -741,7 +1350,9 @@
           <li class="md-nav__item">
   <a href="#asgiworkertype" class="md-nav__link">
     <span class="md-ellipsis">
-      ASGIWorkerType
+      <span class="md-typeset">
+        <code>ASGIWorkerType</code>
+      </span>
     </span>
   </a>
   
@@ -755,7 +1366,9 @@
         <li class="md-nav__item">
   <a href="#configuration-constants" class="md-nav__link">
     <span class="md-ellipsis">
-      Configuration Constants
+      <span class="md-typeset">
+        Configuration Constants
+      </span>
     </span>
   </a>
   
@@ -768,25 +1381,12 @@
     </li>
   
 
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../troubleshooting/" class="md-nav__link">
+                
+              
+            </ul>
+          </nav>
         
-  
-  
-  <span class="md-ellipsis">
-    Troubleshooting
-    
-  </span>
-  
-
-      </a>
+      
     </li>
   
 
@@ -797,18 +1397,82 @@
   
   
   
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releases
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Releases
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../release_notes_2.0.0/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Release Notes
+    
+  
+  Release notes 2.0.0
+
     
   </span>
   
+  
 
       </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
     </li>
   
 
@@ -823,10 +1487,24 @@
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
   
   
   
@@ -835,14 +1513,16 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#boostapp" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp
+      <span class="md-typeset">
+        BoostApp
+      </span>
     </span>
   </a>
   
@@ -852,7 +1532,9 @@
           <li class="md-nav__item">
   <a href="#boostapp__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.__init__()
+      <span class="md-typeset">
+        <code>BoostApp.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -861,7 +1543,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_worker" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_worker()
+      <span class="md-typeset">
+        <code>BoostApp.add_worker()</code>
+      </span>
     </span>
   </a>
   
@@ -870,7 +1554,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_asgi_worker" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_asgi_worker()
+      <span class="md-typeset">
+        <code>BoostApp.add_asgi_worker()</code>
+      </span>
     </span>
   </a>
   
@@ -879,7 +1565,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_faststream_worker" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_faststream_worker()
+      <span class="md-typeset">
+        <code>BoostApp.add_faststream_worker()</code>
+      </span>
     </span>
   </a>
   
@@ -888,7 +1576,9 @@
           <li class="md-nav__item">
   <a href="#boostapprun" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.run()
+      <span class="md-typeset">
+        <code>BoostApp.run()</code>
+      </span>
     </span>
   </a>
   
@@ -897,7 +1587,9 @@
           <li class="md-nav__item">
   <a href="#boostapprun_all_workers-and-boostappstop" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.run_all_workers() and BoostApp.stop()
+      <span class="md-typeset">
+        <code>BoostApp.run_all_workers()</code> and <code>BoostApp.stop()</code>
+      </span>
     </span>
   </a>
   
@@ -906,7 +1598,9 @@
           <li class="md-nav__item">
   <a href="#boostappadd_async_runtime" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.add_async_runtime()
+      <span class="md-typeset">
+        <code>BoostApp.add_async_runtime()</code>
+      </span>
     </span>
   </a>
   
@@ -915,7 +1609,9 @@
           <li class="md-nav__item">
   <a href="#boostappget_registered_workers" class="md-nav__link">
     <span class="md-ellipsis">
-      BoostApp.get_registered_workers()
+      <span class="md-typeset">
+        <code>BoostApp.get_registered_workers()</code>
+      </span>
     </span>
   </a>
   
@@ -929,7 +1625,9 @@
         <li class="md-nav__item">
   <a href="#cli-process-runner" class="md-nav__link">
     <span class="md-ellipsis">
-      CLI Process Runner
+      <span class="md-typeset">
+        CLI Process Runner
+      </span>
     </span>
   </a>
   
@@ -938,7 +1636,9 @@
         <li class="md-nav__item">
   <a href="#worker-stop-contract" class="md-nav__link">
     <span class="md-ellipsis">
-      Worker Stop Contract
+      <span class="md-typeset">
+        Worker Stop Contract
+      </span>
     </span>
   </a>
   
@@ -947,7 +1647,9 @@
         <li class="md-nav__item">
   <a href="#temporalboostworker" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker
+      <span class="md-typeset">
+        TemporalBoostWorker
+      </span>
     </span>
   </a>
   
@@ -957,7 +1659,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerconfigure_temporal_client" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.configure_temporal_client()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_client()</code>
+      </span>
     </span>
   </a>
   
@@ -966,7 +1670,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerconfigure_temporal_runtime" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.configure_temporal_runtime()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_runtime()</code>
+      </span>
     </span>
   </a>
   
@@ -975,7 +1681,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerrun" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.run()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.run()</code>
+      </span>
     </span>
   </a>
   
@@ -984,7 +1692,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkercron" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.cron()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.cron()</code>
+      </span>
     </span>
   </a>
   
@@ -993,7 +1703,9 @@
           <li class="md-nav__item">
   <a href="#temporalboostworkerrequest_stop-and-temporalboostworkershutdown" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalBoostWorker.request_stop() and TemporalBoostWorker.shutdown()
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.request_stop()</code> and <code>TemporalBoostWorker.shutdown()</code>
+      </span>
     </span>
   </a>
   
@@ -1002,7 +1714,9 @@
           <li class="md-nav__item">
   <a href="#lifecycle-states" class="md-nav__link">
     <span class="md-ellipsis">
-      Lifecycle states
+      <span class="md-typeset">
+        Lifecycle states
+      </span>
     </span>
   </a>
   
@@ -1011,7 +1725,9 @@
           <li class="md-nav__item">
   <a href="#properties" class="md-nav__link">
     <span class="md-ellipsis">
-      Properties
+      <span class="md-typeset">
+        Properties
+      </span>
     </span>
   </a>
   
@@ -1025,7 +1741,9 @@
         <li class="md-nav__item">
   <a href="#temporalclientbuilder" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder
+      <span class="md-typeset">
+        TemporalClientBuilder
+      </span>
     </span>
   </a>
   
@@ -1035,7 +1753,9 @@
           <li class="md-nav__item">
   <a href="#temporalclientbuilder__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder.__init__()
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -1044,7 +1764,9 @@
           <li class="md-nav__item">
   <a href="#temporalclientbuilderbuild" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder.build()
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.build()</code>
+      </span>
     </span>
   </a>
   
@@ -1053,7 +1775,9 @@
           <li class="md-nav__item">
   <a href="#temporalclientbuilderset_pydantic_data_converter" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalClientBuilder.set_pydantic_data_converter()
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.set_pydantic_data_converter()</code>
+      </span>
     </span>
   </a>
   
@@ -1067,7 +1791,9 @@
         <li class="md-nav__item">
   <a href="#temporalworkerbuilder" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalWorkerBuilder
+      <span class="md-typeset">
+        TemporalWorkerBuilder
+      </span>
     </span>
   </a>
   
@@ -1077,7 +1803,9 @@
           <li class="md-nav__item">
   <a href="#temporalworkerbuilder__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalWorkerBuilder.__init__()
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -1086,7 +1814,9 @@
           <li class="md-nav__item">
   <a href="#temporalworkerbuilderbuild" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalWorkerBuilder.build()
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.build()</code>
+      </span>
     </span>
   </a>
   
@@ -1100,7 +1830,9 @@
         <li class="md-nav__item">
   <a href="#temporalruntimebuilder" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalRuntimeBuilder
+      <span class="md-typeset">
+        TemporalRuntimeBuilder
+      </span>
     </span>
   </a>
   
@@ -1110,7 +1842,9 @@
           <li class="md-nav__item">
   <a href="#temporalruntimebuilder__init__" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalRuntimeBuilder.__init__()
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.__init__()</code>
+      </span>
     </span>
   </a>
   
@@ -1119,7 +1853,9 @@
           <li class="md-nav__item">
   <a href="#temporalruntimebuilderbuild" class="md-nav__link">
     <span class="md-ellipsis">
-      TemporalRuntimeBuilder.build()
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.build()</code>
+      </span>
     </span>
   </a>
   
@@ -1133,7 +1869,9 @@
         <li class="md-nav__item">
   <a href="#enums" class="md-nav__link">
     <span class="md-ellipsis">
-      Enums
+      <span class="md-typeset">
+        Enums
+      </span>
     </span>
   </a>
   
@@ -1143,7 +1881,9 @@
           <li class="md-nav__item">
   <a href="#asgiworkertype" class="md-nav__link">
     <span class="md-ellipsis">
-      ASGIWorkerType
+      <span class="md-typeset">
+        <code>ASGIWorkerType</code>
+      </span>
     </span>
   </a>
   
@@ -1157,7 +1897,9 @@
         <li class="md-nav__item">
   <a href="#configuration-constants" class="md-nav__link">
     <span class="md-ellipsis">
-      Configuration Constants
+      <span class="md-typeset">
+        Configuration Constants
+      </span>
     </span>
   </a>
   
@@ -1173,20 +1915,26 @@
           
           
             <div class="md-content" data-md-component="content">
+              
               <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
                 
                   
 
-
+  
+    <a href="https://github.com/northpowered/temporal-boost/edit/main/docs/en/api_reference.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
   
   
 
 
-<h1 id="api-reference">API Reference</h1>
+<h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
 <p>Complete API reference for Temporal-boost.</p>
-<h2 id="boostapp">BoostApp</h2>
+<h2 id="boostapp">BoostApp<a class="headerlink" href="#boostapp" title="Permanent link">&para;</a></h2>
 <p>Main application class for Temporal-boost.</p>
-<h3 id="boostapp__init__"><code>BoostApp.__init__()</code></h3>
+<h3 id="boostapp__init__"><code>BoostApp.__init__()</code><a class="headerlink" href="#boostapp__init__" title="Permanent link">&para;</a></h3>
 <p>Initialize a BoostApp instance.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">BoostApp</span><span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1213,13 +1961,13 @@
 </ul>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my-service&quot;</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">&quot;localhost:7233&quot;</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">temporal_namespace</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"my-service"</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">"localhost:7233"</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">temporal_namespace</span><span class="o">=</span><span class="s2">"default"</span><span class="p">,</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">use_pydantic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="boostappadd_worker"><code>BoostApp.add_worker()</code></h3>
+<h3 id="boostappadd_worker"><code>BoostApp.add_worker()</code><a class="headerlink" href="#boostappadd_worker" title="Permanent link">&para;</a></h3>
 <p>Add a Temporal worker to the application.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">add_worker</span><span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1263,13 +2011,13 @@ see <a href="../configuration/#temporal_graceful_shutdown_timeout">configuration
 </ul>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">&quot;my_worker&quot;</span><span class="p">,</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">&quot;my_queue&quot;</span><span class="p">,</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">"my_worker"</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">"my_queue"</span><span class="p">,</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">],</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">workflows</span><span class="o">=</span><span class="p">[</span><span class="n">MyWorkflow</span><span class="p">],</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="boostappadd_asgi_worker"><code>BoostApp.add_asgi_worker()</code></h3>
+<h3 id="boostappadd_asgi_worker"><code>BoostApp.add_asgi_worker()</code><a class="headerlink" href="#boostappadd_asgi_worker" title="Permanent link">&para;</a></h3>
 <p>Add an ASGI application as a worker.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">add_asgi_worker</span><span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1299,9 +2047,9 @@ see <a href="../configuration/#temporal_graceful_shutdown_timeout">configuration
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">fastapi_app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">app</span><span class="o">.</span><span class="n">add_asgi_worker</span><span class="p">(</span><span class="s2">&quot;api_worker&quot;</span><span class="p">,</span> <span class="n">fastapi_app</span><span class="p">,</span> <span class="s2">&quot;0.0.0.0&quot;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">app</span><span class="o">.</span><span class="n">add_asgi_worker</span><span class="p">(</span><span class="s2">"api_worker"</span><span class="p">,</span> <span class="n">fastapi_app</span><span class="p">,</span> <span class="s2">"0.0.0.0"</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="boostappadd_faststream_worker"><code>BoostApp.add_faststream_worker()</code></h3>
+<h3 id="boostappadd_faststream_worker"><code>BoostApp.add_faststream_worker()</code><a class="headerlink" href="#boostappadd_faststream_worker" title="Permanent link">&para;</a></h3>
 <p>Add a FastStream application as a worker.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">add_faststream_worker</span><span class="p">(</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1326,9 +2074,9 @@ see <a href="../configuration/#temporal_graceful_shutdown_timeout">configuration
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">faststream</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastStream</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">faststream_app</span> <span class="o">=</span> <span class="n">FastStream</span><span class="p">(</span><span class="n">broker</span><span class="p">)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">app</span><span class="o">.</span><span class="n">add_faststream_worker</span><span class="p">(</span><span class="s2">&quot;message_worker&quot;</span><span class="p">,</span> <span class="n">faststream_app</span><span class="p">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">app</span><span class="o">.</span><span class="n">add_faststream_worker</span><span class="p">(</span><span class="s2">"message_worker"</span><span class="p">,</span> <span class="n">faststream_app</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="boostapprun"><code>BoostApp.run()</code></h3>
+<h3 id="boostapprun"><code>BoostApp.run()</code><a class="headerlink" href="#boostapprun" title="Permanent link">&para;</a></h3>
 <p>Run the application CLI.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
 </span></code></pre></div>
@@ -1346,13 +2094,13 @@ In non-standalone mode, <code>run()</code> returns the command's value and propa
 Typer's semantics: a <code>SystemExit</code> raised directly by a callback still propagates. The return value is
 not a general exit-status API; use the default standalone mode at a process entry point.</p>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </span></code></pre></div>
 <p>For embedding, call <code>app.run(["exec", "check"], standalone_mode=False)</code> after registering <code>check</code>.
 Migration: callers that previously relied on <code>run()</code> swallowing <code>SystemExit</code> must now catch it
 explicitly or choose non-standalone mode and handle exceptions.</p>
-<h3 id="boostapprun_all_workers-and-boostappstop"><code>BoostApp.run_all_workers()</code> and <code>BoostApp.stop()</code></h3>
+<h3 id="boostapprun_all_workers-and-boostappstop"><code>BoostApp.run_all_workers()</code> and <code>BoostApp.stop()</code><a class="headerlink" href="#boostapprun_all_workers-and-boostappstop" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">run_all_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
@@ -1374,7 +2122,7 @@ The external multi-process supervisor propagates the first observed child failur
 <p>Workers must opt into managed stopping. Temporal, FastStream, and built-in ASGI workers support this
 contract; custom workers provide <code>request_stop()</code> or inherit <code>AsyncBoostWorker</code>. See
 <a href="../running_application/#graceful-shutdown">Graceful Shutdown</a> for guarantees and limitations.</p>
-<h3 id="boostappadd_async_runtime"><code>BoostApp.add_async_runtime()</code></h3>
+<h3 id="boostappadd_async_runtime"><code>BoostApp.add_async_runtime()</code><a class="headerlink" href="#boostappadd_async_runtime" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">add_async_runtime</span><span class="p">(</span><span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">boost_worker</span><span class="p">:</span> <span class="n">BaseBoostWorker</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <p>Register a custom worker's <code>run()</code> under a CLI command and include it in <code>run all</code>.
@@ -1397,7 +2145,7 @@ resource initialization.</p>
 application-specific data should store it separately. Multiple aliases for one worker instance are
 rejected; create distinct worker instances. The unused private CRON/ASGI registration lists have been
 removed; use <code>get_registered_workers()</code> to inspect registered workers.</p>
-<h3 id="boostappget_registered_workers"><code>BoostApp.get_registered_workers()</code></h3>
+<h3 id="boostappget_registered_workers"><code>BoostApp.get_registered_workers()</code><a class="headerlink" href="#boostappget_registered_workers" title="Permanent link">&para;</a></h3>
 <p>Get list of all registered workers.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">get_registered_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseBoostWorker</span><span class="p">]</span>
 </span></code></pre></div>
@@ -1406,7 +2154,7 @@ removed; use <code>get_registered_workers()</code> to inspect registered workers
 <li><code>list[BaseBoostWorker]</code>: A shallow copy of the single worker registry. Objects retain their identity
   and canonical registration names; modifying the returned list does not change registration.</li>
 </ul>
-<h2 id="cli-process-runner">CLI Process Runner</h2>
+<h2 id="cli-process-runner">CLI Process Runner<a class="headerlink" href="#cli-process-runner" title="Permanent link">&para;</a></h2>
 <p>Application strings use <code>module:attribute.nested</code> with dotted identifiers. The importer first uses
 Python's normal import path, then tries the current directory and its immediate parent only for a
 missing target module/package. Missing dependencies and application exceptions propagate unchanged.
@@ -1448,7 +2196,7 @@ cleanup the parent exits with 130/143 unless a failure determined the result. Re
 first request and its deadlines. This timeout is independent of the application and SDK budgets.
 See <a href="../running_application/#multi-process-supervision">Multi-process Supervision</a> for command examples,
 managed worker requirements, and migration.</p>
-<h2 id="worker-stop-contract">Worker Stop Contract</h2>
+<h2 id="worker-stop-contract">Worker Stop Contract<a class="headerlink" href="#worker-stop-contract" title="Permanent link">&para;</a></h2>
 <p><code>BaseBoostWorker.request_stop() -&gt; bool</code> is a non-blocking, thread-safe stop request.
 Implementations must tolerate repeats and requests during startup. Return <code>True</code> when supported;
 the default returns <code>False</code>. Async cleanup belongs on the resource-owning loop.</p>
@@ -1460,12 +2208,12 @@ If <code>run_async()</code> fails, its exception survives a subsequent cleanup f
 When <code>run_async()</code> is cancelled and cleanup fails, the cleanup error propagates so normal cancellation
 cannot hide failed cleanup.
 See the <a href="../advanced_usage/#custom-worker-shutdown">example</a>.</p>
-<h2 id="temporalboostworker">TemporalBoostWorker</h2>
+<h2 id="temporalboostworker">TemporalBoostWorker<a class="headerlink" href="#temporalboostworker" title="Permanent link">&para;</a></h2>
 <p>Temporal worker class.</p>
 <p>Endpoint and namespace precedence is the last explicit worker configuration → <code>BoostApp</code> parameters →
 environment values captured at import → built-in defaults (<code>localhost:7233</code>, <code>default</code>). Each field is
 selected independently. See <a href="../configuration/#configuration-priority">configuration priority</a>.</p>
-<h3 id="temporalboostworkerconfigure_temporal_client"><code>TemporalBoostWorker.configure_temporal_client()</code></h3>
+<h3 id="temporalboostworkerconfigure_temporal_client"><code>TemporalBoostWorker.configure_temporal_client()</code><a class="headerlink" href="#temporalboostworkerconfigure_temporal_client" title="Permanent link">&para;</a></h3>
 <p>Configure the Temporal client before initialization or after the previous run has finished cleanup.
 Raises <code>RuntimeError</code> once initialization starts, or while a lifecycle is building, running, or stopping.
 The call never reconnects a live client or changes its SDK worker. Rejected calls leave builders unchanged.</p>
@@ -1498,12 +2246,12 @@ overrides an imported <code>True</code> value. Configure before initialization; 
 an active client.</p>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">target_host</span><span class="o">=</span><span class="s2">&quot;temporal.example.com:7233&quot;</span><span class="p">,</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">target_host</span><span class="o">=</span><span class="s2">"temporal.example.com:7233"</span><span class="p">,</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">namespace</span><span class="o">=</span><span class="s2">"production"</span><span class="p">,</span>
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="n">use_pydantic_data_converter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="temporalboostworkerconfigure_temporal_runtime"><code>TemporalBoostWorker.configure_temporal_runtime()</code></h3>
+<h3 id="temporalboostworkerconfigure_temporal_runtime"><code>TemporalBoostWorker.configure_temporal_runtime()</code><a class="headerlink" href="#temporalboostworkerconfigure_temporal_runtime" title="Permanent link">&para;</a></h3>
 <p>Configure an independent, worker-owned Temporal runtime before first use. Concurrent workers need
 distinct Prometheus endpoints; runtimes are not shared automatically. Each process must expose every
 worker's endpoint for scraping. See
@@ -1539,11 +2287,11 @@ runtime. See <a href="../configuration/#when-configuration-becomes-fixed">config
 </ul>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_runtime</span><span class="p">(</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="n">prometheus_bind_address</span><span class="o">=</span><span class="s2">&quot;0.0.0.0:9090&quot;</span><span class="p">,</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="n">global_tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;environment&quot;</span><span class="p">:</span> <span class="s2">&quot;production&quot;</span><span class="p">},</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="n">prometheus_bind_address</span><span class="o">=</span><span class="s2">"0.0.0.0:9090"</span><span class="p">,</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="n">global_tags</span><span class="o">=</span><span class="p">{</span><span class="s2">"environment"</span><span class="p">:</span> <span class="s2">"production"</span><span class="p">},</span>
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="temporalboostworkerrun"><code>TemporalBoostWorker.run()</code></h3>
+<h3 id="temporalboostworkerrun"><code>TemporalBoostWorker.run()</code><a class="headerlink" href="#temporalboostworkerrun" title="Permanent link">&para;</a></h3>
 <p>Consume the worker's task queue. This never registers a CRON workflow, including when CRON parameters
 are configured. <code>run &lt;name&gt;</code> uses this method; <code>run all</code> uses it for every registered worker.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">run</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
@@ -1551,7 +2299,7 @@ are configured. <code>run &lt;name&gt;</code> uses this method; <code>run all</c
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </span></code></pre></div>
-<h3 id="temporalboostworkercron"><code>TemporalBoostWorker.cron()</code></h3>
+<h3 id="temporalboostworkercron"><code>TemporalBoostWorker.cron()</code><a class="headerlink" href="#temporalboostworkercron" title="Permanent link">&para;</a></h3>
 <p>Run the worker as a CRON worker.</p>
 <p>Available as <code>cron &lt;name&gt;</code> only when both CRON parameters are configured. Calling this method directly
 without them raises <code>RuntimeError</code> before creating a loop or connecting. It registers once per process
@@ -1578,7 +2326,7 @@ Unexpected cancellation now propagates too. SDK validation failure before starti
 SDK <code>shutdown()</code> that could never finish. No public Client/Runtime close API exists in the supported
 SDK: the adapter releases its and its builders' references, and does not close caller-supplied executors
 or invent close methods. External references may keep SDK objects alive.</p>
-<h3 id="temporalboostworkerrequest_stop-and-temporalboostworkershutdown"><code>TemporalBoostWorker.request_stop()</code> and <code>TemporalBoostWorker.shutdown()</code></h3>
+<h3 id="temporalboostworkerrequest_stop-and-temporalboostworkershutdown"><code>TemporalBoostWorker.request_stop()</code> and <code>TemporalBoostWorker.shutdown()</code><a class="headerlink" href="#temporalboostworkerrequest_stop-and-temporalboostworkershutdown" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">request_stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
@@ -1592,7 +2340,7 @@ waiters share cleanup; cancelling a waiter does not cancel the lifecycle. A fore
 its result is retrieved without another SDK shutdown call. On a shutdown failure the adapter cancels
 and joins its SDK task before releasing references. A stuck SDK operation can still exceed its activity
 grace period; <code>BoostApp.shutdown_timeout</code> bounds the coordinator's wait, not the SDK operation itself.</p>
-<h3 id="lifecycle-states">Lifecycle states</h3>
+<h3 id="lifecycle-states">Lifecycle states<a class="headerlink" href="#lifecycle-states" title="Permanent link">&para;</a></h3>
 <p>The read-only <code>state</code> property reports:</p>
 <table>
 <thead>
@@ -1627,7 +2375,7 @@ grace period; <code>BoostApp.shutdown_timeout</code> bounds the coordinator's wa
 <p>Early stop or failure may skip <code>running</code>. Configure options before initialization and before a run.
 <code>created</code> does not imply the runtime is absent: the lazy runtime property can initialize it without
 starting a lifecycle. After <code>stopped</code>, configuration is available again until the next initialization.</p>
-<h3 id="properties">Properties</h3>
+<h3 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>temporal_client</code> (Client): Get Temporal client instance.</li>
 <li><code>temporal_worker</code> (Worker): Get Temporal worker instance.</li>
@@ -1638,9 +2386,9 @@ starting a lifecycle. After <code>stopped</code>, configuration is available aga
 <li><code>cron_workflow_id</code> (str): Read-only resolved CRON workflow ID.</li>
 <li><code>state</code>: Current lifecycle state. Client and SDK worker properties raise after cleanup until rebuilt.</li>
 </ul>
-<h2 id="temporalclientbuilder">TemporalClientBuilder</h2>
+<h2 id="temporalclientbuilder">TemporalClientBuilder<a class="headerlink" href="#temporalclientbuilder" title="Permanent link">&para;</a></h2>
 <p>Builder for Temporal client configuration.</p>
-<h3 id="temporalclientbuilder__init__"><code>TemporalClientBuilder.__init__()</code></h3>
+<h3 id="temporalclientbuilder__init__"><code>TemporalClientBuilder.__init__()</code><a class="headerlink" href="#temporalclientbuilder__init__" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>    <span class="n">target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1652,7 +2400,7 @@ starting a lifecycle. After <code>stopped</code>, configuration is available aga
 </span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
-<h3 id="temporalclientbuilderbuild"><code>TemporalClientBuilder.build()</code></h3>
+<h3 id="temporalclientbuilderbuild"><code>TemporalClientBuilder.build()</code><a class="headerlink" href="#temporalclientbuilderbuild" title="Permanent link">&para;</a></h3>
 <p>Build and return Temporal client.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Client</span>
 </span></code></pre></div>
@@ -1668,14 +2416,14 @@ import are not read automatically by new builders.</p>
 <p>The constructor's <code>use_pydantic_data_converter</code> flag inherits the environment when <code>None</code>, enables
 Pydantic when <code>True</code>, and disables automatic selection when <code>False</code>. An explicit <code>data_converter</code>
 in constructor kwargs or <code>set_kwargs()</code> takes priority over the flag.</p>
-<h3 id="temporalclientbuilderset_pydantic_data_converter"><code>TemporalClientBuilder.set_pydantic_data_converter()</code></h3>
+<h3 id="temporalclientbuilderset_pydantic_data_converter"><code>TemporalClientBuilder.set_pydantic_data_converter()</code><a class="headerlink" href="#temporalclientbuilderset_pydantic_data_converter" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">set_pydantic_data_converter</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 <p>Enable or disable automatic Pydantic selection for future builds. Calling without arguments enables it.
 Passing <code>enabled=False</code> removes the automatic selection while preserving any explicit <code>data_converter</code>.</p>
-<h2 id="temporalworkerbuilder">TemporalWorkerBuilder</h2>
+<h2 id="temporalworkerbuilder">TemporalWorkerBuilder<a class="headerlink" href="#temporalworkerbuilder" title="Permanent link">&para;</a></h2>
 <p>Builder for Temporal worker configuration.</p>
-<h3 id="temporalworkerbuilder__init__"><code>TemporalWorkerBuilder.__init__()</code></h3>
+<h3 id="temporalworkerbuilder__init__"><code>TemporalWorkerBuilder.__init__()</code><a class="headerlink" href="#temporalworkerbuilder__init__" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>    <span class="n">task_queue</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 </span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>    <span class="o">*</span><span class="p">,</span>
@@ -1700,7 +2448,7 @@ an error; use <code>None</code> or omit the argument to select configuration.</p
 <p>Additional SDK constraints, such as workflow counts of at least two with caching enabled, are checked
 by the SDK during <code>build()</code>. A zero ratio does not disable non-sticky polling: the SDK retains its
 minimum poller count.</p>
-<h3 id="temporalworkerbuilderbuild"><code>TemporalWorkerBuilder.build()</code></h3>
+<h3 id="temporalworkerbuilderbuild"><code>TemporalWorkerBuilder.build()</code><a class="headerlink" href="#temporalworkerbuilderbuild" title="Permanent link">&para;</a></h3>
 <p>Build and return Temporal worker.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Worker</span>
 </span></code></pre></div>
@@ -1717,9 +2465,9 @@ through their worker kwargs without duplicating it.</p>
 before cancellation is requested. It does not cap total SDK shutdown time, initiate application stop,
 or change application/process shutdown budgets. Workers omitting this option now receive the framework
 default instead of the SDK's zero grace period.</p>
-<h2 id="temporalruntimebuilder">TemporalRuntimeBuilder</h2>
+<h2 id="temporalruntimebuilder">TemporalRuntimeBuilder<a class="headerlink" href="#temporalruntimebuilder" title="Permanent link">&para;</a></h2>
 <p>Builder for Temporal runtime configuration.</p>
-<h3 id="temporalruntimebuilder__init__"><code>TemporalRuntimeBuilder.__init__()</code></h3>
+<h3 id="temporalruntimebuilder__init__"><code>TemporalRuntimeBuilder.__init__()</code><a class="headerlink" href="#temporalruntimebuilder__init__" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>    <span class="o">*</span><span class="p">,</span>
 </span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>    <span class="n">logging</span><span class="p">:</span> <span class="n">LoggingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1733,7 +2481,7 @@ default instead of the SDK's zero grace period.</p>
 </span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>    <span class="n">prometheus_durations_as_seconds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="p">,</span>
 </span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
-<h3 id="temporalruntimebuilderbuild"><code>TemporalRuntimeBuilder.build()</code></h3>
+<h3 id="temporalruntimebuilderbuild"><code>TemporalRuntimeBuilder.build()</code><a class="headerlink" href="#temporalruntimebuilderbuild" title="Permanent link">&para;</a></h3>
 <p>Build and return a new independent Temporal runtime. An explicit <code>metrics</code> backend takes priority
 over <code>prometheus_bind_address</code>. Only the effective Prometheus endpoint is logged as bound.
 The caller owns the returned runtime; pass it to <code>TemporalClientBuilder.set_runtime()</code> before
@@ -1755,8 +2503,8 @@ configuration and uses function defaults for omitted fields. See <a href="../con
 <li><code>ValueError</code>: Original SDK initialization error, including exporter bind conflicts. The builder
   never retries with metrics disabled. Every concurrent Prometheus runtime needs its own endpoint.</li>
 </ul>
-<h2 id="enums">Enums</h2>
-<h3 id="asgiworkertype"><code>ASGIWorkerType</code></h3>
+<h2 id="enums">Enums<a class="headerlink" href="#enums" title="Permanent link">&para;</a></h2>
+<h3 id="asgiworkertype"><code>ASGIWorkerType</code><a class="headerlink" href="#asgiworkertype" title="Permanent link">&para;</a></h3>
 <p><code>auto</code> selects the first available built-in in this fixed order: <strong>Uvicorn → Granian → Hypercorn</strong>.
 A backend is registered only when its required optional packages import successfully.
 Explicit selection bypasses this priority. When only custom backends are available, <code>auto</code> selects
@@ -1769,7 +2517,7 @@ under an existing key raises <code>ValueError</code>, including attempts to repl
 <li><code>hypercorn</code>: Use Hypercorn server</li>
 <li><code>granian</code>: Use Granian server</li>
 </ul>
-<h2 id="configuration-constants">Configuration Constants</h2>
+<h2 id="configuration-constants">Configuration Constants<a class="headerlink" href="#configuration-constants" title="Permanent link">&para;</a></h2>
 <p>Environment defaults are available as constants in <code>temporal_boost.temporal.config</code>. They are read
 once during the first package import; <code>.env</code> files are not loaded automatically. Prepare the
 environment before importing the package or starting the CLI. Later <code>os.environ</code> changes do not
@@ -1803,6 +2551,11 @@ update these constants or configure existing SDK objects. See <a href="../config
 
 
 
+  
+  
+
+
+
 
 
 
@@ -1820,14 +2573,58 @@ update these constants or configure existing SDK objects. See <a href="../config
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../examples/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Examples">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Examples
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../release_notes_2.0.0/" class="md-footer__link md-footer__link--next" aria-label="Next: Release notes 2.0.0">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Release notes 2.0.0
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
       <div class="md-copyright">
   
+    <div class="md-copyright__highlight">
+      Temporal-boost · <a href="https://temporal.io/brand">Temporal brand guidelines</a> · Inter: SIL Open Font License
+    </div>
+  
   
     Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
     </a>
   
 </div>
@@ -1837,18 +2634,35 @@ update these constants or configure existing SDK objects. See <a href="../config
 </footer>
       
     </div>
-    <div class="md-dialog" data-md-component="dialog">
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "content.code.copy", "navigation.instant", "content.tabs.link"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.tracking","navigation.footer","content.code.copy","content.action.edit","content.tabs.link"],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+  
+  <script>
+    const portalHeadAlternates = [...document.head.querySelectorAll('link[rel="alternate"][hreflang]')];
+    portalHeadAlternates.forEach((link) => link.rel = "portal-alternate");
+  </script>
+  
+      <script src="../assets/javascripts/bundle.d31f0ffa.min.js"></script>
+      
+        <script src="../assets/javascripts/language.js"></script>
       
     
+  <script>
+    document$.subscribe(() => portalHeadAlternates.forEach((link) => link.rel = "alternate"));
+  </script>
+
   </body>
 </html>

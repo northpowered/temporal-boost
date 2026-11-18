@@ -1,0 +1,2478 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+  
+  
+    
+    
+  
+    
+    
+  
+  
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Публичные контракты приложения, воркеров, сборщиков и CLI.">
+      
+      
+      
+        <link rel="canonical" href="https://northpowered.github.io/temporal-boost/ru/api_reference/">
+      
+      
+      
+        <link rel="prev" href="../examples/">
+      
+      
+        <link rel="next" href="../release_notes_2.0.0/">
+      
+      
+        
+          
+        
+          
+        
+      
+      
+      <link rel="icon" href="../assets/brand/temporal-dark.svg">
+      <meta name="generator" content="zensical-0.1.0">
+    
+
+    
+      
+        <title>Справочник API - Temporal-boost</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/tokens.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/temporal.css">
+    
+    <script>__md_scope=new URL("/temporal-boost/",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  
+  <script id="portal-search-i18n" type="application/json">{"count":"Найдено: {count}","strings":{"Close search":"Закрыть поиск","Filters":"Фильтры","Loading search…":"Загрузка поиска…","No results":"Ничего не найдено","Search":"Поиск","Search is unavailable. Reload the page to try again.":"Поиск недоступен. Перезагрузите страницу.","Search results":"Результаты поиска","Tags":"Теги","Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag.":"Перемещайтесь по тегам стрелками вверх и вниз. Пробел или Enter переключает тег."}}</script>
+  
+    
+      <link rel="alternate" hreflang="en" href="https://northpowered.github.io/temporal-boost/api_reference/">
+    
+      <link rel="alternate" hreflang="ru" href="https://northpowered.github.io/temporal-boost/ru/api_reference/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://northpowered.github.io/temporal-boost/api_reference/">
+  
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Перейти к содержанию
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="./.." title="Temporal-boost" class="md-header__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="../assets/brand/temporal-light.svg" alt="Temporal-boost">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Навигация</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Temporal-boost
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Справочник API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Включить светлую тему"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Включить светлую тему" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Включить тёмную тему"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Включить тёмную тему" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    <button class="md-header__button md-icon" aria-label="Выберите язык">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+        
+          <li class="md-select__item">
+            <a href="/temporal-boost/api_reference/" hreflang="en" lang="en"
+               class="md-select__link" data-portal-language data-anchor-ids="api-reference boostapp boostapp__init__ boostappadd_worker boostappadd_asgi_worker boostappadd_faststream_worker boostapprun boostapprun_all_workers-and-boostappstop boostappadd_async_runtime boostappget_registered_workers cli-process-runner worker-stop-contract temporalboostworker temporalboostworkerconfigure_temporal_client temporalboostworkerconfigure_temporal_runtime temporalboostworkerrun temporalboostworkercron temporalboostworkerrequest_stop-and-temporalboostworkershutdown lifecycle-states properties temporalclientbuilder temporalclientbuilder__init__ temporalclientbuilderbuild temporalclientbuilderset_pydantic_data_converter temporalworkerbuilder temporalworkerbuilder__init__ temporalworkerbuilderbuild temporalruntimebuilder temporalruntimebuilder__init__ temporalruntimebuilderbuild enums asgiworkertype configuration-constants"
+               >English</a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/temporal-boost/ru/api_reference/" hreflang="ru" lang="ru"
+               class="md-select__link" data-portal-language data-anchor-ids="api-reference boostapp boostapp__init__ boostappadd_worker boostappadd_asgi_worker boostappadd_faststream_worker boostapprun boostapprun_all_workers-and-boostappstop boostappadd_async_runtime boostappget_registered_workers cli-process-runner worker-stop-contract temporalboostworker temporalboostworkerconfigure_temporal_client temporalboostworkerconfigure_temporal_runtime temporalboostworkerrun temporalboostworkercron temporalboostworkerrequest_stop-and-temporalboostworkershutdown lifecycle-states properties temporalclientbuilder temporalclientbuilder__init__ temporalclientbuilderbuild temporalclientbuilderset_pydantic_data_converter temporalworkerbuilder temporalworkerbuilder__init__ temporalworkerbuilderbuild temporalruntimebuilder temporalruntimebuilder__init__ temporalruntimebuilderbuild enums asgiworkertype configuration-constants"
+               aria-current="page">Русский</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Поиск</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Поиск">
+  <button type="button" class="md-search__button">
+    Поиск
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        
+<a href="https://github.com/northpowered/temporal-boost" title="Перейти к репозиторию" class="md-source">
+  <div class="md-source__icon md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></div>
+  <div class="md-source__repository">northpowered/temporal-boost</div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./.." class="md-tabs__link">
+          
+  
+  Начало работы
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../creating_application/" class="md-tabs__link">
+          
+  
+  Руководства
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../running_application/" class="md-tabs__link">
+          
+  
+  Эксплуатация
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/" class="md-tabs__link">
+          
+  
+  Примеры
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="././" class="md-tabs__link">
+          
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../release_notes_2.0.0/" class="md-tabs__link">
+          
+  
+  Выпуски
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="./.." title="Temporal-boost" class="md-nav__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="../assets/brand/temporal-light.svg" alt="Temporal-boost">
+
+    </a>
+    Temporal-boost
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/northpowered/temporal-boost" title="Перейти к репозиторию" class="md-source">
+  <div class="md-source__icon md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></div>
+  <div class="md-source__repository">northpowered/temporal-boost</div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Начало работы
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_1">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Начало работы
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Начало работы
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Руководства
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Руководства
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Создание приложения
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Конфигурация
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Расширенное использование
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faststream_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Интеграция с FastStream
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Эксплуатация
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Эксплуатация
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Запуск приложения
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Устранение неполадок
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Примеры
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Примеры
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Примеры
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Справочник API
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Справочник API
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#boostapp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        BoostApp
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BoostApp">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#boostapp__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_worker()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_asgi_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_asgi_worker()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_faststream_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_faststream_worker()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostapprun" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.run()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostapprun_all_workers-and-boostappstop" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.run_all_workers()</code> и <code>BoostApp.stop()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_async_runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_async_runtime()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappget_registered_workers" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.get_registered_workers()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-process-runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Запускатель процессов CLI
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-stop-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Контракт остановки воркера
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalboostworker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalBoostWorker
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalBoostWorker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerconfigure_temporal_client" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_client()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerconfigure_temporal_runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_runtime()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerrun" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.run()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkercron" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.cron()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerrequest_stop-and-temporalboostworkershutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.request_stop()</code> и <code>TemporalBoostWorker.shutdown()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Состояния жизненного цикла
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Свойства
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalclientbuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalClientBuilder
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalClientBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalclientbuilder__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalclientbuilderbuild" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.build()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalclientbuilderset_pydantic_data_converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.set_pydantic_data_converter()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalworkerbuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalWorkerBuilder
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalWorkerBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalworkerbuilder__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalworkerbuilderbuild" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.build()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalruntimebuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalRuntimeBuilder
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalRuntimeBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalruntimebuilder__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalruntimebuilderbuild" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.build()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enums" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Перечисления
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Перечисления">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asgiworkertype" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>ASGIWorkerType</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Константы конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Выпуски
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Выпуски
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release_notes_2.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Изменения 2.0.0
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#boostapp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        BoostApp
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="BoostApp">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#boostapp__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_worker()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_asgi_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_asgi_worker()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_faststream_worker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_faststream_worker()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostapprun" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.run()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostapprun_all_workers-and-boostappstop" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.run_all_workers()</code> и <code>BoostApp.stop()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappadd_async_runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.add_async_runtime()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boostappget_registered_workers" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>BoostApp.get_registered_workers()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-process-runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Запускатель процессов CLI
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-stop-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Контракт остановки воркера
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalboostworker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalBoostWorker
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalBoostWorker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerconfigure_temporal_client" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_client()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerconfigure_temporal_runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.configure_temporal_runtime()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerrun" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.run()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkercron" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.cron()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalboostworkerrequest_stop-and-temporalboostworkershutdown" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalBoostWorker.request_stop()</code> и <code>TemporalBoostWorker.shutdown()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Состояния жизненного цикла
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Свойства
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalclientbuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalClientBuilder
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalClientBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalclientbuilder__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalclientbuilderbuild" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.build()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalclientbuilderset_pydantic_data_converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalClientBuilder.set_pydantic_data_converter()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalworkerbuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalWorkerBuilder
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalWorkerBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalworkerbuilder__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalworkerbuilderbuild" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalWorkerBuilder.build()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporalruntimebuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        TemporalRuntimeBuilder
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TemporalRuntimeBuilder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporalruntimebuilder__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.__init__()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporalruntimebuilderbuild" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TemporalRuntimeBuilder.build()</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enums" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Перечисления
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Перечисления">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#asgiworkertype" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>ASGIWorkerType</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Константы конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+    <a href="https://github.com/northpowered/temporal-boost/edit/main/docs/ru/api_reference.md" title="Редактировать страницу" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="api-reference">Справочник API<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
+<p>Полный справочник Temporal-boost.</p>
+<h2 id="boostapp">BoostApp<a class="headerlink" href="#boostapp" title="Permanent link">&para;</a></h2>
+<p>Основной класс приложения.</p>
+<h3 id="boostapp__init__"><code>BoostApp.__init__()</code><a class="headerlink" href="#boostapp__init__" title="Permanent link">&para;</a></h3>
+<p>Создаёт экземпляр BoostApp.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">BoostApp</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">temporal_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">temporal_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">debug_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">use_pydantic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">logger_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">DEFAULT_LOGGING_CONFIG</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">shutdown_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><strong>Параметры:</strong></p>
+<ul>
+<li><code>name</code> (str | None): имя приложения, по умолчанию <code>"temporal_generic_service"</code>.</li>
+<li><code>temporal_endpoint</code> (str | None): заменяет импортированный <code>TEMPORAL_TARGET_HOST</code>; <code>None</code> наследует его.</li>
+<li><code>temporal_namespace</code> (str | None): заменяет импортированный <code>TEMPORAL_NAMESPACE</code>; <code>None</code> наследует его.</li>
+<li><code>debug_mode</code> (bool): режим отладки, по умолчанию <code>False</code>.</li>
+<li><code>use_pydantic</code> (bool | None): <code>None</code> наследует <code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code>, <code>True</code> включает Pydantic, <code>False</code> отключает автоматический выбор. Явный <code>data_converter</code> клиента приоритетнее.</li>
+<li><code>logger_config</code> (dict | str | Path | None): словарь настройки логов или путь к JSON/YAML либо файлу конфигурации logging.</li>
+<li><code>shutdown_timeout</code> (float): общий бюджет секунд на согласованную остановку и ожидание потоков; конечный и неотрицательный, независим от настроек SDK.</li>
+</ul>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"my-service"</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">"localhost:7233"</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">temporal_namespace</span><span class="o">=</span><span class="s2">"default"</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">use_pydantic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="boostappadd_worker"><code>BoostApp.add_worker()</code><a class="headerlink" href="#boostappadd_worker" title="Permanent link">&para;</a></h3>
+<p>Добавляет воркер Temporal.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">add_worker</span><span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">task_queue</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">activities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">workflows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">interceptors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Interceptor</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">cron_schedule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">cron_runner</span><span class="p">:</span> <span class="n">MethodAsyncNoParam</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">cron_workflow_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="o">**</span><span class="n">worker_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemporalBoostWorker</span>
+</span></code></pre></div>
+<p><strong>Параметры:</strong></p>
+<ul>
+<li><code>worker_name</code> (str): уникальное имя; запрещены <code>"run"</code>, <code>"cron"</code>, <code>"exec"</code>, <code>"all"</code>.</li>
+<li><code>task_queue</code> (str): имя очереди задач Temporal.</li>
+<li><code>activities</code> (list[Callable] | None): функции activity.</li>
+<li><code>workflows</code> (list[type] | None): классы workflow.</li>
+<li><code>interceptors</code> (list[Interceptor] | None): перехватчики Temporal.</li>
+<li><code>cron_schedule</code> (str | None): расписание CRON.</li>
+<li><code>cron_runner</code> (MethodAsyncNoParam | None): метод запуска workflow для CRON.</li>
+<li><code>cron_workflow_id</code> (str | None): стабильный ID в настроенном namespace. По умолчанию <code>temporal-boost/cron/&lt;percent-encoded task_queue&gt;/&lt;percent-encoded worker_name&gt;</code>. Пустые и пробельные ID вызывают <code>ValueError</code>.</li>
+<li><code>**worker_kwargs</code>: дополнительные настройки воркера.</li>
+</ul>
+<p><code>cron_schedule</code> и <code>cron_runner</code> передаются вместе или оба пропускаются. Неполная пара и пустое расписание вызывают <code>ValueError</code> при создании воркера до подключения. Синтаксис выражения проверяет SDK/сервер. Это относится и к прямому созданию <code>TemporalBoostWorker</code>. Один <code>cron_workflow_id</code> не включает CRON. <code>add_worker()</code> регистрирует локальные команды, но не создаёт расписание на сервере.</p>
+<p><code>graceful_shutdown_timeout=timedelta(...)</code> в <code>worker_kwargs</code> задаёт период завершения activity в SDK. Пропуск или <code>None</code> наследует <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code> (30 секунд), ноль сохраняется, отрицательная длительность вызывает <code>ValueError</code> при регистрации. Параметр независим от <code>BoostApp.shutdown_timeout</code>: см. <a href="../configuration/#temporal_graceful_shutdown_timeout">конфигурацию</a>.</p>
+<p><strong>Возвращает:</strong></p>
+<ul>
+<li><code>TemporalBoostWorker</code>: созданный экземпляр.</li>
+</ul>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="s2">"my_worker"</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s2">"my_queue"</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">],</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">workflows</span><span class="o">=</span><span class="p">[</span><span class="n">MyWorkflow</span><span class="p">],</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="boostappadd_asgi_worker"><code>BoostApp.add_asgi_worker()</code><a class="headerlink" href="#boostappadd_asgi_worker" title="Permanent link">&para;</a></h3>
+<p>Добавляет приложение ASGI как воркер.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">add_asgi_worker</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">asgi_app</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">port</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">asgi_worker_type</span><span class="p">:</span> <span class="n">ASGIWorkerType</span> <span class="o">=</span> <span class="n">ASGIWorkerType</span><span class="o">.</span><span class="n">auto</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="o">**</span><span class="n">asgi_worker_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><strong>Параметры:</strong></p>
+<ul>
+<li><code>worker_name</code> (str): уникальное имя.</li>
+<li><code>asgi_app</code> (Any): объект приложения ASGI или строковый путь.</li>
+<li><code>host</code> (str): адрес прослушивания.</li>
+<li><code>port</code> (int): порт.</li>
+<li><code>log_level</code> (str | int | None): уровень логирования сервера.</li>
+<li><code>asgi_worker_type</code> (ASGIWorkerType): auto, uvicorn, hypercorn или granian.</li>
+<li><code>**asgi_worker_kwargs</code>: настройки одного асинхронного сервера. Перезагрузчики, несколько внутренних воркеров и нестандартные циклы отклоняются. Granian использует встроенный сервер; Hypercorn проверяет имена полей. См. <a href="../creating_application/#managed-asgi-shutdown">завершение ASGI</a>.</li>
+</ul>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">fastapi_app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">app</span><span class="o">.</span><span class="n">add_asgi_worker</span><span class="p">(</span><span class="s2">"api_worker"</span><span class="p">,</span> <span class="n">fastapi_app</span><span class="p">,</span> <span class="s2">"0.0.0.0"</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="boostappadd_faststream_worker"><code>BoostApp.add_faststream_worker()</code><a class="headerlink" href="#boostappadd_faststream_worker" title="Permanent link">&para;</a></h3>
+<p>Добавляет FastStream как воркер.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">add_faststream_worker</span><span class="p">(</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">faststream_app</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">log_level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="o">**</span><span class="n">faststream_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FastStreamBoostWorker</span>
+</span></code></pre></div>
+<p><strong>Параметры:</strong></p>
+<ul>
+<li><code>worker_name</code> (str): уникальное имя.</li>
+<li><code>faststream_app</code> (Any): экземпляр FastStream.</li>
+<li><code>log_level</code> (str | int | None): уровень логирования.</li>
+<li><code>**faststream_kwargs</code>: дополнительные настройки FastStream.</li>
+</ul>
+<p><strong>Возвращает:</strong></p>
+<ul>
+<li><code>FastStreamBoostWorker</code>: созданный экземпляр.</li>
+</ul>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">faststream</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastStream</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">faststream_app</span> <span class="o">=</span> <span class="n">FastStream</span><span class="p">(</span><span class="n">broker</span><span class="p">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">app</span><span class="o">.</span><span class="n">add_faststream_worker</span><span class="p">(</span><span class="s2">"message_worker"</span><span class="p">,</span> <span class="n">faststream_app</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="boostapprun"><code>BoostApp.run()</code><a class="headerlink" href="#boostapprun" title="Permanent link">&para;</a></h3>
+<p>Запускает CLI приложения.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
+</span></code></pre></div>
+<p><code>args</code> — один список аргументов CLI. Пропуск или <code>None</code> использует <code>sys.argv[1:]</code>; <code>[]</code> остаётся пустым и вызывает настроенную справку/ошибку отсутствующей команды с кодом 2. Отдельные позиционные аргументы и единая строка команды не поддерживаются: используйте <code>app.run(["run", "worker_name"])</code>.</p>
+<p>По умолчанию Typer вызывает <code>SystemExit</code>: справка и успешные команды дают 0, неизвестные команды, пропущенные аргументы и неверные значения — 2. Явный ненулевой код сохраняется. Необработанные ошибки воркера передаются и приводят к ненулевому статусу процесса. В <code>run all</code> успешный <code>SystemExit(0)</code>/<code>SystemExit(None)</code> воркера преобразуется на границе CLI в <code>RuntimeError</code>, чтобы ошибка координатора не сообщала об успехе. Прямой <code>run_all_workers()</code> сохраняет исходное исключение.</p>
+<p><code>standalone_mode=False</code>, <code>prog_name="service"</code> и другие параметры передаются Typer. Без standalone-режима <code>run()</code> возвращает результат команды и передаёт ошибки разбора/воркера, например <code>click.UsageError</code> и <code>RuntimeError</code>. Справка возвращает 0. Прямой <code>SystemExit</code> обработчика продолжает распространяться согласно Typer. Возвращаемое значение не является универсальным API кода выхода; в точке входа процесса используйте стандартный standalone-режим.</p>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</span></code></pre></div>
+<p>При встраивании зарегистрируйте <code>check</code> и вызовите <code>app.run(["exec", "check"], standalone_mode=False)</code>. Миграция: если код рассчитывал на подавление <code>SystemExit</code>, перехватывайте его явно или используйте non-standalone и обрабатывайте исключения.</p>
+<h3 id="boostapprun_all_workers-and-boostappstop"><code>BoostApp.run_all_workers()</code> и <code>BoostApp.stop()</code><a class="headerlink" href="#boostapprun_all_workers-and-boostappstop" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">run_all_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><code>run_all_workers()</code> создаёт поток для каждого воркера и ждёт остановки или ошибки. В главном потоке временно обрабатывает SIGINT/SIGTERM. <code>stop()</code> потокобезопасно запрашивает остановку, сразу возвращает управление и допускает повторы. Вызовы вне запуска не влияют на следующий запуск.</p>
+<p>Координатор вызывает <code>request_stop()</code> живых воркеров и ждёт все потоки в пределах <code>shutdown_timeout</code>. Если более ранней ошибки нет, оставшиеся воркеры перечисляются в <code>TimeoutError</code>. Иначе таймаут логируется и передаётся первая ошибка. Daemon-потоки могут продолжить работу; пока они живы, повторный запуск запрещён. Одновременные вызовы также отклоняются.</p>
+<p>Первая ошибка воркера инициирует остановку и после очистки передаётся с исходным traceback. Последующие ошибки только логируются. Возврат <code>run()</code> до общей остановки считается <code>RuntimeError</code>; конечному воркеру нужно вызвать <code>app.stop()</code> до возврата или запускаться отдельно. Обычный возврат, <code>asyncio.CancelledError</code> и <code>concurrent.futures.CancelledError</code> во время остановки допустимы. Отмена до stop и все другие исключения, включая <code>SystemExit</code>/<code>KeyboardInterrupt</code>, считаются ошибками. Такой порядок сохраняет и ошибки startup/запроса остановки. CLI преобразует успешный <code>SystemExit</code>, как описано выше. Внешний многопроцессный супервизор передаёт первый обнаруженный сбой дочернего процесса после остановки остальных.</p>
+<p>Temporal, FastStream и встроенные ASGI поддерживают управляемую остановку. Собственным воркерам нужен <code>request_stop()</code> или <code>AsyncBoostWorker</code>: см. <a href="../running_application/#graceful-shutdown">корректное завершение</a>.</p>
+<h3 id="boostappadd_async_runtime"><code>BoostApp.add_async_runtime()</code><a class="headerlink" href="#boostappadd_async_runtime" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">add_async_runtime</span><span class="p">(</span><span class="n">worker_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">boost_worker</span><span class="p">:</span> <span class="n">BaseBoostWorker</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p>Регистрирует <code>run()</code> собственного воркера как CLI-команду и включает его в <code>run all</code>. <code>boost_worker</code> должен реализовать синхронный <code>run()</code> и асинхронный <code>shutdown()</code> контракта <code>BaseBoostWorker</code>. Для управляемой остановки нужен потокобезопасный <code>request_stop()</code> или <a href="../advanced_usage/#custom-worker-shutdown">база AsyncBoostWorker</a>.</p>
+<p>Регистрация присваивает <code>boost_worker.name = worker_name</code>, заменяя прежнее имя. Это каноническое имя CLI, <code>get_registered_workers()</code>, логов и потока <code>worker-&lt;worker_name&gt;</code>. Параметры callback сохраняются, но <code>run all</code> вызывает <code>run()</code> без аргументов. Не меняйте имя; каждой регистрации приложения нужен отдельный экземпляр.</p>
+<p>Все типы воркеров используют общее пространство имён. Зарезервированные <code>run</code>, <code>cron</code>, <code>exec</code>, <code>all</code>, дубликат имени и повтор объекта в одном приложении вызывают <code>RuntimeError</code> до изменения имени или команды. Возвращается <code>None</code>.</p>
+<p>Заранее созданный <code>TemporalBoostWorker</code> сохраняет настройки клиента/runtime, debug-флаг и <code>cron_workflow_id</code>. Метод не применяет Temporal-настройки <code>BoostApp</code> и не регистрирует <code>cron</code>. Для наследования defaults и CRON используйте <code>add_worker()</code>; иначе настройте экземпляр явно до инициализации ресурсов.</p>
+<p><strong>Миграция:</strong> alias регистрации становится именем воркера. Если прежнее имя нужно бизнес-логике, храните его отдельно. Несколько aliases одного объекта запрещены: создавайте разные экземпляры. Неиспользуемые приватные списки CRON/ASGI удалены; используйте <code>get_registered_workers()</code>.</p>
+<h3 id="boostappget_registered_workers"><code>BoostApp.get_registered_workers()</code><a class="headerlink" href="#boostappget_registered_workers" title="Permanent link">&para;</a></h3>
+<p>Возвращает зарегистрированных воркеров.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">get_registered_workers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">BaseBoostWorker</span><span class="p">]</span>
+</span></code></pre></div>
+<p><strong>Результат:</strong> <code>list[BaseBoostWorker]</code>, поверхностная копия единого реестра. Объекты сохраняют identity и канонические имена; изменение списка не меняет регистрацию.</p>
+<h2 id="cli-process-runner">Запускатель процессов CLI<a class="headerlink" href="#cli-process-runner" title="Permanent link">&para;</a></h2>
+<p>Строка приложения имеет вид <code>module:attribute.nested</code> с точечными идентификаторами. Сначала используется обычный путь импорта Python; текущий каталог и его непосредственный родитель проверяются только при отсутствии целевого модуля/пакета. Ошибки зависимостей и приложения передаются без изменений. Неверный формат, отсутствующая цель и атрибут дают разные <code>ValueError</code>; исходная ошибка поиска сохраняется как причина.</p>
+<p>Неудача восстанавливает <code>sys.path</code>; успешный fallback оставляет только каталог найденной цели для следующих импортов. Рекурсивного поиска и очистки кэша модулей нет. См. <a href="../running_application/#application-import-lookup">поиск приложения</a>.</p>
+<p>Перед путём приложения доступны <code>--workers N --shutdown-timeout SECONDS</code>. Таймаут действует при <code>--workers &gt; 1</code>, по умолчанию 30 секунд, конечный и неотрицательный.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.cli.process_runner</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_multiprocess</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">run_multiprocess</span><span class="p">(</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">app_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">number_of_processes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">arguments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>    <span class="n">shutdown_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p>В каждом дочернем процессе запускается та же команда. Запускатель наблюдает каждый процесс, при первом ненулевом выходе останавливает остальные, дожидается завершения и закрывает дескрипторы. Автоперезапуска нет. После успеха всех возвращает <code>None</code>. Ошибка вызывает <code>SystemExit</code> с первым обнаруженным положительным статусом; сигнал <code>-N</code> преобразуется в <code>128 + N</code>. Ошибки startup/cleanup не заменяют более раннюю. Успешный <code>SystemExit(0)</code>/<code>SystemExit(None)</code> как ошибка превращается в <code>RuntimeError</code>. Неверное количество процессов или таймаут дают <code>ValueError</code> до создания процессов.</p>
+<p>Выбор ASGI в <code>BoostApp</code> при <code>number_of_processes &gt; 1</code> вызывает usage error в дочернем процессе до запуска воркеров; родитель передаёт код 2. Это относится к <code>run all</code> с любым <code>BaseAsgiWorker</code> и <code>run &lt;asgi-name&gt;</code> всех серверов. Temporal, CRON, exec и help разрешены даже при наличии ASGI-регистраций. Проверяется фактический callback после разбора; приложение не импортируется в родителе. Общего сокета нет: см. <a href="../running_application/#asgi-and-external-processes">ASGI и внешние процессы</a>.</p>
+<p>Сначала родитель запрашивает управляемую остановку через отдельные однонаправленные каналы и наблюдателей детей, затем закрывает каналы. Общий grace deadline действует на всех; далее terminate до 5 секунд и kill до 5 секунд. В главном потоке SIGINT/SIGTERM временно перехватываются и затем восстанавливаются. После очистки выход 130/143, если ошибка не определила другой результат. Повторные сигналы не меняют первый запрос и сроки. Этот бюджет независим от приложения и SDK. См. <a href="../running_application/#multi-process-supervision">супервизию процессов</a>.</p>
+<h2 id="worker-stop-contract">Контракт остановки воркера<a class="headerlink" href="#worker-stop-contract" title="Permanent link">&para;</a></h2>
+<p><code>BaseBoostWorker.request_stop() -&gt; bool</code> — неблокирующий потокобезопасный запрос. Реализация должна принимать повторы и запросы при старте. При поддержке возвращает <code>True</code>; стандартная реализация — <code>False</code>. Асинхронная очистка выполняется в цикле владельца ресурсов.</p>
+<p><code>AsyncBoostWorker</code>, экспортируемый из <code>temporal_boost</code> и <code>temporal_boost.workers</code>, реализует контракт для asyncio. Вызовите <code>super().__init__()</code>, задайте <code>name</code>, реализуйте async <code>run_async()</code>/<code>shutdown()</code> и наследуйте <code>run()</code>/<code>request_stop()</code>. База владеет циклом, один раз вызывает очистку за запуск и ждёт возврата <code>run_async()</code>. <code>shutdown()</code> должен учитывать частичный startup и разблокировать <code>run_async()</code>. При ошибке исполнения последующая ошибка очистки логируется; при отмене ошибка очистки передаётся, чтобы отмена не скрывала сбой. См. <a href="../advanced_usage/#custom-worker-shutdown">пример</a>.</p>
+<h2 id="temporalboostworker">TemporalBoostWorker<a class="headerlink" href="#temporalboostworker" title="Permanent link">&para;</a></h2>
+<p>Класс воркера Temporal. Приоритет endpoint и namespace по отдельности: последняя явная настройка воркера → параметры <code>BoostApp</code> → окружение импорта → <code>localhost:7233</code> и <code>default</code>. См. <a href="../configuration/#configuration-priority">приоритет конфигурации</a>.</p>
+<h3 id="temporalboostworkerconfigure_temporal_client"><code>TemporalBoostWorker.configure_temporal_client()</code><a class="headerlink" href="#temporalboostworkerconfigure_temporal_client" title="Permanent link">&para;</a></h3>
+<p>Настраивает клиент до инициализации или после очистки прошлого запуска. С начала инициализации и в состояниях building/running/stopping вызывает <code>RuntimeError</code>. Не переподключает живой клиент и не меняет SDK воркер; отклонённый вызов сохраняет сборщики.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">configure_temporal_client</span><span class="p">(</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">identity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>    <span class="n">tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="n">use_pydantic_data_converter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><strong>Параметры:</strong></p>
+<ul>
+<li><code>target_host</code> (str | None): адрес сервера.</li>
+<li><code>namespace</code> (str | None): namespace.</li>
+<li><code>api_key</code> (str | None): API-ключ Temporal Cloud.</li>
+<li><code>identity</code> (str | None): идентификатор клиента.</li>
+<li><code>tls</code> (bool | None): включение TLS.</li>
+<li><code>use_pydantic_data_converter</code> (bool | None): <code>True</code> включает Pydantic, <code>False</code> отключает автоматический выбор; <code>None</code> наследует окружение при первом вызове и сохраняет существующий сборщик. Явный <code>data_converter</code> в <code>kwargs</code> приоритетнее.</li>
+<li><code>**kwargs</code>: дополнительные параметры клиента.</li>
+</ul>
+<p>У существующего сборщика пропущенные поля и <code>None</code> сохраняют значения. Пустые строки передаются setters буквально и не сбрасывают defaults. <code>tls=False</code> заменяет импортированный <code>True</code>. Настраивайте до инициализации; активный клиент не переподключается.</p>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">target_host</span><span class="o">=</span><span class="s2">"temporal.example.com:7233"</span><span class="p">,</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">namespace</span><span class="o">=</span><span class="s2">"production"</span><span class="p">,</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="n">use_pydantic_data_converter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="temporalboostworkerconfigure_temporal_runtime"><code>TemporalBoostWorker.configure_temporal_runtime()</code><a class="headerlink" href="#temporalboostworkerconfigure_temporal_runtime" title="Permanent link">&para;</a></h3>
+<p>Настраивает отдельный runtime воркера до использования. Одновременным runtime нужны разные endpoints Prometheus; автоматического разделения нет. Процесс должен предоставлять каждый endpoint: см. <a href="../advanced_usage/#metrics-across-workers-and-processes">метрики</a>.</p>
+<p>После создания runtime и при активном запуске вызывает <code>RuntimeError</code>. Чтение <code>temporal_client_runtime</code> создаёт runtime и фиксирует параметры даже до <code>run()</code>. После очистки метод настраивает следующий запуск и не заменяет живой runtime. См. <a href="../configuration/#when-configuration-becomes-fixed">срок действия настроек</a>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">configure_temporal_runtime</span><span class="p">(</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">logging</span><span class="p">:</span> <span class="n">LoggingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">metrics</span><span class="p">:</span> <span class="n">OpenTelemetryConfig</span> <span class="o">|</span> <span class="n">PrometheusConfig</span> <span class="o">|</span> <span class="n">MetricBuffer</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    <span class="n">global_tags</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    <span class="n">attach_service_name</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    <span class="n">metric_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    <span class="n">prometheus_bind_address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_BIND_ADDRESS</span><span class="p">,</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>    <span class="n">prometheus_counters_total_suffix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_COUNTERS_TOTAL_SUFFIX</span><span class="p">,</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>    <span class="n">prometheus_unit_suffix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_UNIT_SUFFIX</span><span class="p">,</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>    <span class="n">prometheus_durations_as_seconds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="p">,</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><strong>Параметры:</strong></p>
+<ul>
+<li><code>logging</code> (LoggingConfig | None): конфигурация логов.</li>
+<li><code>metrics</code> (OpenTelemetryConfig | PrometheusConfig | MetricBuffer | None): конфигурация метрик.</li>
+<li><code>global_tags</code> (Mapping[str, str] | None): глобальные теги.</li>
+<li><code>attach_service_name</code> (bool): добавление имени сервиса.</li>
+<li><code>metric_prefix</code> (str | None): префикс метрик.</li>
+<li><code>prometheus_bind_address</code> (str | None): адрес экспортёра.</li>
+<li><code>prometheus_counters_total_suffix</code> (bool | None): суффикс <code>_total</code> счётчиков.</li>
+<li><code>prometheus_unit_suffix</code> (bool | None): суффикс единицы измерения.</li>
+<li><code>prometheus_durations_as_seconds</code> (bool | None): длительности в секундах.</li>
+</ul>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_runtime</span><span class="p">(</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="n">prometheus_bind_address</span><span class="o">=</span><span class="s2">"0.0.0.0:9090"</span><span class="p">,</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="n">global_tags</span><span class="o">=</span><span class="p">{</span><span class="s2">"environment"</span><span class="p">:</span> <span class="s2">"production"</span><span class="p">},</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="temporalboostworkerrun"><code>TemporalBoostWorker.run()</code><a class="headerlink" href="#temporalboostworkerrun" title="Permanent link">&para;</a></h3>
+<p>Обрабатывает очередь воркера. Не регистрирует CRON даже при наличии параметров CRON. Используется <code>run &lt;name&gt;</code> и <code>run all</code> для каждого воркера.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">run</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="temporalboostworkercron"><code>TemporalBoostWorker.cron()</code><a class="headerlink" href="#temporalboostworkercron" title="Permanent link">&para;</a></h3>
+<p>Запускает воркер в режиме CRON. Команда <code>cron &lt;name&gt;</code> доступна при обоих параметрах CRON. Прямой вызов без них даёт <code>RuntimeError</code> до цикла и подключения. Регистрирует задачу один раз при старте процесса и обрабатывает очередь до остановки.</p>
+<p>Атомарно запускает или использует ID через <code>WorkflowIDConflictPolicy.USE_EXISTING</code>. Закрытые ID отклоняются с <code>WorkflowAlreadyStartedError</code> через <code>WorkflowIDReusePolicy.REJECT_DUPLICATE</code> в пределах хранения истории сервером. Повтор сохраняет расписание и конфигурацию. Локальная остановка не отменяет серверный workflow. См. <a href="../creating_application/#cron-workflow-identity">идентичность CRON</a> и <a href="../running_application/#migrating-existing-uuid-cron-workflows">миграцию UUID</a>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">cron</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><strong>Пример:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">worker</span><span class="o">.</span><span class="n">cron</span><span class="p">()</span>
+</span></code></pre></div>
+<p>Обе команды владеют циклом событий и единым жизненным циклом startup/исполнения/очистки. Остановка при старте отменяет подключение. Очистка CRON завершает локальное ожидание, отменяет незавершённую регистрацию и останавливает SDK воркер. Адаптер владеет задачей SDK <code>run()</code> и использует публичный <code>shutdown()</code> без дополнительного SDK async context manager. Обычный <code>run()</code> не регистрирует CRON, локальная остановка не удаляет серверный workflow.</p>
+<p>Последовательные запуски создают новые клиент, runtime и SDK воркер в новом цикле. Одновременные <code>run()</code>/<code>cron()</code> одного адаптера дают <code>RuntimeError</code>. Ошибки startup/исполнения передаются после очистки; последующие ошибки очистки только логируются. Неожиданная отмена также передаётся. Сбой SDK-валидации до старта не ждёт незавершаемый SDK <code>shutdown()</code>. В поддерживаемом SDK нет публичного close клиента/runtime: адаптер освобождает ссылки свои и сборщиков, не закрывает executors вызывающего кода. Внешние ссылки могут удерживать SDK-объекты.</p>
+<h3 id="temporalboostworkerrequest_stop-and-temporalboostworkershutdown"><code>TemporalBoostWorker.request_stop()</code> и <code>TemporalBoostWorker.shutdown()</code><a class="headerlink" href="#temporalboostworkerrequest_stop-and-temporalboostworkershutdown" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">request_stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p><code>request_stop()</code> возвращает <code>True</code> и запрашивает остановку из любого потока без ожидания. Повторы безопасны. Запрос до первого запуска запоминается и предотвращает ресурсы; после остановки не влияет на следующий запуск. <code>shutdown()</code> до/после запуска ничего не делает; во время запуска должен вызываться в своём цикле, запрашивает остановку и ждёт завершения с ошибками. Ожидающие разделяют очистку; отмена одного не отменяет жизненный цикл. Чужой цикл даёт <code>RuntimeError</code> с указанием <code>request_stop()</code>. В callback воркера также используйте <code>request_stop()</code>.</p>
+<p>SDK shutdown вызывается не более одного раза за активный SDK run. Если run уже завершён, извлекается результат без повторного shutdown. При ошибке остановки адаптер отменяет и дожидается SDK-задачи до освобождения ссылок. Зависшая операция SDK может превысить период завершения activity; <code>BoostApp.shutdown_timeout</code> ограничивает ожидание координатора, а не SDK.</p>
+<h3 id="lifecycle-states">Состояния жизненного цикла<a class="headerlink" href="#lifecycle-states" title="Permanent link">&para;</a></h3>
+<p>Свойство <code>state</code> доступно только для чтения:</p>
+<table>
+<thead>
+<tr>
+<th>Значение</th>
+<th>Смысл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>created</code></td>
+<td>Создан; активного запуска нет</td>
+</tr>
+<tr>
+<td><code>building</code></td>
+<td>Создание runtime, подключение клиента, создание SDK воркера</td>
+</tr>
+<tr>
+<td><code>running</code></td>
+<td>Задача SDK run запущена; регистрация CRON может продолжаться</td>
+</tr>
+<tr>
+<td><code>stopping</code></td>
+<td>Отмена startup/CRON и ожидание очистки SDK</td>
+</tr>
+<tr>
+<td><code>stopped</code></td>
+<td>Ссылки на ресурсы освобождены; разрешён следующий запуск</td>
+</tr>
+</tbody>
+</table>
+<p>Ранняя остановка/ошибка может пропустить <code>running</code>. Настраивайте до инициализации и запуска. <code>created</code> не означает отсутствие runtime: ленивое свойство может создать его без запуска. После <code>stopped</code> настройка доступна до следующей инициализации.</p>
+<h3 id="properties">Свойства<a class="headerlink" href="#properties" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>temporal_client</code> (Client): экземпляр клиента.</li>
+<li><code>temporal_worker</code> (Worker): экземпляр SDK воркера.</li>
+<li><code>temporal_client_runtime</code> (Runtime): лениво создаёт/кэширует runtime и фиксирует конфигурацию; может открыть порт метрик. Повторное чтение возвращает объект до очистки запуска. При очистке чтение без runtime вызывает ошибку, предотвращая создание ресурсов.</li>
+<li><code>temporal_cron_runner</code> (MethodAsyncNoParam): метод CRON.</li>
+<li><code>cron_workflow_id</code> (str): вычисленный ID CRON, только чтение.</li>
+<li><code>state</code>: текущее состояние. Свойства клиента и SDK воркера после очистки вызывают ошибки до новой сборки.</li>
+</ul>
+<h2 id="temporalclientbuilder">TemporalClientBuilder<a class="headerlink" href="#temporalclientbuilder" title="Permanent link">&para;</a></h2>
+<p>Сборщик клиента Temporal.</p>
+<h3 id="temporalclientbuilder__init__"><code>TemporalClientBuilder.__init__()</code><a class="headerlink" href="#temporalclientbuilder__init__" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>    <span class="n">target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="n">identity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>    <span class="n">tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>    <span class="n">use_pydantic_data_converter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<h3 id="temporalclientbuilderbuild"><code>TemporalClientBuilder.build()</code><a class="headerlink" href="#temporalclientbuilderbuild" title="Permanent link">&para;</a></h3>
+<p>Создаёт и возвращает клиента.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Client</span>
+</span></code></pre></div>
+<p><strong>Результат:</strong> <code>Client</code>.</p>
+<p>Непустые аргументы конструктора <code>target_host</code>, <code>namespace</code>, <code>api_key</code>, <code>identity</code> заменяют импортированную конфигурацию; <code>None</code> и пустые строки используют её. Поздние setters заменяют сохранённые значения, включая пустые строки. <code>tls=None</code> наследует конфигурацию, <code>tls=False</code> заменяет её. У отдельного сборщика нет слоя <code>BoostApp</code>. Новые сборщики не перечитывают изменения окружения после импорта.</p>
+<p><code>use_pydantic_data_converter=None</code> наследует окружение; <code>True</code> включает Pydantic, <code>False</code> отключает автоматический выбор. Явный <code>data_converter</code> в kwargs конструктора или <code>set_kwargs()</code> приоритетнее флага.</p>
+<h3 id="temporalclientbuilderset_pydantic_data_converter"><code>TemporalClientBuilder.set_pydantic_data_converter()</code><a class="headerlink" href="#temporalclientbuilderset_pydantic_data_converter" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">set_pydantic_data_converter</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p>Меняет автоматический выбор Pydantic будущих сборок. Без аргументов включает; <code>enabled=False</code> отключает автоматический выбор, сохраняя явный <code>data_converter</code>.</p>
+<h2 id="temporalworkerbuilder">TemporalWorkerBuilder<a class="headerlink" href="#temporalworkerbuilder" title="Permanent link">&para;</a></h2>
+<p>Сборщик воркера Temporal.</p>
+<h3 id="temporalworkerbuilder__init__"><code>TemporalWorkerBuilder.__init__()</code><a class="headerlink" href="#temporalworkerbuilder__init__" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>    <span class="n">task_queue</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>    <span class="n">debug_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>    <span class="n">max_concurrent_workflow_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>    <span class="n">max_concurrent_activities</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>    <span class="n">max_concurrent_local_activities</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>    <span class="n">max_concurrent_workflow_task_polls</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>    <span class="n">nonsticky_to_sticky_poll_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a>    <span class="n">max_concurrent_activity_task_polls</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>    <span class="n">graceful_shutdown_timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p>Для шести числовых параметров пропуск/<code>None</code> выбирает <a href="../configuration/#temporal_max_concurrent_workflow_tasks">окружение/default</a>. Параллелизм и число опросов — положительные целые числа. Коэффициент — конечный неотрицательный <code>int</code>/<code>float</code>; <code>0.0</code> сохраняется, значения больше <code>1.0</code> разрешены. Булевы значения, числовые строки и неверные типы дают <code>TypeError</code>, неверные диапазоны — <code>ValueError</code> при создании. Выбранные defaults проверяются так же. Нулевые счётчики теперь дают ошибку: используйте <code>None</code> или пропуск.</p>
+<p>Дополнительные ограничения, например минимум два workflow при кэшировании, проверяет SDK при <code>build()</code>. Нулевой коэффициент не отключает non-sticky опрос: SDK сохраняет минимальное число poller.</p>
+<h3 id="temporalworkerbuilderbuild"><code>TemporalWorkerBuilder.build()</code><a class="headerlink" href="#temporalworkerbuilderbuild" title="Permanent link">&para;</a></h3>
+<p>Создаёт и возвращает SDK воркер.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Worker</span>
+</span></code></pre></div>
+<p><strong>Результат:</strong> <code>Worker</code>.</p>
+<p><code>graceful_shutdown_timeout</code> передаётся прямо в SDK. Явный неотрицательный <code>datetime.timedelta</code>, включая ноль, заменяет окружение; пропуск/<code>None</code> использует <code>config.GRACEFUL_SHUTDOWN_TIMEOUT</code> (30 секунд). Выбранная отрицательная длительность даёт <code>ValueError</code> при создании сборщика. <code>BoostApp.add_worker()</code> и <code>TemporalBoostWorker</code> передают параметр через kwargs без дублирования.</p>
+<p>Период начинается при запросе SDK shutdown и задаёт время завершения activity до запроса отмены. Он не ограничивает общее время остановки SDK, не инициирует stop и не меняет бюджеты приложения/процессов. Пропуск теперь использует default фреймворка вместо нуля SDK.</p>
+<h2 id="temporalruntimebuilder">TemporalRuntimeBuilder<a class="headerlink" href="#temporalruntimebuilder" title="Permanent link">&para;</a></h2>
+<p>Сборщик runtime Temporal.</p>
+<h3 id="temporalruntimebuilder__init__"><code>TemporalRuntimeBuilder.__init__()</code><a class="headerlink" href="#temporalruntimebuilder__init__" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>    <span class="o">*</span><span class="p">,</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>    <span class="n">logging</span><span class="p">:</span> <span class="n">LoggingConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="n">metrics</span><span class="p">:</span> <span class="n">OpenTelemetryConfig</span> <span class="o">|</span> <span class="n">PrometheusConfig</span> <span class="o">|</span> <span class="n">MetricBuffer</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="n">global_tags</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>    <span class="n">attach_service_name</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>    <span class="n">metric_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>    <span class="n">prometheus_bind_address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_BIND_ADDRESS</span><span class="p">,</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>    <span class="n">prometheus_counters_total_suffix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_COUNTERS_TOTAL_SUFFIX</span><span class="p">,</span>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>    <span class="n">prometheus_unit_suffix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_UNIT_SUFFIX</span><span class="p">,</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>    <span class="n">prometheus_durations_as_seconds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="p">,</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+<h3 id="temporalruntimebuilderbuild"><code>TemporalRuntimeBuilder.build()</code><a class="headerlink" href="#temporalruntimebuilderbuild" title="Permanent link">&para;</a></h3>
+<p>Создаёт новый независимый runtime. Явный <code>metrics</code> приоритетнее <code>prometheus_bind_address</code>; логируется только реально используемый endpoint. Вызывающий код владеет результатом и должен передать его в <code>TemporalClientBuilder.set_runtime()</code> до сборки клиента. Не передавайте живой runtime между процессами.</p>
+<p>Defaults четырёх <code>prometheus_*</code> фиксируются при определении функции во время импорта, как у <code>TemporalBoostWorker.configure_temporal_runtime()</code>. Изменение окружения/<code>config.PROMETHEUS_*</code> не обновляет пропущенные аргументы. При <code>metrics=None</code> явный <code>prometheus_bind_address=None</code> отключает неявный экспортёр; <code>False</code>/<code>None</code> флага суффикса или длительности даёт <code>False</code>. Настройка runtime воркера заменяет прежнюю целиком, используя defaults функции для пропусков. См. <a href="../configuration/#runtime-configuration">конфигурацию runtime</a>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Runtime</span>
+</span></code></pre></div>
+<p><strong>Результат:</strong> <code>Runtime</code>.</p>
+<p><strong>Исключения:</strong> <code>ValueError</code> SDK при инициализации, включая конфликт порта. Повтора с отключёнными метриками нет. Одновременным runtime Prometheus нужны разные endpoints.</p>
+<h2 id="enums">Перечисления<a class="headerlink" href="#enums" title="Permanent link">&para;</a></h2>
+<h3 id="asgiworkertype"><code>ASGIWorkerType</code><a class="headerlink" href="#asgiworkertype" title="Permanent link">&para;</a></h3>
+<p><code>auto</code> выбирает доступный встроенный сервер в порядке <strong>Uvicorn → Granian → Hypercorn</strong>. Регистрация доступна при успешном импорте optional dependencies. Явный выбор обходит приоритет. Если есть только собственные серверы, выбирается лексикографически минимальный ключ. Повтор той же пары класс/ключ идемпотентен; другой класс с занятым ключом, включая встроенный, даёт <code>ValueError</code>.</p>
+<ul>
+<li><code>auto</code>: автоматический выбор.</li>
+<li><code>uvicorn</code>: Uvicorn.</li>
+<li><code>hypercorn</code>: Hypercorn.</li>
+<li><code>granian</code>: Granian.</li>
+</ul>
+<h2 id="configuration-constants">Константы конфигурации<a class="headerlink" href="#configuration-constants" title="Permanent link">&para;</a></h2>
+<p>Defaults доступны в <code>temporal_boost.temporal.config</code> и читаются один раз при первом импорте. <code>.env</code> автоматически не загружается. Подготовьте окружение до импорта/CLI. Изменения <code>os.environ</code> не обновляют константы и SDK-объекты: см. <a href="../configuration/#environment-loading">загрузку окружения</a>.</p>
+<ul>
+<li><code>TARGET_HOST</code>: адрес Temporal.</li>
+<li><code>CLIENT_NAMESPACE</code>: namespace.</li>
+<li><code>CLIENT_TLS</code>: флаг TLS.</li>
+<li><code>CLIENT_API_KEY</code>: API-ключ.</li>
+<li><code>CLIENT_IDENTITY</code>: идентификатор клиента.</li>
+<li><code>USE_PYDANTIC_DATA_CONVERTER</code>: флаг Pydantic.</li>
+<li><code>MAX_CONCURRENT_WORKFLOW_TASKS</code>: максимум задач workflow.</li>
+<li><code>MAX_CONCURRENT_ACTIVITIES</code>: максимум activity.</li>
+<li><code>MAX_CONCURRENT_LOCAL_ACTIVITIES</code>: максимум локальных activity.</li>
+<li><code>MAX_WORKFLOW_TASK_POLLS</code>: максимум опросов workflow.</li>
+<li><code>MAX_ACTIVITY_TASK_POLLS</code>: максимум опросов activity.</li>
+<li><code>NONSTICKY_STICKY_RATIO</code>: соотношение опросов non-sticky/sticky.</li>
+<li><code>GRACEFUL_SHUTDOWN_TIMEOUT</code>: период завершения activity SDK (<code>timedelta</code>, 30 секунд), независимый от бюджета приложения.</li>
+<li><code>PROMETHEUS_BIND_ADDRESS</code>: адрес Prometheus.</li>
+<li><code>PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code>: суффикс счётчиков.</li>
+<li><code>PROMETHEUS_UNIT_SUFFIX</code>: суффикс единиц измерения.</li>
+<li><code>PROMETHEUS_DURATIONS_AS_SECONDS</code>: длительности в секундах.</li>
+</ul>
+<p>Все настройки описаны в <a href="../configuration/">руководстве по конфигурации</a>.</p>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../examples/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Примеры">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Примеры
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../release_notes_2.0.0/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Изменения 2.0.0">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Изменения 2.0.0
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Temporal-boost · <a href="https://temporal.io/brand">Правила бренда Temporal</a> · Inter: SIL Open Font License
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.tracking","navigation.footer","content.code.copy","content.action.edit","content.tabs.link"],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Скопировано в буфер","clipboard.copy":"Копировать в буфер","clipboard.error":"Could not copy to clipboard","search.result.more.one":"Ещё 1 на этой странице","search.result.more.other":"Ещё # на этой странице","search.result.none":"Совпадений не найдено","search.result.one":"Найдено 1 совпадение","search.result.other":"Найдено совпадений: #","search.result.placeholder":"Начните печатать для поиска","search.result.term.missing":"Отсутствует","select.version":"Выберите версию"},"version":null}</script>
+    
+    
+  
+  <script>
+    const portalHeadAlternates = [...document.head.querySelectorAll('link[rel="alternate"][hreflang]')];
+    portalHeadAlternates.forEach((link) => link.rel = "portal-alternate");
+  </script>
+  
+      <script src="../assets/javascripts/bundle.d31f0ffa.min.js"></script>
+      
+        <script src="../assets/javascripts/language.js"></script>
+      
+    
+  <script>
+    document$.subscribe(() => portalHeadAlternates.forEach((link) => link.rel = "alternate"));
+  </script>
+
+  </body>
+</html>

@@ -1,0 +1,2746 @@
+
+<!doctype html>
+<html lang="ru" class="no-js">
+  <head>
+    
+  
+  
+    
+    
+  
+    
+    
+  
+  
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Подключения, параллелизм, метрики и приоритет конфигурации.">
+      
+      
+      
+        <link rel="canonical" href="https://northpowered.github.io/temporal-boost/ru/configuration/">
+      
+      
+      
+        <link rel="prev" href="../creating_application/">
+      
+      
+        <link rel="next" href="../advanced_usage/">
+      
+      
+        
+          
+        
+          
+        
+      
+      
+      <link rel="icon" href="../assets/brand/temporal-dark.svg">
+      <meta name="generator" content="zensical-0.1.0">
+    
+
+    
+      
+        <title>Конфигурация - Temporal-boost</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../assets/stylesheets/modern/main.4ab2de0c.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/tokens.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/temporal.css">
+    
+    <script>__md_scope=new URL("/temporal-boost/",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  
+  <script id="portal-search-i18n" type="application/json">{"count":"Найдено: {count}","strings":{"Close search":"Закрыть поиск","Filters":"Фильтры","Loading search…":"Загрузка поиска…","No results":"Ничего не найдено","Search":"Поиск","Search is unavailable. Reload the page to try again.":"Поиск недоступен. Перезагрузите страницу.","Search results":"Результаты поиска","Tags":"Теги","Use Up and Down arrow keys to move between tags. Press Space or Enter to toggle a tag.":"Перемещайтесь по тегам стрелками вверх и вниз. Пробел или Enter переключает тег."}}</script>
+  
+    
+      <link rel="alternate" hreflang="en" href="https://northpowered.github.io/temporal-boost/configuration/">
+    
+      <link rel="alternate" hreflang="ru" href="https://northpowered.github.io/temporal-boost/ru/configuration/">
+    
+    <link rel="alternate" hreflang="x-default" href="https://northpowered.github.io/temporal-boost/configuration/">
+  
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Перейти к содержанию
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Верхний колонтитул">
+    <a href="./.." title="Temporal-boost" class="md-header__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="../assets/brand/temporal-light.svg" alt="Temporal-boost">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      <span class="md-visually-hidden">Навигация</span>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Temporal-boost
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Конфигурация
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Включить светлую тему"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Включить светлую тему" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Включить тёмную тему"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Включить тёмную тему" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    <button class="md-header__button md-icon" aria-label="Выберите язык">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+        
+          <li class="md-select__item">
+            <a href="/temporal-boost/configuration/" hreflang="en" lang="en"
+               class="md-select__link" data-portal-language data-anchor-ids="configuration table-of-contents environment-loading temporal-client-configuration temporal_target_host temporal_namespace temporal_tls temporal_api_key temporal_identity temporal_use_pydantic_data_converter worker-configuration temporal_max_concurrent_workflow_tasks temporal_max_concurrent_activities temporal_max_concurrent_local_activities temporal_max_workflow_task_polls temporal_max_activity_task_polls temporal_nonsticky_to_sticky_ratio temporal_graceful_shutdown_timeout prometheus-metrics-configuration temporal_prometheus_bind_address temporal_prometheus_counters_total_suffix temporal_prometheus_unit_suffix temporal_prometheus_durations_as_seconds runtime-configuration when-configuration-becomes-fixed configuration-priority configuration-examples development-configuration production-configuration high-performance-configuration resource-limited-configuration using-configuration-files configuration-validation startup-environment-and-explicit-overrides configuration-tips common-configuration-patterns pattern-1-environment-based pattern-2-configuration-class pattern-3-pydantic-settings security-best-practices troubleshooting-configuration check-current-configuration validate-configuration"
+               >English</a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="/temporal-boost/ru/configuration/" hreflang="ru" lang="ru"
+               class="md-select__link" data-portal-language data-anchor-ids="configuration table-of-contents environment-loading temporal-client-configuration temporal_target_host temporal_namespace temporal_tls temporal_api_key temporal_identity temporal_use_pydantic_data_converter worker-configuration temporal_max_concurrent_workflow_tasks temporal_max_concurrent_activities temporal_max_concurrent_local_activities temporal_max_workflow_task_polls temporal_max_activity_task_polls temporal_nonsticky_to_sticky_ratio temporal_graceful_shutdown_timeout prometheus-metrics-configuration temporal_prometheus_bind_address temporal_prometheus_counters_total_suffix temporal_prometheus_unit_suffix temporal_prometheus_durations_as_seconds runtime-configuration when-configuration-becomes-fixed configuration-priority configuration-examples development-configuration production-configuration high-performance-configuration resource-limited-configuration using-configuration-files configuration-validation startup-environment-and-explicit-overrides configuration-tips common-configuration-patterns pattern-1-environment-based pattern-2-configuration-class pattern-3-pydantic-settings security-best-practices troubleshooting-configuration check-current-configuration validate-configuration"
+               aria-current="page">Русский</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <span class="md-visually-hidden">Поиск</span>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Поиск">
+  <button type="button" class="md-search__button">
+    Поиск
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        
+<a href="https://github.com/northpowered/temporal-boost" title="Перейти к репозиторию" class="md-source">
+  <div class="md-source__icon md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></div>
+  <div class="md-source__repository">northpowered/temporal-boost</div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Вкладки" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./.." class="md-tabs__link">
+          
+  
+  Начало работы
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../creating_application/" class="md-tabs__link">
+          
+  
+  Руководства
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../running_application/" class="md-tabs__link">
+          
+  
+  Эксплуатация
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/" class="md-tabs__link">
+          
+  
+  Примеры
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api_reference/" class="md-tabs__link">
+          
+  
+  API
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="../release_notes_2.0.0/" class="md-tabs__link">
+          
+  
+  Выпуски
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Навигация" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="./.." title="Temporal-boost" class="md-nav__button md-logo" aria-label="Temporal-boost" data-md-component="logo">
+      
+  <img src="../assets/brand/temporal-light.svg" alt="Temporal-boost">
+
+    </a>
+    Temporal-boost
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/northpowered/temporal-boost" title="Перейти к репозиторию" class="md-source">
+  <div class="md-source__icon md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg></div>
+  <div class="md-source__repository">northpowered/temporal-boost</div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Начало работы
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_1">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Начало работы
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Начало работы
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Руководства
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Руководства
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Создание приложения
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Конфигурация
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Конфигурация
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Содержание
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Загрузка окружения
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporal-client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Настройки клиента Temporal
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Настройки клиента Temporal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_target_host" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_TARGET_HOST</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_NAMESPACE</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_TLS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_api_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_API_KEY</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_IDENTITY</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_use_pydantic_data_converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Настройки воркера
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Настройки воркера">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_workflow_tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_CONCURRENT_ACTIVITIES</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_local_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_workflow_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_WORKFLOW_TASK_POLLS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_activity_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_ACTIVITY_TASK_POLLS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_nonsticky_to_sticky_ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_NONSTICKY_TO_STICKY_RATIO</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_graceful_shutdown_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prometheus-metrics-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Метрики Prometheus
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Метрики Prometheus">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_bind_address" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_BIND_ADDRESS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_counters_total_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_unit_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_UNIT_SUFFIX</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_durations_as_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Настройки runtime
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-configuration-becomes-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Когда настройки фиксируются
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Приоритет конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Примеры конфигурации
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Примеры конфигурации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Разработка
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Production
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-performance-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Высокая производительность
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-limited-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ограниченные ресурсы
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Файлы конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Проверка конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startup-environment-and-explicit-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Окружение запуска и явные параметры
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Советы по настройке
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-configuration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Типовые схемы конфигурации
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Типовые схемы конфигурации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-environment-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Схема 1: окружение
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-configuration-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Схема 2: класс настроек
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-pydantic-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Схема 3: Pydantic Settings
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Рекомендации по безопасности
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Диагностика конфигурации
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Диагностика конфигурации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-current-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Просмотр текущих настроек
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Проверка настроек
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Расширенное использование
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faststream_integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Интеграция с FastStream
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Эксплуатация
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Эксплуатация
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running_application/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Запуск приложения
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Устранение неполадок
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Примеры
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Примеры
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Примеры
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  API
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  API
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Справочник API
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Выпуски
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Выпуски
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release_notes_2.0.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Изменения 2.0.0
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Содержание">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Содержание
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Содержание
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Загрузка окружения
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#temporal-client-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Настройки клиента Temporal
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Настройки клиента Temporal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_target_host" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_TARGET_HOST</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_namespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_NAMESPACE</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_TLS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_api_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_API_KEY</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_IDENTITY</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_use_pydantic_data_converter" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Настройки воркера
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Настройки воркера">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_workflow_tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_CONCURRENT_ACTIVITIES</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_concurrent_local_activities" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_workflow_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_WORKFLOW_TASK_POLLS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_max_activity_task_polls" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_MAX_ACTIVITY_TASK_POLLS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_nonsticky_to_sticky_ratio" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_NONSTICKY_TO_STICKY_RATIO</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_graceful_shutdown_timeout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prometheus-metrics-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Метрики Prometheus
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Метрики Prometheus">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_bind_address" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_BIND_ADDRESS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_counters_total_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_unit_suffix" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_UNIT_SUFFIX</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal_prometheus_durations_as_seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Настройки runtime
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-configuration-becomes-fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Когда настройки фиксируются
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Приоритет конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Примеры конфигурации
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Примеры конфигурации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Разработка
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#production-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Production
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#high-performance-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Высокая производительность
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-limited-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Ограниченные ресурсы
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Файлы конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Проверка конфигурации
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#startup-environment-and-explicit-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Окружение запуска и явные параметры
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Советы по настройке
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-configuration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Типовые схемы конфигурации
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Типовые схемы конфигурации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-1-environment-based" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Схема 1: окружение
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-2-configuration-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Схема 2: класс настроек
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-3-pydantic-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Схема 3: Pydantic Settings
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Рекомендации по безопасности
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Диагностика конфигурации
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Диагностика конфигурации">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#check-current-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Просмотр текущих настроек
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Проверка настроек
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+
+  
+    <a href="https://github.com/northpowered/temporal-boost/edit/main/docs/ru/configuration.md" title="Редактировать страницу" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="configuration">Конфигурация<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
+<p>Temporal-boost использует окружение для значений по умолчанию и позволяет явно настраивать приложение и воркеры. Здесь описаны параметры, их приоритет и момент чтения.</p>
+<h2 id="table-of-contents">Содержание<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="#environment-loading">Загрузка окружения</a></li>
+<li><a href="#temporal-client-configuration">Клиент Temporal</a></li>
+<li><a href="#worker-configuration">Настройки воркера</a></li>
+<li><a href="#prometheus-metrics-configuration">Метрики Prometheus</a></li>
+<li><a href="#runtime-configuration">Настройки runtime</a></li>
+<li><a href="#configuration-priority">Приоритет конфигурации</a></li>
+<li><a href="#configuration-examples">Примеры</a></li>
+</ul>
+<h2 id="environment-loading">Загрузка окружения<a class="headerlink" href="#environment-loading" title="Permanent link">&para;</a></h2>
+<p><code>temporal_boost.temporal.config</code> читает окружение один раз при первом импорте пакета. Подготовьте его до импорта <code>temporal_boost</code> или модулей, которые его импортируют. Изменение <code>os.environ</code> после импорта не обновляет константы даже для новых приложений и сборщиков. Для последующих изменений передавайте явные аргументы до инициализации: см. <a href="#when-configuration-becomes-fixed">момент фиксации настроек</a>.</p>
+<p>Пакет не загружает <code>.env</code> автоматически. Загрузите файл до импорта или подготовьте окружение извне: см. <a href="#using-configuration-files">пример запуска</a>. Установленная команда <code>temporal-boost</code> импортирует пакет раньше модуля приложения; загрузчик <code>.env</code> внутри этого модуля вызывается слишком поздно для значений CLI по умолчанию.</p>
+<h2 id="temporal-client-configuration">Настройки клиента Temporal<a class="headerlink" href="#temporal-client-configuration" title="Permanent link">&para;</a></h2>
+<p>Эти параметры управляют подключением воркеров к серверу Temporal.</p>
+<h3 id="temporal_target_host"><code>TEMPORAL_TARGET_HOST</code><a class="headerlink" href="#temporal_target_host" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: строка. <strong>По умолчанию</strong>: <code>localhost:7233</code>. <strong>Назначение</strong>: адрес сервера, host:port.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.example.com:7233
+</span></code></pre></div>
+<h3 id="temporal_namespace"><code>TEMPORAL_NAMESPACE</code><a class="headerlink" href="#temporal_namespace" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: строка. <strong>По умолчанию</strong>: <code>default</code>. <strong>Назначение</strong>: namespace Temporal.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span></code></pre></div>
+<h3 id="temporal_tls"><code>TEMPORAL_TLS</code><a class="headerlink" href="#temporal_tls" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: булево значение. <strong>По умолчанию</strong>: <code>false</code>. <strong>Назначение</strong>: TLS для подключений.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<p>Принимает <code>true</code>, <code>1</code>, <code>yes</code> без учёта регистра.</p>
+<h3 id="temporal_api_key"><code>TEMPORAL_API_KEY</code><a class="headerlink" href="#temporal_api_key" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: строка. <strong>По умолчанию</strong>: <code>None</code>. <strong>Назначение</strong>: API-ключ Temporal Cloud или защищённого кластера.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_API_KEY</span><span class="o">=</span>your-api-key-here
+</span></code></pre></div>
+<p>Не сохраняйте API-ключи в системе контроля версий; используйте менеджер секретов.</p>
+<h3 id="temporal_identity"><code>TEMPORAL_IDENTITY</code><a class="headerlink" href="#temporal_identity" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: строка. <strong>По умолчанию</strong>: <code>None</code>. <strong>Назначение</strong>: идентификатор клиента.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_IDENTITY</span><span class="o">=</span>worker-1
+</span></code></pre></div>
+<h3 id="temporal_use_pydantic_data_converter"><code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code><a class="headerlink" href="#temporal_use_pydantic_data_converter" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: булево значение. <strong>По умолчанию</strong>: <code>false</code>. <strong>Назначение</strong>: сериализация с преобразователем Pydantic.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<p>Преобразователь использует модели Pydantic для типизации и проверки сериализуемых данных. При создании клиентского сборщика <code>BoostApp(use_pydantic=...)</code> и <code>use_pydantic_data_converter</code> у <code>TemporalClientBuilder</code> или <code>worker.configure_temporal_client()</code> следуют общему правилу:</p>
+<table>
+<thead>
+<tr>
+<th>Аргумент</th>
+<th>Поведение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>None</code> (по умолчанию)</td>
+<td>Наследуется <code>TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</code></td>
+</tr>
+<tr>
+<td><code>True</code></td>
+<td>Включается преобразователь Pydantic из SDK</td>
+</tr>
+<tr>
+<td><code>False</code></td>
+<td>Автоматический выбор Pydantic отключён даже при включении через окружение</td>
+</tr>
+</tbody>
+</table>
+<p>Явный <code>data_converter</code> у <code>TemporalClientBuilder</code>, <code>set_kwargs()</code> или <code>worker.configure_temporal_client()</code> приоритетнее флага и окружения. Отключение флага сохраняет явный преобразователь. Если он не задан, используется стандартный преобразователь SDK.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">use_pydantic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># Overrides an environment value of true</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">"example"</span><span class="p">,</span> <span class="s2">"example-queue"</span><span class="p">,</span> <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">])</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span><span class="n">data_converter</span><span class="o">=</span><span class="n">custom_converter</span><span class="p">)</span>  <span class="c1"># Explicit converter takes priority</span>
+</span></code></pre></div>
+<p>До инициализации клиента и после очистки запуска <code>configure_temporal_client()</code> меняет флаг только при <code>True</code> или <code>False</code>; <code>None</code> сохраняет прежний выбор. Поздний вызов вызывает <code>RuntimeError</code>: см. <a href="#when-configuration-becomes-fixed">фиксацию настроек</a>. У отдельного сборщика отключайте Pydantic через <code>builder.set_pydantic_data_converter(enabled=False)</code>; вызов без аргументов включает его. Каждый <code>build()</code> использует текущий выбор без сохранения автоматически добавленного ранее преобразователя. Уже подключённый клиент не меняется.</p>
+<p><strong>Миграция:</strong> если код рассчитывал, что <code>False</code> включает Pydantic, передайте <code>True</code>. При одновременном явном преобразователе и включённом флаге теперь побеждает явный преобразователь; удалите его для использования Pydantic SDK.</p>
+<h2 id="worker-configuration">Настройки воркера<a class="headerlink" href="#worker-configuration" title="Permanent link">&para;</a></h2>
+<p>Эти параметры управляют поведением и ресурсами воркера. Шесть числовых параметров ниже используют окружение только при пропуске аргумента или <code>None</code>. Проверка выполняется при создании <code>TemporalWorkerBuilder</code>, в том числе через <code>BoostApp.add_worker()</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Аргумент</th>
+<th>Допустимые значения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>max_concurrent_workflow_tasks</code></td>
+<td>Положительное целое число</td>
+</tr>
+<tr>
+<td><code>max_concurrent_activities</code></td>
+<td>Положительное целое число</td>
+</tr>
+<tr>
+<td><code>max_concurrent_local_activities</code></td>
+<td>Положительное целое число</td>
+</tr>
+<tr>
+<td><code>max_concurrent_workflow_task_polls</code></td>
+<td>Положительное целое число</td>
+</tr>
+<tr>
+<td><code>max_concurrent_activity_task_polls</code></td>
+<td>Положительное целое число</td>
+</tr>
+<tr>
+<td><code>nonsticky_to_sticky_poll_ratio</code></td>
+<td>Конечное неотрицательное <code>int</code> или <code>float</code>, включая <code>0.0</code>, без верхнего предела</td>
+</tr>
+</tbody>
+</table>
+<p>Неверные типы, включая булевы значения и числовые строки, вызывают <code>TypeError</code>; выход за диапазон — <code>ValueError</code>. Для счётчиков запрещены дробные значения, включая <code>1.0</code>. Явный ноль больше не заменяется конфигурацией: используйте <code>None</code> или пропустите аргумент. Нулевой или отрицательный счётчик из окружения также отклоняется. Корректный явный аргумент может заменить неверный настроенный default. Окружение разбирается при импорте; неверный текст числа по-прежнему заменяется встроенным значением парсера.</p>
+<p>Во время <code>build()</code> SDK проверяет дополнительные ограничения: при <code>max_cached_workflows &gt; 0</code> параллелизм workflow и число опросов должны быть не меньше двух. Без кэширования допустима единица. Проверка коэффициента в сборщике отклоняет отрицательные и неконечные значения, которые SDK Core сам не проверяет; верхней границы <code>1.0</code> нет.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">"worker"</span><span class="p">,</span> <span class="s2">"queue"</span><span class="p">,</span> <span class="n">workflows</span><span class="o">=</span><span class="p">[</span><span class="n">MyWorkflow</span><span class="p">],</span> <span class="n">nonsticky_to_sticky_poll_ratio</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Нулевой коэффициент передаётся в SDK без изменений. При кэшировании SDK сохраняет минимум одного poller для каждой sticky/non-sticky очереди; ноль не отключает non-sticky опрос.</p>
+<h3 id="temporal_max_concurrent_workflow_tasks"><code>TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</code><a class="headerlink" href="#temporal_max_concurrent_workflow_tasks" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: целое число. <strong>По умолчанию</strong>: <code>300</code>. Максимум одновременно выполняемых задач workflow на воркер.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
+</span></code></pre></div>
+<p>Увеличьте для пропускной способности или уменьшите для ограничения ресурсов.</p>
+<h3 id="temporal_max_concurrent_activities"><code>TEMPORAL_MAX_CONCURRENT_ACTIVITIES</code><a class="headerlink" href="#temporal_max_concurrent_activities" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: целое число. <strong>По умолчанию</strong>: <code>300</code>. Максимум одновременных activity на воркер.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">200</span>
+</span></code></pre></div>
+<p>Подбирайте значение под нагрузку и доступные ресурсы.</p>
+<h3 id="temporal_max_concurrent_local_activities"><code>TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</code><a class="headerlink" href="#temporal_max_concurrent_local_activities" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: целое число. <strong>По умолчанию</strong>: <code>100</code>. Максимум одновременных локальных activity.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
+</span></code></pre></div>
+<p>Локальные activity выполняются в том же процессе, что и workflow.</p>
+<h3 id="temporal_max_workflow_task_polls"><code>TEMPORAL_MAX_WORKFLOW_TASK_POLLS</code><a class="headerlink" href="#temporal_max_workflow_task_polls" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: целое число. <strong>По умолчанию</strong>: <code>10</code>. Максимум одновременных опросов задач workflow.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
+</span></code></pre></div>
+<p>Определяет количество одновременно опрашиваемых задач workflow.</p>
+<h3 id="temporal_max_activity_task_polls"><code>TEMPORAL_MAX_ACTIVITY_TASK_POLLS</code><a class="headerlink" href="#temporal_max_activity_task_polls" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: целое число. <strong>По умолчанию</strong>: <code>10</code>. Максимум одновременных опросов задач activity.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">20</span>
+</span></code></pre></div>
+<p>Определяет количество одновременно опрашиваемых задач activity.</p>
+<h3 id="temporal_nonsticky_to_sticky_ratio"><code>TEMPORAL_NONSTICKY_TO_STICKY_RATIO</code><a class="headerlink" href="#temporal_nonsticky_to_sticky_ratio" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: дробное число. <strong>По умолчанию</strong>: <code>0.2</code>. Соотношение non-sticky и sticky опросов workflow.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.3
+</span></code></pre></div>
+<p>Sticky workflow сохраняют состояние в памяти для повышения производительности.</p>
+<h3 id="temporal_graceful_shutdown_timeout"><code>TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</code><a class="headerlink" href="#temporal_graceful_shutdown_timeout" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: целое число секунд. <strong>По умолчанию</strong>: <code>30</code>. Период ожидания завершения activity, передаваемый SDK как <code>graceful_shutdown_timeout</code>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
+</span></code></pre></div>
+<p>При остановке SDK activity получают этот период для завершения до запроса отмены. Ноль запрашивает отмену сразу. SDK всё равно ждёт завершения activity; игнорирование отмены может продлить остановку сверх указанного времени.</p>
+<p>Переопределите настройку конкретного воркера через <code>datetime.timedelta</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>    <span class="s2">"payments"</span><span class="p">,</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>    <span class="s2">"payments_queue"</span><span class="p">,</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">process_payment</span><span class="p">],</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="n">graceful_shutdown_timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">45</span><span class="p">),</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Явное значение, включая <code>timedelta(0)</code>, приоритетно. Пропуск или <code>None</code> использует прочитанную при импорте константу; стандартный fallback — 30 секунд. Некорректный текст целого числа использует тот же fallback. Выбранная отрицательная длительность вызывает <code>ValueError</code> при создании сборщика. Явная неотрицательная длительность может заменить отрицательную из окружения.</p>
+<p><strong>Изменение поведения:</strong> без аргумента воркер теперь получает период из окружения или 30 секунд. Ранее настройка игнорировалась и SDK использовал ноль, если значение не передавалось явно.</p>
+<p>У координатора отдельный бюджет <code>BoostApp(shutdown_timeout=30.0)</code> на ожидание всех потоков. Внешний запускатель имеет отдельный общий <code>--shutdown-timeout</code> для дочерних процессов (30 секунд), затем до 5 секунд после terminate и ещё 5 после kill. Внешний бюджет должен учитывать внутреннюю очистку. Эта переменная не меняет бюджеты и не инициирует остановку. Адаптер Temporal поддерживает <code>request_stop()</code>; очистка SDK зависит от соблюдения отмены activity. См. <a href="../running_application/#graceful-shutdown">корректное завершение</a>.</p>
+<h2 id="prometheus-metrics-configuration">Метрики Prometheus<a class="headerlink" href="#prometheus-metrics-configuration" title="Permanent link">&para;</a></h2>
+<p>Параметры сбора и экспорта метрик.</p>
+<h3 id="temporal_prometheus_bind_address"><code>TEMPORAL_PROMETHEUS_BIND_ADDRESS</code><a class="headerlink" href="#temporal_prometheus_bind_address" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: строка. <strong>По умолчанию</strong>: <code>None</code>. Адрес endpoint метрик Prometheus.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span></code></pre></div>
+<p>Каждый runtime воркера публикует <code>/metrics</code> на этом адресе. Одновременным runtime нужны разные endpoints; конфликт порта вызывает ошибку запуска, а не отключает телеметрию. Переопределяйте адрес через <code>configure_temporal_runtime()</code> и выделяйте каждому процессу порты или сетевые адреса. <code>--workers N</code> не распределяет порты метрик. Собирайте каждый endpoint: см. <a href="../advanced_usage/#metrics-across-workers-and-processes">метрики воркеров и процессов</a>.</p>
+<p>Экспортёр SDK не использует <code>PROMETHEUS_MULTIPROC_DIR</code>; этот каталог не объединяет метрики SDK.</p>
+<h3 id="temporal_prometheus_counters_total_suffix"><code>TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</code><a class="headerlink" href="#temporal_prometheus_counters_total_suffix" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: булево значение. <strong>По умолчанию</strong>: <code>false</code>. Добавляет <code>_total</code> к счётчикам.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_COUNTERS_TOTAL_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<h3 id="temporal_prometheus_unit_suffix"><code>TEMPORAL_PROMETHEUS_UNIT_SUFFIX</code><a class="headerlink" href="#temporal_prometheus_unit_suffix" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: булево значение. <strong>По умолчанию</strong>: <code>false</code>. Добавляет единицы измерения к именам метрик.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_UNIT_SUFFIX</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<h3 id="temporal_prometheus_durations_as_seconds"><code>TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</code><a class="headerlink" href="#temporal_prometheus_durations_as_seconds" title="Permanent link">&para;</a></h3>
+<p><strong>Тип</strong>: булево значение. <strong>По умолчанию</strong>: <code>false</code>. Выражает длительности в секундах вместо миллисекунд.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_PROMETHEUS_DURATIONS_AS_SECONDS</span><span class="o">=</span><span class="nb">true</span>
+</span></code></pre></div>
+<h2 id="runtime-configuration">Настройки runtime<a class="headerlink" href="#runtime-configuration" title="Permanent link">&para;</a></h2>
+<p>Runtime настраивается программно: см. <a href="../advanced_usage/">расширенное использование</a>.</p>
+<p>Defaults для <code>prometheus_bind_address</code>, <code>prometheus_counters_total_suffix</code>, <code>prometheus_unit_suffix</code> и <code>prometheus_durations_as_seconds</code> фиксируются при определении <code>TemporalRuntimeBuilder.__init__()</code> и <code>worker.configure_temporal_runtime()</code> во время импорта. Изменение <code>os.environ</code> и даже <code>config.PROMETHEUS_*</code> не обновляет пропущенные аргументы. Передавайте явные значения до создания runtime.</p>
+<p>Каждый <code>configure_temporal_runtime()</code> заменяет конфигурацию целиком; пропущенные поля возвращаются к defaults функции. Явный <code>metrics</code> приоритетнее адреса. При <code>metrics=None</code> явный <code>prometheus_bind_address=None</code> отключает неявный экспортёр, даже если в окружении был адрес. Явные <code>False</code> и <code>None</code> у флагов суффиксов/длительности дают <code>False</code>; <code>None</code> не перечитывает окружение.</p>
+<h2 id="when-configuration-becomes-fixed">Когда настройки фиксируются<a class="headerlink" href="#when-configuration-becomes-fixed" title="Permanent link">&para;</a></h2>
+<p>Настройте воркер Temporal до запуска:</p>
+<table>
+<thead>
+<tr>
+<th>Состояние воркера</th>
+<th>Настройка runtime</th>
+<th>Настройка клиента</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Создан, ресурсы не инициализированы</td>
+<td>Разрешена</td>
+<td>Разрешена</td>
+</tr>
+<tr>
+<td>Runtime создан через <code>temporal_client_runtime</code>, клиент ещё не создан</td>
+<td><code>RuntimeError</code></td>
+<td>Разрешена</td>
+</tr>
+<tr>
+<td>Инициализация клиента/SDK воркера началась или завершилась</td>
+<td><code>RuntimeError</code></td>
+<td><code>RuntimeError</code></td>
+</tr>
+<tr>
+<td>Жизненный цикл <code>building</code>, <code>running</code> или <code>stopping</code></td>
+<td><code>RuntimeError</code></td>
+<td><code>RuntimeError</code></td>
+</tr>
+<tr>
+<td>Очистка завершена (<code>stopped</code>), ресурсы освобождены</td>
+<td>Для следующего запуска</td>
+<td>Для следующего запуска</td>
+</tr>
+</tbody>
+</table>
+<p>Первое чтение <code>temporal_client_runtime</code> создаёт и кэширует runtime даже до запуска и может занять порт Prometheus. Задавайте параметры до чтения. Повторное чтение возвращает тот же объект; изменение настроек отклоняется без изменения сборщика. Состояние <code>created</code> означает отсутствие активного запуска и допускает уже созданный через свойство runtime.</p>
+<p>Отклонённая настройка клиента также сохраняет сборщики и SDK-объекты. Автоматического переподключения, замены runtime или изменения работающего SDK воркера нет. После очистки запуска или ошибки старта оба метода снова доступны; следующий запуск создаёт новые объекты. Чтение свойства runtime после очистки снова создаёт объект и фиксирует параметры. Если неудачный конструктор не оставил кэшированного runtime и активного запуска нет, можно перенастроить его перед повтором.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">"consumer"</span><span class="p">,</span> <span class="s2">"queue"</span><span class="p">,</span> <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">])</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_runtime</span><span class="p">(</span><span class="n">prometheus_bind_address</span><span class="o">=</span><span class="s2">"127.0.0.1:9101"</span><span class="p">)</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">"production"</span><span class="p">)</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Optional inspection now creates the runtime and fixes its telemetry options:</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="n">runtime</span> <span class="o">=</span> <span class="n">worker</span><span class="o">.</span><span class="n">temporal_client_runtime</span>
+</span></code></pre></div>
+<p><strong>Миграция:</strong> перенесите настройку до <code>run()</code>/<code>cron()</code> и первого чтения runtime. Для изменения остановите воркер, дождитесь возврата запуска и очистки, затем настройте следующий запуск. Чтобы отказаться от пробного runtime без запуска адаптера, создайте новый воркер. Внешние ссылки могут удерживать прежний экспортёр; освободите их до повторного использования порта.</p>
+<p>Activity, interceptors и параллелизм задаются при создании адаптера или через <code>app.add_worker()</code>. Для их изменения нужен новый адаптер. Отдельные <code>TemporalClientBuilder</code>/<code>TemporalWorkerBuilder</code> остаются изменяемыми: setters влияют на будущие сборки и не меняют уже возвращённые объекты.</p>
+<h2 id="configuration-priority">Приоритет конфигурации<a class="headerlink" href="#configuration-priority" title="Permanent link">&para;</a></h2>
+<p>Endpoint и namespace выбираются независимо, от высшего приоритета к низшему:</p>
+<ol>
+<li><strong>Явная настройка воркера</strong>: последнее не-<code>None</code> значение <code>target_host</code> или <code>namespace</code> в <code>configure_temporal_client()</code> до инициализации клиента.</li>
+<li><strong>Параметры BoostApp</strong>: <code>temporal_endpoint</code> и <code>temporal_namespace</code>.</li>
+<li><strong>Окружение при импорте</strong>: <code>TEMPORAL_TARGET_HOST</code> и <code>TEMPORAL_NAMESPACE</code>.</li>
+<li><strong>Встроенные значения</strong>: <code>localhost:7233</code> и <code>default</code>.</li>
+</ol>
+<p>При повторной настройке сборщика клиента пропущенные поля и <code>None</code> сохраняют предыдущие значения. Изменение только namespace сохраняет endpoint. У отдельного <code>TemporalClientBuilder</code> нет слоя приложения: аргументы конструктора заменяют конфигурацию импорта, последующие setters заменяют сохранённые значения будущих сборок.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.prod:7233
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="c1"># The app endpoint wins over the environment; namespace still comes from the environment.</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">"temporal.dev:7233"</span><span class="p">)</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">"consumer"</span><span class="p">,</span> <span class="s2">"queue"</span><span class="p">,</span> <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">])</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="c1"># This worker connects to temporal.dev:7233 in the isolated namespace.</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">"isolated"</span><span class="p">)</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span><span class="n">target_host</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># Keeps temporal.dev:7233</span>
+</span></code></pre></div>
+<p>Остальные поля следуют собственным правилам:</p>
+<table>
+<thead>
+<tr>
+<th>Поля</th>
+<th>Правило выбора</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Строковые аргументы конструктора клиента (<code>target_host</code>, <code>namespace</code>, <code>api_key</code>, <code>identity</code>)</td>
+<td><code>None</code> и пустая строка используют импортированную конфигурацию. Настройки воркера и endpoint/namespace приложения используют setters, сохраняющие явную пустую строку. Она не сбрасывает конфигурацию и может отклоняться SDK.</td>
+</tr>
+<tr>
+<td><code>tls</code></td>
+<td>При первой настройке <code>None</code> наследует конфигурацию, явный <code>False</code> заменяет <code>True</code>. У существующего сборщика <code>None</code> сохраняет настройку.</td>
+</tr>
+<tr>
+<td>Флаг Pydantic / <code>data_converter</code></td>
+<td>Явный преобразователь приоритетнее флага; различаются <code>None</code>, <code>False</code>, <code>True</code>. См. <a href="#temporal_use_pydantic_data_converter">выбор преобразователя</a>.</td>
+</tr>
+<tr>
+<td>Счётчики, коэффициент и период завершения activity</td>
+<td>Только <code>None</code> выбирает конфигурацию. Ноль допустим для коэффициента и периода; счётчики положительны. См. <a href="#worker-configuration">воркеры</a>.</td>
+</tr>
+<tr>
+<td>Defaults Prometheus</td>
+<td>Пропуск использует значения времени импорта; явные аргументы подчиняются <a href="#runtime-configuration">правилам runtime</a>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuration-examples">Примеры конфигурации<a class="headerlink" href="#configuration-examples" title="Permanent link">&para;</a></h2>
+<h3 id="development-configuration">Разработка<a class="headerlink" href="#development-configuration" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># .env.development</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>development
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">10</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">10</span>
+</span></code></pre></div>
+<h3 id="production-configuration">Production<a class="headerlink" href="#production-configuration" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># .env.production</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.production.example.com:7233
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="nv">TEMPORAL_API_KEY</span><span class="o">=</span><span class="si">${</span><span class="nv">TEMPORAL_API_KEY</span><span class="si">}</span><span class="w">  </span><span class="c1"># From secrets manager</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="nv">TEMPORAL_USE_PYDANTIC_DATA_CONVERTER</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">300</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">300</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="nv">TEMPORAL_GRACEFUL_SHUTDOWN_TIMEOUT</span><span class="o">=</span><span class="m">60</span>
+</span></code></pre></div>
+<h3 id="high-performance-configuration">Высокая производительность<a class="headerlink" href="#high-performance-configuration" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># .env.high-performance</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>temporal.cluster.example.com:7233
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>production
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="nv">TEMPORAL_TLS</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">1000</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">500</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a><span class="nv">TEMPORAL_NONSTICKY_TO_STICKY_RATIO</span><span class="o">=</span><span class="m">0</span>.1
+</span><span id="__span-25-10"><a id="__codelineno-25-10" name="__codelineno-25-10" href="#__codelineno-25-10"></a><span class="nv">TEMPORAL_PROMETHEUS_BIND_ADDRESS</span><span class="o">=</span><span class="m">0</span>.0.0.0:9090
+</span></code></pre></div>
+<h3 id="resource-limited-configuration">Ограниченные ресурсы<a class="headerlink" href="#resource-limited-configuration" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># .env.limited-resources</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nv">TEMPORAL_TARGET_HOST</span><span class="o">=</span>localhost:7233
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="nv">TEMPORAL_NAMESPACE</span><span class="o">=</span>default
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_ACTIVITIES</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS</span><span class="o">=</span><span class="m">50</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="nv">TEMPORAL_MAX_CONCURRENT_LOCAL_ACTIVITIES</span><span class="o">=</span><span class="m">20</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="nv">TEMPORAL_MAX_WORKFLOW_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="nv">TEMPORAL_MAX_ACTIVITY_TASK_POLLS</span><span class="o">=</span><span class="m">5</span>
+</span></code></pre></div>
+<h3 id="using-configuration-files">Файлы конфигурации<a class="headerlink" href="#using-configuration-files" title="Permanent link">&para;</a></h3>
+<p>Для прямого запуска скрипта установите <code>python-dotenv</code> отдельно и загрузите файл до импорта пакета и модулей воркеров:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="n">load_dotenv</span><span class="p">(</span><span class="s2">".env"</span><span class="p">)</span>  <span class="c1"># Must run before importing temporal_boost</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+<p>По умолчанию <code>load_dotenv()</code> сохраняет переменные окружения процесса. Это подготавливает окружение; явные настройки приложения и воркера сохраняют свой приоритет.</p>
+<h3 id="configuration-validation">Проверка конфигурации<a class="headerlink" href="#configuration-validation" title="Permanent link">&para;</a></h3>
+<p>Проверяйте настройки при запуске:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate_config</span><span class="p">():</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">    </span><span class="sd">"""Validate required configuration."""</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>    <span class="n">required_vars</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>        <span class="s2">"TEMPORAL_TARGET_HOST"</span><span class="p">,</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>        <span class="s2">"TEMPORAL_NAMESPACE"</span><span class="p">,</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>    <span class="p">]</span>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">required_vars</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">var</span><span class="p">)]</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Missing required environment variables: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-28-14"><a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a>
+</span><span id="__span-28-15"><a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a><span class="n">validate_config</span><span class="p">()</span>
+</span><span id="__span-28-16"><a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="startup-environment-and-explicit-overrides">Окружение запуска и явные параметры<a class="headerlink" href="#startup-environment-and-explicit-overrides" title="Permanent link">&para;</a></h3>
+<p>Подготовьте окружение до первого импорта в новом процессе:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="c1"># Set defaults before importing temporal_boost or your application modules.</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"TEMPORAL_TARGET_HOST"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"localhost:7233"</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"TEMPORAL_NAMESPACE"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"test"</span>
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+<p>Если пакет уже импортирован, настройте новое приложение или воркер, клиент которого ещё не инициализирован:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">(</span><span class="n">temporal_endpoint</span><span class="o">=</span><span class="s2">"localhost:7233"</span><span class="p">,</span> <span class="n">temporal_namespace</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="n">worker</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">add_worker</span><span class="p">(</span><span class="s2">"consumer"</span><span class="p">,</span> <span class="s2">"queue"</span><span class="p">,</span> <span class="n">activities</span><span class="o">=</span><span class="p">[</span><span class="n">my_activity</span><span class="p">])</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="n">worker</span><span class="o">.</span><span class="n">configure_temporal_client</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">"another-test"</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Вызовы влияют на будущее создание ресурсов и не меняют активный клиент или runtime.</p>
+<h3 id="configuration-tips">Советы по настройке<a class="headerlink" href="#configuration-tips" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Используйте <code>.env.development</code> и <code>.env.production</code> для разных сред.</li>
+<li>Не сохраняйте секреты в репозитории; используйте менеджер секретов.</li>
+<li>Документируйте значения по умолчанию.</li>
+<li>Проверяйте настройки при старте.</li>
+<li>Преобразуйте строковые переменные в нужные типы.</li>
+<li>Логируйте конфигурацию без секретов.</li>
+</ol>
+<h3 id="common-configuration-patterns">Типовые схемы конфигурации<a class="headerlink" href="#common-configuration-patterns" title="Permanent link">&para;</a></h3>
+<h4 id="pattern-1-environment-based">Схема 1: окружение<a class="headerlink" href="#pattern-1-environment-based" title="Permanent link">&para;</a></h4>
+<p>Выполните подготовку до импорта <code>temporal_boost</code> и модулей приложения:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"ENVIRONMENT"</span><span class="p">,</span> <span class="s2">"development"</span><span class="p">)</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="k">if</span> <span class="n">env</span> <span class="o">==</span> <span class="s2">"production"</span><span class="p">:</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"TEMPORAL_TLS"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">)</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"TEMPORAL_PROMETHEUS_BIND_ADDRESS"</span><span class="p">,</span> <span class="s2">"0.0.0.0:9090"</span><span class="p">)</span>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoostApp</span>
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a>
+</span><span id="__span-31-10"><a id="__codelineno-31-10" name="__codelineno-31-10" href="#__codelineno-31-10"></a><span class="n">app</span> <span class="o">=</span> <span class="n">BoostApp</span><span class="p">()</span>
+</span></code></pre></div>
+<h4 id="pattern-2-configuration-class">Схема 2: класс настроек<a class="headerlink" href="#pattern-2-configuration-class" title="Permanent link">&para;</a></h4>
+<p>Класс настроек приложения читает окружение независимо. Передавайте значения явно в <code>BoostApp</code> или настройку воркера: создание объекта настроек не меняет константы пакета.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="nd">@dataclass</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalConfig</span><span class="p">:</span>
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>    <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>    <span class="n">tls</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-32-10"><a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a>
+</span><span id="__span-32-11"><a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a>    <span class="nd">@classmethod</span>
+</span><span id="__span-32-12"><a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_env</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+</span><span id="__span-32-13"><a id="__codelineno-32-13" name="__codelineno-32-13" href="#__codelineno-32-13"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+</span><span id="__span-32-14"><a id="__codelineno-32-14" name="__codelineno-32-14" href="#__codelineno-32-14"></a>            <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"TEMPORAL_TARGET_HOST"</span><span class="p">,</span> <span class="s2">"localhost:7233"</span><span class="p">),</span>
+</span><span id="__span-32-15"><a id="__codelineno-32-15" name="__codelineno-32-15" href="#__codelineno-32-15"></a>            <span class="n">namespace</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"TEMPORAL_NAMESPACE"</span><span class="p">,</span> <span class="s2">"default"</span><span class="p">),</span>
+</span><span id="__span-32-16"><a id="__codelineno-32-16" name="__codelineno-32-16" href="#__codelineno-32-16"></a>            <span class="n">tls</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"TEMPORAL_TLS"</span><span class="p">,</span> <span class="s2">"false"</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"true"</span><span class="p">,</span>
+</span><span id="__span-32-17"><a id="__codelineno-32-17" name="__codelineno-32-17" href="#__codelineno-32-17"></a>            <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">"TEMPORAL_API_KEY"</span><span class="p">),</span>
+</span><span id="__span-32-18"><a id="__codelineno-32-18" name="__codelineno-32-18" href="#__codelineno-32-18"></a>        <span class="p">)</span>
+</span><span id="__span-32-19"><a id="__codelineno-32-19" name="__codelineno-32-19" href="#__codelineno-32-19"></a>
+</span><span id="__span-32-20"><a id="__codelineno-32-20" name="__codelineno-32-20" href="#__codelineno-32-20"></a><span class="n">config</span> <span class="o">=</span> <span class="n">TemporalConfig</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+</span></code></pre></div>
+<h4 id="pattern-3-pydantic-settings">Схема 3: Pydantic Settings<a class="headerlink" href="#pattern-3-pydantic-settings" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">TemporalSettings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a>    <span class="n">temporal_target_host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost:7233"</span>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a>    <span class="n">temporal_namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"default"</span>
+</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a>    <span class="n">temporal_tls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a>    <span class="n">temporal_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a>
+</span><span id="__span-33-9"><a id="__codelineno-33-9" name="__codelineno-33-9" href="#__codelineno-33-9"></a>    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+</span><span id="__span-33-10"><a id="__codelineno-33-10" name="__codelineno-33-10" href="#__codelineno-33-10"></a>        <span class="n">env_prefix</span> <span class="o">=</span> <span class="s2">"TEMPORAL_"</span>
+</span><span id="__span-33-11"><a id="__codelineno-33-11" name="__codelineno-33-11" href="#__codelineno-33-11"></a>        <span class="n">case_sensitive</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-33-12"><a id="__codelineno-33-12" name="__codelineno-33-12" href="#__codelineno-33-12"></a>
+</span><span id="__span-33-13"><a id="__codelineno-33-13" name="__codelineno-33-13" href="#__codelineno-33-13"></a><span class="n">settings</span> <span class="o">=</span> <span class="n">TemporalSettings</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="security-best-practices">Рекомендации по безопасности<a class="headerlink" href="#security-best-practices" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Удаляйте API-ключи и другие секреты из логов.</li>
+<li>Используйте AWS Secrets Manager, HashiCorp Vault или аналогичные средства.</li>
+<li>Регулярно заменяйте ключи.</li>
+<li>Включайте TLS в production.</li>
+<li>Ограничивайте сетевой доступ к Temporal.</li>
+<li>Регистрируйте изменения production-конфигурации.</li>
+</ol>
+<h3 id="troubleshooting-configuration">Диагностика конфигурации<a class="headerlink" href="#troubleshooting-configuration" title="Permanent link">&para;</a></h3>
+<h4 id="check-current-configuration">Просмотр текущих настроек<a class="headerlink" href="#check-current-configuration" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
+</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>
+</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Host: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Namespace: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"TLS: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Max Activities: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">MAX_CONCURRENT_ACTIVITIES</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div>
+<h4 id="validate-configuration">Проверка настроек<a class="headerlink" href="#validate-configuration" title="Permanent link">&para;</a></h4>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">temporal_boost.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span>
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">():</span>
+</span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">TARGET_HOST</span><span class="p">,</span> <span class="s2">"TEMPORAL_TARGET_HOST not set"</span>
+</span><span id="__span-35-5"><a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a>    <span class="k">assert</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_NAMESPACE</span><span class="p">,</span> <span class="s2">"TEMPORAL_NAMESPACE not set"</span>
+</span><span id="__span-35-6"><a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a>    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_TLS</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">CLIENT_API_KEY</span><span class="p">:</span>
+</span><span id="__span-35-7"><a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="s2">"Warning: TLS enabled but no API key provided"</span><span class="p">)</span>
+</span><span id="__span-35-8"><a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a>
+</span><span id="__span-35-9"><a id="__codelineno-35-9" name="__codelineno-35-9" href="#__codelineno-35-9"></a><span class="n">validate</span><span class="p">()</span>
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Нижний колонтитул" >
+        
+          
+          <a href="../creating_application/" class="md-footer__link md-footer__link--prev" aria-label="Назад: Создание приложения">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Назад
+              </span>
+              <div class="md-ellipsis">
+                Создание приложения
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../advanced_usage/" class="md-footer__link md-footer__link--next" aria-label="Вперед: Расширенное использование">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Вперед
+              </span>
+              <div class="md-ellipsis">
+                Расширенное использование
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Temporal-boost · <a href="https://temporal.io/brand">Правила бренда Temporal</a> · Inter: SIL Open Font License
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"..","features":["navigation.tabs","navigation.sections","navigation.tracking","navigation.footer","content.code.copy","content.action.edit","content.tabs.link"],"redirect":null,"search":"../assets/javascripts/workers/search.719e0d91.min.js","tags":null,"translations":{"clipboard.copied":"Скопировано в буфер","clipboard.copy":"Копировать в буфер","clipboard.error":"Could not copy to clipboard","search.result.more.one":"Ещё 1 на этой странице","search.result.more.other":"Ещё # на этой странице","search.result.none":"Совпадений не найдено","search.result.one":"Найдено 1 совпадение","search.result.other":"Найдено совпадений: #","search.result.placeholder":"Начните печатать для поиска","search.result.term.missing":"Отсутствует","select.version":"Выберите версию"},"version":null}</script>
+    
+    
+  
+  <script>
+    const portalHeadAlternates = [...document.head.querySelectorAll('link[rel="alternate"][hreflang]')];
+    portalHeadAlternates.forEach((link) => link.rel = "portal-alternate");
+  </script>
+  
+      <script src="../assets/javascripts/bundle.d31f0ffa.min.js"></script>
+      
+        <script src="../assets/javascripts/language.js"></script>
+      
+    
+  <script>
+    document$.subscribe(() => portalHeadAlternates.forEach((link) => link.rel = "alternate"));
+  </script>
+
+  </body>
+</html>

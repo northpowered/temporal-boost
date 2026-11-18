@@ -1,0 +1,41 @@
+@font-face {
+  font-family: Inter;
+  src: url("../fonts/InterVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  --temporal-uv: #444ce7;
+  --temporal-space: #141414;
+  --temporal-white: #f8fafc;
+  --md-text-font: Inter, system-ui, sans-serif;
+  --md-code-font: ui-monospace, SFMono-Regular, Consolas, monospace;
+  --md-primary-fg-color: var(--temporal-uv);
+  --md-primary-bg-color: #fff;
+}
+[data-md-color-scheme="slate"] {
+  --portal-surface: #1a1a1a;
+  --portal-border: #727272;
+  --portal-link: #c7d2fe;
+  --portal-hover: #bfdbfe;
+  --md-default-bg-color: var(--temporal-space);
+  --md-default-fg-color: var(--temporal-white);
+  --md-default-fg-color--light: #cbd5e1;
+  --md-default-fg-color--lighter: #94a3b8;
+  --md-code-bg-color: #202020;
+  --md-code-fg-color: #f1f5f9;
+  --md-typeset-a-color: var(--portal-link);
+  --md-accent-fg-color: var(--portal-hover);
+}
+[data-md-color-scheme="default"] {
+  --portal-surface: #fff;
+  --portal-border: #737d8c;
+  --portal-link: var(--temporal-uv);
+  --portal-hover: #1d4ed8;
+  --md-default-bg-color: var(--temporal-white);
+  --md-default-fg-color: var(--temporal-space);
+  --md-default-fg-color--light: #475569;
+  --md-typeset-a-color: var(--portal-link);
+  --md-accent-fg-color: var(--portal-hover);
+}
