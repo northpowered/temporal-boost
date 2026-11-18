@@ -89,6 +89,42 @@
        raise ValueError("Worker must have activities or workflows")
    ```
 
+### Неизвестный аргумент metrics_endpoint {#unexpected-metrics-endpoint}
+
+Старые примеры quick start, включая README из Temporal-boost 2.0.2, передавали `metrics_endpoint`
+в `app.add_worker()`. Аргумент попадал в конструктор `Worker` SDK, который его не принимает, вызывая
+`TypeError: Worker.__init__() got an unexpected keyword argument 'metrics_endpoint'`.
+Теперь Temporal-boost отклоняет аргумент при регистрации воркера, даже если его значение — `None`.
+Прямое создание `TemporalWorkerBuilder` также отклоняет его.
+
+Удалите `metrics_endpoint` и настройте runtime возвращённого воркера:
+
+```python
+from temporalio import activity
+from temporal_boost import BoostApp
+
+app = BoostApp()
+
+
+@activity.defn
+async def greet(name: str) -> str:
+    return f"Hello, {name}!"
+
+
+worker = app.add_worker("worker_1", "task_q_1", activities=[greet])
+worker.configure_temporal_runtime(prometheus_bind_address="0.0.0.0:9000")
+
+if __name__ == "__main__":
+    app.run()
+```
+
+Этот API настройки runtime уже доступен в Temporal-boost 2.0.2. Одно лишь обновление `temporalio`
+с 1.18.1 до 1.20.0 не исправляет старый пример: ни одна из версий не принимает `metrics_endpoint`
+в `Worker`. Если метрики не нужны, удалите аргумент без настройки экспортёра.
+
+Настраивайте runtime до чтения `temporal_client_runtime` или запуска воркера. Каждому одновременно
+работающему runtime нужен отдельный endpoint Prometheus; см. [метрики нескольких воркеров и процессов](advanced_usage.md#metrics-across-workers-and-processes).
+
 ### Воркер не обрабатывает задачи {#worker-not-processing-tasks}
 
 **Симптомы:** процесс работает, но задачи остаются в очереди.

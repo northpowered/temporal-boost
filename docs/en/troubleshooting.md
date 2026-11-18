@@ -107,6 +107,42 @@ Common issues and solutions when working with Temporal-boost.
        raise ValueError("Worker must have activities or workflows")
    ```
 
+### Unexpected metrics_endpoint Argument {#unexpected-metrics-endpoint}
+
+Older quick start examples, including the README shipped with Temporal-boost 2.0.2, passed
+`metrics_endpoint` to `app.add_worker()`. This reaches the SDK's `Worker` constructor, which does
+not accept it, causing `TypeError: Worker.__init__() got an unexpected keyword argument 'metrics_endpoint'`.
+Temporal-boost now rejects the argument during worker registration, even if its value is `None`.
+Direct `TemporalWorkerBuilder` construction also rejects it.
+
+Remove `metrics_endpoint` and configure the returned worker's runtime instead:
+
+```python
+from temporalio import activity
+from temporal_boost import BoostApp
+
+app = BoostApp()
+
+
+@activity.defn
+async def greet(name: str) -> str:
+    return f"Hello, {name}!"
+
+
+worker = app.add_worker("worker_1", "task_q_1", activities=[greet])
+worker.configure_temporal_runtime(prometheus_bind_address="0.0.0.0:9000")
+
+if __name__ == "__main__":
+    app.run()
+```
+
+This runtime API is already available in Temporal-boost 2.0.2. Upgrading `temporalio` from 1.18.1 to
+1.20.0 alone does not fix the old example: neither version accepts `metrics_endpoint` on `Worker`.
+If metrics are unnecessary, remove the argument without configuring an exporter.
+
+Configure the runtime before reading `temporal_client_runtime` or starting the worker. Each concurrent
+runtime needs a distinct Prometheus endpoint; see [metrics across workers and processes](advanced_usage.md#metrics-across-workers-and-processes).
+
 ### Worker Not Processing Tasks
 
 **Symptoms:**

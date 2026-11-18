@@ -33,6 +33,11 @@ class TemporalWorkerBuilder:
         graceful_shutdown_timeout: timedelta | None = None,
         **kwargs: Any,
     ) -> None:
+        if "metrics_endpoint" in kwargs:
+            raise TypeError(
+                "metrics_endpoint is not supported. Remove it from worker arguments and call "
+                "worker.configure_temporal_runtime(prometheus_bind_address=...) before starting the worker."
+            )
         self._graceful_shutdown_timeout = (
             config.GRACEFUL_SHUTDOWN_TIMEOUT if graceful_shutdown_timeout is None else graceful_shutdown_timeout
         )
