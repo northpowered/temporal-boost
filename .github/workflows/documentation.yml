@@ -124,7 +124,7 @@ jobs:
           retention-days: 30
 
   deploy:
-    name: Publish verified main artifact
+    name: Publish verified site to gh-pages
     needs: [build, restore]
     if: >-
       always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
@@ -132,14 +132,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
     steps:
-      - name: Configure Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - name: Deploy without rebuilding
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: Download verified site
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: docs-portal-verified
+          path: site
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@e9c66a37f080288a11235e32cbe2dc5fb3a679cc # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./site
+          cname: northpowered.github.io
+          keep_files: false
