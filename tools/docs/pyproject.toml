@@ -1,11 +1,11 @@
 [project]
 name = "temporal-boost-docs"
 version = "0.0.0"
-requires-python = ">=3.11"
+requires-python = ">=3.11.5"
 dependencies = ["zensical==0.1.0", "tomli-w==1.2.0", "pyyaml==6.0.3"]
 
 [dependency-groups]
-checks = ["pytest==8.4.2", "playwright==1.56.0", "beautifulsoup4==4.14.2", "fonttools[woff]==4.60.1"]
+checks = ["pytest==9.0.3", "playwright==1.56.0", "beautifulsoup4==4.14.2", "fonttools[woff]==4.60.2"]
 
 [tool.uv]
 package = false
