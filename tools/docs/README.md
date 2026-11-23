@@ -39,8 +39,8 @@ records legacy URLs and anchors checked against each new build.
 ## Deployment and rollback
 
 The documentation workflow builds and tests both locales before saving
-`docs-portal-verified`. The same verified site is uploaded for Pages on `main`.
-Successful builds retain this artifact for 30 days.
+`docs-portal-verified`. The same verified site is published to the legacy
+`gh-pages` branch. Successful builds retain this artifact for 30 days.
 
 To roll back, run **Documentation portal** manually on `main` and set
 `restore_run_id` to a successful main documentation run whose
