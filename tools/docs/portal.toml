@@ -519,6 +519,38 @@ status = "reviewed"
 source_sha256 = "7cedeb9873f59a8c56b5e836404e8bcdf852172181fffa67e34792de9367b33d"
 
 [[pages]]
+page_id = "release_notes_2_1_0"
+source = "release_notes_2.1.0.md"
+route = "release_notes_2.1.0/"
+group = "releases"
+anchors = [
+    "release-notes-temporal-boost-210",
+    "highlights",
+    "worker-lifecycle",
+    "failure-propagation",
+    "managed-shutdown",
+    "cron-workers",
+    "asgi-faststream-processes",
+    "configuration-and-extensibility",
+    "metrics-and-telemetry",
+    "documentation-and-tooling",
+    "security-and-dependencies",
+    "migration-notes",
+]
+
+[pages.titles]
+en = "Release notes 2.1.0"
+ru = "Изменения 2.1.0"
+
+[pages.descriptions]
+en = "Release notes for Temporal Boost 2.1.0, covering worker reliability, configuration, metrics, documentation, and security updates."
+ru = "Изменения Temporal Boost 2.1.0: надёжность воркеров, конфигурация, метрики, документация и обновление зависимостей."
+
+[pages.translations.ru]
+status = "reviewed"
+source_sha256 = "b1e74ffea8fdd4d03cb58084462b03275e6b720159cc9aea58ac0d830c7ce205"
+
+[[pages]]
 page_id = "release_notes_2_0_0"
 source = "release_notes_2.0.0.md"
 route = "release_notes_2.0.0/"
